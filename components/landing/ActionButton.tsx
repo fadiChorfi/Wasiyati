@@ -15,16 +15,27 @@ export default function ActionButton({
   icon,
 }: ActionButtonProps) {
   const base =
-    "flex-row-reverse bg-[radial-gradient(circle_at_30%_20%,#19714f,transparent_55%),linear-gradient(160deg,#0a3f2f_0%,#06281e_70%)] bg-[length:200%_200%] hover:bg-[position:100%_100%] items-center gap-4 rounded-full px-2 py-2 text-sm font-semibold transition-all duration-500 cursor-pointer active:scale-95";
-  const styles =
-    variant === "primary"
-      ? "bg-accent-foreground text-[var(--accent-foreground)] hover:brightness-95"
-      : "border border-[var(--border)] bg-white text-[var(--foreground)] hover:bg-[var(--background)]";
+    "flex-row-reverse bg-[length:200%_200%] hover:bg-[position:100%_100%] items-center gap-4 rounded-full px-2 py-2 text-sm font-semibold transition-all duration-500 cursor-pointer active:scale-95";
+
+  const isPrimary = variant === "primary";
+
+  const containerStyles = isPrimary
+    ? "bg-[radial-gradient(circle_at_30%_20%,#19714f,transparent_55%),linear-gradient(160deg,#0a3f2f_0%,#06281e_70%)] text-white border border-transparent"
+    : "bg-white text-black border border-gray-200/60 shadow-sm";
+
+  const iconStyles = isPrimary
+    ? "bg-white text-[#06281e]"
+    : "bg-[radial-gradient(circle_at_30%_20%,#19714f,transparent_55%),linear-gradient(160deg,#0a3f2f_0%,#06281e_70%)] text-white bg-[length:200%_200%] group-hover:bg-[position:100%_100%] transition-all duration-500";
 
   return (
-    <button className={`group ${base} ${styles} ${className}`} type="button">
-      <span className="pr-2.5 font-bold">{label}</span>
-      <span className="relative flex bg-white h-12 w-12 items-center justify-center rounded-full text-accent-foreground text-4xl overflow-hidden">
+    <button
+      className={`group ${base} ${containerStyles} ${className}`}
+      type="button"
+    >
+      <span className="pr-2.5 font-bold ">{label}</span>
+      <span
+        className={`relative flex h-12 w-12 items-center justify-center rounded-full text-4xl overflow-hidden ${iconStyles}`}
+      >
         {/* Visible arrow that flies out top-left */}
         <span className="absolute transition-transform duration-150 ease-out group-hover:-translate-x-full group-hover:-translate-y-full">
           {icon}

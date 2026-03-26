@@ -1,3 +1,4 @@
+import { RxArrowTopLeft } from "react-icons/rx";
 import ActionButton from "./ActionButton";
 import Navbar from "./Navbar";
 import Image from "next/image";
@@ -22,17 +23,23 @@ export default function HeroSection() {
           <span className="inline-flex rounded-full bg-white/10 px-4 py-1 text-xs text-white/90 border border-white/20">
             SRA مرخصون ومعتمدون: 9876660
           </span>
-          <h1 className="text-4xl leading-tight font-semibold md:text-6xl text-white">
-            شريكك الموثوق
+          <h1 className="text-4xl leading-tight font-semibold md:text-5xl text-white">
+            أنشئ وصيتك بسهولة
             <br />
-            للحلول القانونية
+            وبخطوات قانونية واضحة
           </h1>
-          <p className="max-w-md text-sm leading-8 text-white/80">
-            نقدم استشارات قانونية دقيقة للأفراد والشركات، ونبني معك استراتيجية
-            واضحة لحماية حقوقك. دعنا نبني أقوى قضية معًا.
+          <p className="max-w-md text-base leading-8 text-white/80">
+            منصة رقمية تساعدك على إعداد وصيتك من خلال عملية منظمة تبدأ باختيار
+            الخدمة، ثم تقديم المعلومات، ومراجعتها من طرف مختصين قبل اعتمادها
+            بشكل نهائي.
           </p>
           <div className="pt-2">
-            <ActionButton label="ابدأ قضيتك" />
+            <ActionButton
+              label="احصل على استشارة"
+              variant="secondary"
+              className="  text-base font-bold hidden md:flex md:flex-row "
+              icon={<RxArrowTopLeft />}
+            />
           </div>
         </div>
 

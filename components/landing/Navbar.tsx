@@ -39,7 +39,7 @@ export default function Navbar() {
           icon={<RxArrowTopLeft />}
         />
         <nav
-          className="flex items-center text-sm font-bold text-primary relative"
+          className="flex items-center bg-amber-600 text-sm font-bold text-primary relative"
           dir="rtl"
         >
           {links.map((link, index) => {
