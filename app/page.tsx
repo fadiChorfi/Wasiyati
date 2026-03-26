@@ -1,22 +1,15 @@
-import { createClient } from "@/utils/supabase/server";
-import { cookies } from "next/headers";
+import AboutSection from "@/components/landing/AboutSection";
+import HeroSection from "@/components/landing/HeroSection";
+import ServicesSection from "@/components/landing/ServicesSection";
 
-type Todo = {
-  id: string | number;
-  name: string;
-};
-
-export default async function Page() {
-  const cookieStore = await cookies();
-  const supabase = createClient(cookieStore);
-
-  const { data: todos } = await supabase.from("todos").select();
-
+export default function Page() {
   return (
-    <ul>
-      {(todos as Todo[] | null)?.map((todo) => (
-        <li key={todo.id}>{todo.name}</li>
-      ))}
-    </ul>
+    <main className="min-h-screen bg-background p-3">
+      <div className="mx-auto max-w-350 space-y-0">
+        <HeroSection />
+        <AboutSection />
+        <ServicesSection />
+      </div>
+    </main>
   );
 }
