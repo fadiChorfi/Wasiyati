@@ -1,47 +1,72 @@
-import ActionButton from "./ActionButton";
 import SectionBadge from "./SectionBadge";
 import Image from "next/image";
+import { RxCheck } from "react-icons/rx";
+
+const trustPoints = [
+  "خطوات واضحة ومنظمة",
+  "مراجعة بشرية من مختصين",
+  "حماية وسرية المعلومات",
+  "متابعة حالة الطلب بسهولة",
+];
 
 export default function AboutSection() {
   return (
-    <section className="bg-background px-6 py-24 text-center">
-      <div className="flex justify-center mb-8">
-        <SectionBadge text="عن فريقنا" />
-      </div>
+    <section className="bg-background px-6 py-24" dir="rtl">
+      <div className="mx-auto max-w-6xl">
+        <div className="flex  mb-12">
+          <SectionBadge text="من نحن" />
+        </div>
 
-      <h2 className="mx-auto mt-6 max-w-4xl text-3xl leading-normal font-serif text-foreground md:text-5xl">
-        فريق{" "}
-        <span className="inline-flex items-center justify-center mx-2 px-1 align-middle h-8 w-16 bg-gray-200 rounded-full overflow-hidden relative top-1">
-          <Image
-            src="https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&q=80&w=100&h=50"
-            className="w-full h-full object-cover opacity-80"
-            alt=""
-            width={100}
-            height={50}
-          />
-        </span>{" "}
-        وصيتي هو محامٍ مخلص يركز على حماية حقوق عملائه{" "}
-        <span className="inline-flex items-center justify-center mx-2 px-1 align-middle h-8 w-16 bg-gray-200 rounded-lg overflow-hidden relative top-1">
-          <Image
-            src="https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=100&h=50"
-            className="w-full h-full object-cover"
-            alt=""
-            width={100}
-            height={50}
-          />
-        </span>{" "}
-        مع توجيه واضح ونتائج ملموسة.
-      </h2>
+        <div className="flex flex-col gap-16 md:flex-row md:items-center">
+          {/* Right side for Text */}
+          <div className="flex flex-1 flex-col items-start space-y-6 text-right">
+            <h2 className="text-3xl font-bold leading-tight text-foreground md:text-4xl lg:text-5xl">
+              هدفنا هو جعل إعداد وصيتك عملية بسيطة وآمنة دون تعقيد أو غموض.
+            </h2>
 
-      <p className="mx-auto mt-8 max-w-2xl text-sm leading-7 text-muted-foreground">
-        يتم التعامل مع كل قضية بعناية واهتمام وشعور قوي بالمسؤولية. يؤمن روبرت
-        بأن العملاء المطلعين يتخذون قرارات أفضل، ولهذا السبب فإن الوضوح والصدق
-        يوجهان عمله.
-      </p>
+            <div className="space-y-4 text-base leading-8 text-muted-foreground m-0 p-0">
+              <p>
+                نحن منصة رقمية تهدف إلى تبسيط الإجراءات القانونية المتعلقة
+                بإعداد الوصية من خلال نظام منظم وواضح. نوفر للمستخدم تجربة سهلة
+                تبدأ باختيار الخدمة، مرورًا بتعبئة المعلومات المطلوبة، وصولًا
+                إلى مراجعة الطلب من طرف مختصين لضمان دقة الإجراءات واحترام
+                الشروط القانونية.
+              </p>
+              <p>
+                نؤمن أن التعامل مع الأمور القانونية يجب أن يكون واضحًا وآمنًا
+                ومتاحًا للجميع، لذلك قمنا ببناء منصة تجمع بين التكنولوجيا
+                والخبرة القانونية لتقديم خدمة موثوقة وشفافة.
+              </p>
+            </div>
 
-      <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-        <ActionButton label="ابدأ قضيتك" />
-        <ActionButton label="احصل على عرض سعر" variant="secondary" />
+            <div className="grid grid-cols-1 gap-4 pt-6 sm:grid-cols-2 w-full">
+              {trustPoints.map((point) => (
+                <div
+                  key={point}
+                  className="flex items-center gap-3 text-sm font-semibold text-foreground"
+                >
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#19714f]/10 text-[#19714f]">
+                    <RxCheck className="h-4 w-4" />
+                  </span>
+                  {point}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Left side for Image */}
+          <div className="flex-1 w-full">
+            <div className="relative h-87.5 w-full md:h-125 overflow-hidden rounded-[28px] bg-gray-100 shadow-sm">
+              <Image
+                src="/about.jpg"
+                className="object-cover"
+                alt="من نحن"
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );

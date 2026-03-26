@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import Navbar from "@/components/landing/Navbar";
 
 const cairo = localFont({
   src: [
@@ -51,7 +52,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="ltr">
-      <body className={`${cairo.variable} antialiased`}>{children}</body>
+      <body className={`${cairo.variable} antialiased`}>
+        <div className="top-2 left-0 right-0 w-full z-50 sticky">
+          <Navbar />
+        </div>
+        <main>{children}</main>
+      </body>
     </html>
   );
 }

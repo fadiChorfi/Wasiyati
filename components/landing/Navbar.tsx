@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RxArrowTopLeft } from "react-icons/rx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -18,6 +18,23 @@ export default function Navbar() {
   const pathname = usePathname();
   const activeIndex = links.findIndex((link) => link.href === pathname);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [showNav, setShowNav] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setShowNav(false);
+      } else {
+        setShowNav(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
 
   const currentIndex =
     hoveredIndex !== null
@@ -28,7 +45,9 @@ export default function Navbar() {
 
   return (
     <header
-      className="absolute top-0 left-0 right-0 w-full px-6 pt-6 z-10"
+      className={`absolute top-0 left-0 right-0 w-full px-6 pt-6 z-10 transition-transform duration-300 ${
+        showNav ? "translate-y-0" : "-translate-y-full"
+      }`}
       dir="ltr"
     >
       <div className="flex items-center justify-between rounded-full bg-white px-2.5 py-2.5 shadow-sm mx-auto max-w-6xl">
@@ -39,7 +58,7 @@ export default function Navbar() {
           icon={<RxArrowTopLeft />}
         />
         <nav
-          className="flex items-center bg-amber-600 text-sm font-bold text-primary relative"
+          className="flex items-center  text-sm font-bold text-primary relative"
           dir="rtl"
         >
           {links.map((link, index) => {
