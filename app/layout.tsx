@@ -51,7 +51,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="ltr">
+    <html lang="ar" dir="ltr" className="scroll-smooth">
       <body className={`${cairo.variable} antialiased`}>
         <div className="top-2 left-0 right-0 w-full z-50 sticky">
           <Navbar />

@@ -11,7 +11,7 @@ const trustPoints = [
 
 export default function AboutSection() {
   return (
-    <section className="bg-background px-6 py-24" dir="rtl">
+    <section id="about" className="bg-background px-6 py-24" dir="rtl">
       <div className="mx-auto max-w-6xl">
         <div className="flex  mb-12">
           <SectionBadge text="من نحن" />

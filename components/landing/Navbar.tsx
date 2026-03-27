@@ -7,11 +7,11 @@ import { usePathname } from "next/navigation";
 import ActionButton from "./ActionButton";
 
 const links = [
-  { name: "الرئيسية", href: "/" },
-  { name: "من نحن", href: "/about" },
-  { name: "الخدمات", href: "/services" },
-  { name: "القضايا", href: "/cases" },
-  { name: "تواصل", href: "/contact" },
+  { name: "الرئيسية", href: "#hero" },
+  { name: "من نحن", href: "#about" },
+  { name: "الخدمات", href: "#services" },
+  { name: "القضايا", href: "#" },
+  { name: "تواصل", href: "#" },
 ];
 
 export default function Navbar() {

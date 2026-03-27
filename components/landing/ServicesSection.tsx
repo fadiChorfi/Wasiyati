@@ -1,75 +1,139 @@
+"use client";
+
+import { useState } from "react";
+import { RxArrowTopLeft } from "react-icons/rx";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import ActionButton from "./ActionButton";
 import SectionBadge from "./SectionBadge";
 import ServiceCard from "./ServiceCard";
 
 const services = [
   {
-    title: "التمثيل القانوني",
+    title: "وصية عامة",
     description:
-      "مرافعة احترافية وتمثيل كامل أمام الجهات القضائية لحماية مصالحك بأعلى مستوى.",
+      "إعداد وصية قانونية شاملة لتنظيم توزيع الممتلكات والحقوق وفق رغباتك وبطريقة موثقة وآمنة.",
     image:
       "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=400",
   },
   {
-    title: "قضايا التعويض",
+    title: "وصية بالأعمال",
     description:
-      "متابعة دقيقة لملفات الأضرار والإصابات لضمان الحصول على تعويض عادل ومنصف.",
+      "تنظيم انتقال الشركات والأصول التجارية والشراكات لضمان استمرارية الأعمال وحماية المصالح القانونية.",
     image:
       "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=400",
   },
   {
-    title: "قضايا الأسرة",
+    title: "وصية بالعقار",
     description:
-      "حلول قانونية متوازنة وحساسة لملفات الأسرة بما يحقق الأمان والاستقرار.",
+      "توثيق وتنظيم توزيع العقارات والأملاك العقارية بطريقة قانونية واضحة تمنع النزاعات المستقبلية.",
     image:
       "https://images.unsplash.com/photo-1575505586569-646b2ca898fc?auto=format&fit=crop&q=80&w=400",
+  },
+  {
+    title: "وصية مالية",
+    description:
+      "تنظيم الأموال والحسابات المالية والاستثمارات وتحديد آلية توزيعها بشكل قانوني وآمن.",
+    image:
+      "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=400",
   },
 ];
 
 export default function ServicesSection() {
+  const [hoverStyle, setHoverStyle] = useState({
+    opacity: 0,
+    left: 0,
+    width: 0,
+  });
+
   return (
-    <section className="bg-white px-6 pb-24 pt-16 rounded-[40px] mx-4 mb-4">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-16 flex flex-col items-start justify-between gap-8 md:flex-row md:items-end">
+    <section
+      id="services"
+      className="bg-white px-6 pb-24 pt-16 rounded-[40px] mx-4 mb-4"
+    >
+      <div className="mx-auto max-w-6xl" dir="rtl">
+        <div className="mb-16 flex flex-col items-start justify-between gap-8 md:flex-row  md:items-center">
           <div>
             <div className="mb-4">
-              <SectionBadge text="مجالات الممارسة" />
+              <SectionBadge text="خدماتنا" />
             </div>
             <h2 className="text-4xl leading-tight font-serif text-foreground md:text-5xl">
               خدمات قانونية{" "}
               <span className="opacity-40 italic font-serif">موثوقة</span>
               <br />
-              يمكنك الاعتماد عليها
+              يمكنك البدء بها بسهولة
             </h2>
           </div>
-          <div className="flex flex-col items-end gap-6">
-            <p className="max-w-md text-sm leading-7 text-muted-foreground md:text-left rtl:md:text-left">
-              يعمل توماس عن كثب مع العملاء، ويقدم حلولاً قانونية واضحة وعملية
-              بثقة وشفافية.
+          <div className="flex flex-col  gap-6 text-right">
+            <p className="max-w-md text-sm leading-8 text-muted-foreground">
+              منصة رقمية تساعدك على إعداد وصيتك وتنظيم شؤونك القانونية بطريقة
+              واضحة وآمنة، بإشراف مختصين ومراجعة قانونية دقيقة.
             </p>
-            <div className="flex gap-2">
-              <button className="h-10 w-10 rounded-full border border-border flex items-center justify-center hover:bg-gray-50 text-foreground">
-                ←
+            <div className="hidden gap-2">
+              <button
+                title="السابق"
+                aria-label="السابق"
+                className="h-10 w-10 text-sm rounded-full border border-border flex items-center justify-center hover:bg-gray-50 text-foreground transition-colors"
+              >
+                <FaArrowRight />
               </button>
-              <button className="h-10 w-10 rounded-full bg-[#c6a96a] text-white flex items-center justify-center hover:bg-[#b0965f]">
-                →
+              <button
+                title="التالي"
+                aria-label="التالي"
+                className="h-10 w-10 text-sm rounded-full bg-[#c6a96a] text-white flex items-center justify-center hover:bg-[#b0965f] transition-colors"
+              >
+                <FaArrowLeft />
               </button>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-3">
-          {services.map((service) => (
-            <ServiceCard key={service.title} {...service} />
-          ))}
+        <div
+          className="relative"
+          onMouseLeave={() =>
+            setHoverStyle((prev) => ({ ...prev, opacity: 0 }))
+          }
+        >
+          <div className="grid gap-8 md:grid-cols-4 relative z-10">
+            {services.map((service) => (
+              <div
+                key={service.title}
+                onMouseEnter={(e) => {
+                  const el = e.currentTarget;
+                  setHoverStyle({
+                    opacity: 1,
+                    left: el.offsetLeft,
+                    width: el.offsetWidth,
+                  });
+                }}
+                className="relative"
+              >
+                <ServiceCard {...service} />
+              </div>
+            ))}
+          </div>
+
+          {/* Hover highlight background */}
+          <div
+            className="absolute rounded-4xl bg-[#d0e0db] transition-all duration-300 ease-out hidden md:block z-0 pointer-events-none"
+            style={{
+              opacity: hoverStyle.opacity,
+              left: hoverStyle.left,
+              width: hoverStyle.width,
+              height: "calc(100% + 2rem)",
+              top: "-1rem",
+              transform: "scaleX(1.09)", // Slightly enlarge to create a padding effect around the card without messing up exact physical coordinates
+            }}
+          />
         </div>
 
         <div className="mt-16 text-center">
-          <div className="inline-flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              هل تحتاج لمساعدة؟
-            </span>
-            <ActionButton label="ابدأ قضيتك" />
+          <div className="inline-flex flex-col items-center gap-4" dir="ltr">
+            <ActionButton
+              label="ابدأ إعداد وصيتك"
+              variant="primary"
+              className="  text-base font-bold hidden md:inline-flex   text-white"
+              icon={<RxArrowTopLeft />}
+            />
           </div>
         </div>
       </div>
