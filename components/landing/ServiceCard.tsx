@@ -15,7 +15,7 @@ export default function ServiceCard({
     <article className="group">
       <div className="h-64 w-full rounded-2xl bg-linear-to-br from-[#f0efe9] to-[#e6e4dc] overflow-hidden grayscale-50 group-hover:grayscale-0 transition duration-500 relative">
         {image && (
-          <Image src={image} alt={title} fill className="object-cover" />
+          <Image src={image} alt={title} fill className="object-cover  " />
         )}
         <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition"></div>
       </div>

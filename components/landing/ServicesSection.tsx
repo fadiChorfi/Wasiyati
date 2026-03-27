@@ -26,15 +26,13 @@ const services = [
     title: "وصية بالعقار",
     description:
       "توثيق وتنظيم توزيع العقارات والأملاك العقارية بطريقة قانونية واضحة تمنع النزاعات المستقبلية.",
-    image:
-      "https://images.unsplash.com/photo-1575505586569-646b2ca898fc?auto=format&fit=crop&q=80&w=400",
+    image: "/estate.webp",
   },
   {
     title: "وصية مالية",
     description:
       "تنظيم الأموال والحسابات المالية والاستثمارات وتحديد آلية توزيعها بشكل قانوني وآمن.",
-    image:
-      "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&q=80&w=400",
+    image: "/money.webp",
   },
 ];
 

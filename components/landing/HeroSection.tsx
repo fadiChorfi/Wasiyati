@@ -13,7 +13,7 @@ export default function HeroSection() {
   return (
     <section
       id="hero"
-      className="relative overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_30%_20%,#19714f,transparent_55%),linear-gradient(160deg,#0a3f2f_0%,#06281e_70%)] text-white min-h-[85vh] flex flex-col pt-24"
+      className="relative overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_30%_20%,#19714f,transparent_55%),linear-gradient(160deg,#0a3f2f_0%,#06281e_70%)] text-white min-h-[85vh] flex flex-col pt-24 mx-4"
       dir="rtl"
     >
       <div className="flex flex-col md:flex-row items-center justify-between w-full mx-auto max-w-5xl gap-8 px-6 pb-8 pt-10 flex-1">

@@ -8,10 +8,10 @@ import ActionButton from "./ActionButton";
 
 const links = [
   { name: "الرئيسية", href: "#hero" },
-  { name: "من نحن", href: "#about" },
   { name: "الخدمات", href: "#services" },
-  { name: "القضايا", href: "#" },
-  { name: "تواصل", href: "#" },
+  { name: "عن الوصية", href: "#about-will" },
+  { name: "حول المنصة", href: "#about" },
+  { name: "تواصل معنا", href: "#contact" },
 ];
 
 export default function Navbar() {
@@ -40,7 +40,7 @@ export default function Navbar() {
     hoveredIndex !== null
       ? hoveredIndex
       : activeIndex >= 0
-        ? 4 - activeIndex
+        ? links.length - 1 - activeIndex
         : null;
 
   return (
@@ -67,10 +67,10 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className={`w-23 text-center py-2 transition hidden md:block relative z-10 ${
+                className={`w-28 text-center py-2 transition hidden md:block relative z-10 ${
                   isActive ? "text-foreground" : "hover:text-foreground"
                 }`}
-                onMouseEnter={() => setHoveredIndex(4 - index)}
+                onMouseEnter={() => setHoveredIndex(links.length - 1 - index)}
                 onMouseLeave={() => setHoveredIndex(null)}
               >
                 {link.name}
@@ -82,8 +82,8 @@ export default function Navbar() {
             className="absolute h-9 rounded-full bg-black/5 transition-all duration-300 ease-out hidden md:block"
             style={{
               opacity: currentIndex !== null ? 1 : 0,
-              width: "92px",
-              transform: `translateX(${currentIndex !== null ? currentIndex * 92 : 0}px)`,
+              width: "112px",
+              transform: `translateX(${currentIndex !== null ? currentIndex * 112 : 0}px)`,
               left: 0,
               top: "50%",
               marginTop: "-18px",
