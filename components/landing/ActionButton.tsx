@@ -6,6 +6,7 @@ type ActionButtonProps = {
   className?: string;
   count?: number;
   icon?: React.ReactNode;
+  onClick?: () => void;
 };
 
 export default function ActionButton({
@@ -13,6 +14,7 @@ export default function ActionButton({
   variant = "primary",
   className = "",
   icon,
+  onClick,
 }: ActionButtonProps) {
   const base =
     "flex-row-reverse bg-[length:200%_200%] hover:bg-[position:100%_100%] items-center gap-4 rounded-full px-2 py-2 text-sm font-semibold transition-all duration-500 cursor-pointer active:scale-95";
@@ -29,6 +31,7 @@ export default function ActionButton({
 
   return (
     <button
+        onClick={onClick}
       className={`group ${base} ${containerStyles} ${className}`}
       type="button"
     >

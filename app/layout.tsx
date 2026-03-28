@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/landing/Navbar";
 import { createClient } from "@/lib/supabase/server";
 import { OneTap } from "@/components/auth/OneTap";
+import Footer from "@/components/landing/Footer";
 
 const cairo = localFont({
   src: [
@@ -67,6 +68,9 @@ export default async function RootLayout({
           {!user && <OneTap />}
           {children}
         </main>
+        <div className="mx-auto w-full mt-auto">
+          <Footer />
+        </div>
       </body>
     </html>
   );

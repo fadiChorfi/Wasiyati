@@ -1,6 +1,8 @@
+"use client";
 import { RxArrowTopLeft } from "react-icons/rx";
 import ActionButton from "./ActionButton";
 import AuthCard from "../auth/auth-card";
+import { useRouter } from "next/navigation";
 
 const stats = [
   { value: "إجراءات", label: "آمنة" },
@@ -10,6 +12,7 @@ const stats = [
 ];
 
 export default function HeroSection() {
+  const router = useRouter();
   return (
     <section
       id="hero"
@@ -37,6 +40,7 @@ export default function HeroSection() {
           </p>
           <div className="pt-2">
             <ActionButton
+              onClick={() => router.push("/guide")}
               label="كيف تعمل المنصة؟"
               variant="secondary"
               className="  text-base font-bold hidden md:flex md:flex-row "

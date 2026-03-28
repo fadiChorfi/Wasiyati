@@ -5,7 +5,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="ltr" className="scroll-smooth">
-      <main>{children}</main>
+      <body>
+        <main>{children}</main>
+      </body>
     </html>
   );
 }

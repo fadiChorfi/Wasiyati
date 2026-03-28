@@ -1,7 +1,6 @@
 import AboutSection from "@/components/landing/AboutSection";
 import HeroSection from "@/components/landing/HeroSection";
 import ServicesSection from "@/components/landing/ServicesSection";
-import Footer from "@/components/landing/Footer";
 
 export default function Page() {
   return (
@@ -10,9 +9,6 @@ export default function Page() {
         <HeroSection />
         <AboutSection />
         <ServicesSection />
-      </div>
-      <div className="mx-auto w-full mt-auto">
-        <Footer />
       </div>
     </main>
   );
