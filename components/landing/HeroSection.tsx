@@ -1,6 +1,6 @@
 import { RxArrowTopLeft } from "react-icons/rx";
 import ActionButton from "./ActionButton";
-import Image from "next/image";
+import AuthCard from "../auth/auth-card";
 
 const stats = [
   { value: "إجراءات", label: "آمنة" },
@@ -45,18 +45,7 @@ export default function HeroSection() {
           </div>
         </div>
 
-        {/* <div className="relative hidden items-end justify-center h-full min-h-100">
-          <div className="relative h-95 w-70 rounded-t-full bg-white/5 border border-white/10 backdrop-blur-sm flex items-end justify-center overflow-hidden">
-            <Image
-              src="/header.png"
-              alt="Lawyer"
-              fill
-              className="object-cover opacity-90 mix-blend-overlay"
-              priority
-            />
-            <div className="absolute inset-x-0 bottom-0 h-1/2 bg-linear-to-t from-[#06281e] to-transparent"></div>
-          </div>
-        </div> */}
+        <AuthCard />
       </div>
 
       <div className="border-t  border-white/10  backdrop-blur-sm mt-auto  max-w-5xl mx-auto relative z-10 w-full">
@@ -70,15 +59,6 @@ export default function HeroSection() {
             </div>
           ))}
         </div>
-      </div>
-      <div className="absolute left-23 top-16  h-220 w-110  justify-center min-h-100">
-        <Image
-          src="/header.png"
-          alt="Lawyer"
-          fill
-          className="object-cover "
-          priority
-        />
       </div>
     </section>
   );
