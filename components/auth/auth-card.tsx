@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useSignupModal } from "@/hooks/useSignupModal";
 import { SignupModal } from "./SignupModal";
 import { FcGoogle } from "react-icons/fc";
+import Image from "next/image";
 
 export default function AuthCard() {
   const { open } = useSignupModal();
@@ -100,10 +101,20 @@ export default function AuthCard() {
           </div>
         ) : user ? (
           <div className="text-center space-y-5 animate-in fade-in zoom-in duration-500">
-            <div className="w-20 h-20 bg-[#e8f3ef] text-[#19714f] rounded-full flex items-center justify-center text-3xl font-bold mx-auto shadow-sm border border-[#19714f]/20">
-              {user.user_metadata?.full_name?.charAt(0) ||
+            <div className="w-20 h-20 bg-[#e8f3ef] text-[#19714f] rounded-full flex items-center justify-center text-3xl font-bold mx-auto shadow-sm border border-[#19714f]/20 overflow-hidden">
+              {user.user_metadata?.picture ? (
+                <Image
+                  src={user.user_metadata.picture}
+                  alt={user.user_metadata?.full_name || "User Profile"}
+                  width={80}
+                  height={80}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                user.user_metadata?.full_name?.charAt(0) ||
                 user.email?.charAt(0)?.toUpperCase() ||
-                "👤"}
+                "👤"
+              )}
             </div>
 
             <div>
