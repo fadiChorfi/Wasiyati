@@ -5,6 +5,15 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 // ✅ Fix 1: Proper type instead of `any`
+interface PromptNotification {
+  isNotDisplayed: () => boolean
+  isSkippedMoment: () => boolean
+  isDismissedMoment: () => boolean
+  getNotDisplayedReason: () => string
+  getSkippedReason: () => string
+  getDismissedReason: () => string
+}
+
 interface GoogleAccountsId {
   initialize: (config: {
     client_id: string
@@ -12,7 +21,8 @@ interface GoogleAccountsId {
     auto_select: boolean
     cancel_on_tap_outside: boolean
   }) => void
-  prompt: () => void
+  prompt: (callback?: (notification: PromptNotification) => void) => void  // ← optional callback
+  renderButton: (element: HTMLElement, config: object) => void
 }
 
 declare global {
