@@ -4,7 +4,7 @@ import ActionButton from "./ActionButton";
 
 export default function ContactUsBanner() {
   return (
-    <section id="contact" className="px-6 py-12 mx-4 mb-8" dir="rtl">
+    <section id="contact" className="px-6 py-12 mx-4" dir="rtl">
       <div className="mx-auto max-w-6xl">
         <div className="relative overflow-hidden bg-white border border-border rounded-4xl p-8 md:p-12 shadow-sm flex flex-col md:flex-row items-center justify-between gap-8">
           {/* Background Decorations */}
