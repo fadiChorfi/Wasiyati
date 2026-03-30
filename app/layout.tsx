@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import Navbar from "@/components/landing/Navbar";
 import { createClient } from "@/lib/supabase/server";
 import { OneTap } from "@/components/auth/OneTap";
-import Footer from "@/components/landing/Footer";
 
 const cairo = localFont({
   src: [
@@ -60,17 +58,11 @@ export default async function RootLayout({
 
   return (
     <html lang="ar" dir="ltr" className="scroll-smooth">
-      <body className={`${cairo.variable} antialiased`}>
-        <div className="top-2 left-0 right-0 w-full z-50 sticky">
-          <Navbar />
-        </div>
-        <main>
-          {!user && <OneTap />}
-          {children}
-        </main>
-        <div className="mx-auto w-full mt-auto">
-          <Footer />
-        </div>
+      <body
+        className={`${cairo.variable} antialiased flex flex-col min-h-screen`}
+      >
+        {!user && <OneTap />}
+        {children}
       </body>
     </html>
   );

@@ -64,7 +64,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="#about-will"
+                  href="/about-will"
                   className="hover:text-white transition-colors"
                 >
                   عن الوصية

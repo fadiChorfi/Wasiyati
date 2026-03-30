@@ -1,5 +1,5 @@
-import Link from "next/link";
 import ActionButton from "@/components/landing/ActionButton";
+import Link from "next/link";
 import { RxArrowTopLeft, RxCheck, RxCross2 } from "react-icons/rx";
 
 export default function GuidePage() {

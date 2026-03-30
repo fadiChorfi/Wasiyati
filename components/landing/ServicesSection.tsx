@@ -127,7 +127,7 @@ export default function ServicesSection() {
         <div className="mt-16 text-center">
           <div className="inline-flex flex-col items-center gap-4" dir="ltr">
             <ActionButton
-              label="ابدأ إعداد وصيتك"
+              label="اكتشف جميع الباقات و الأسعار"
               variant="primary"
               className="  text-base font-bold hidden md:inline-flex   text-white"
               icon={<RxArrowTopLeft />}
