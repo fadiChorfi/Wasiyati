@@ -8,9 +8,9 @@ import ActionButton from "./ActionButton";
 
 const links = [
   { name: "الرئيسية", href: "#hero" },
-  { name: "الخدمات", href: "#services" },
-  { name: "عن الوصية", href: "#about-will" },
   { name: "حول المنصة", href: "#about" },
+  { name: "عن الوصية", href: "#about-will" },
+  { name: "الخدمات", href: "#services" },
   { name: "تواصل معنا", href: "#contact" },
 ];
 
