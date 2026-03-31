@@ -62,9 +62,7 @@ const priorityMap: Record<WillStatus, number> = {
 export default function MyWillsPage() {
   const [loading, setLoading] = useState(true);
   const [wills, setWills] = useState<Will[]>([]);
-  const [sort] = useState<"الأولوية" | "الأحدث" | "الأقدم" | "النوع">(
-    "الأحدث",
-  );
+  const [sort] = useState<"الأولوية" | "الأحدث" | "الأقدم" | "النوع">("الأحدث");
   const [selectedWill, setSelectedWill] = useState<Will | null>(null);
   const [deleteWillId, setDeleteWillId] = useState<string | null>(null);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
@@ -110,8 +108,6 @@ export default function MyWillsPage() {
     }
     return 0;
   });
-
- 
 
   const getTopBarColor = (type: WillType) => {
     switch (type) {
@@ -208,7 +204,7 @@ export default function MyWillsPage() {
       </header>
 
       {/* 4. WILL CARDS GRID / STATE */}
-      <div className="px-6 py-6 bg-background max-w-7xl">
+      <div className="py-6 bg-background max-w-7xl">
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
