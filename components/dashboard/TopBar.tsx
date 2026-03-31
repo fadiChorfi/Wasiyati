@@ -1,13 +1,22 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { RxBell, RxMagnifyingGlass } from "react-icons/rx";
+import {
+  RxBell,
+  RxMagnifyingGlass,
+  RxPerson,
+  RxArchive,
+  RxGear,
+  RxExit,
+} from "react-icons/rx";
 import { useState, useRef, useEffect } from "react";
 
 export default function TopBar() {
   const pathname = usePathname();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -16,6 +25,12 @@ export default function TopBar() {
         !notifRef.current.contains(event.target as Node)
       ) {
         setShowNotifications(false);
+      }
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
+        setShowUserMenu(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -135,6 +150,50 @@ export default function TopBar() {
               <div className="p-3 bg-gray-50/50 text-center">
                 <button className="text-xs font-bold text-[#06281e] hover:text-[#19714f] transition-colors">
                   عرض كل الإشعارات
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* User Profile Menu */}
+        <div className="relative" ref={userMenuRef}>
+          <button
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="flex items-center gap-2 hover:bg-gray-100 p-1.5 pr-2 rounded-full transition-colors"
+            aria-label="قائمة المستخدم"
+          >
+            <div className="w-8 h-8 rounded-full bg-[#c6a96a] text-white flex items-center justify-center font-bold text-sm overflow-hidden border border-gray-200">
+              <span className="leading-none pb-1">م</span>
+            </div>
+            <span className="hidden md:block text-sm font-bold text-[#06281e]">
+              محمد أحمد
+            </span>
+          </button>
+
+          {/* User Dropdown */}
+          {showUserMenu && (
+            <div
+              className="absolute left-0 mt-2 w-48 bg-white rounded-2xl shadow-lg border border-gray-100/80 z-50 overflow-hidden"
+              dir="rtl"
+            >
+              <div className="py-2">
+                <button className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+                  <RxArchive className="text-lg text-gray-500" />
+                  عروضي
+                </button>
+                <button className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+                  <RxPerson className="text-lg text-gray-500" />
+                  الملف الشخصي
+                </button>
+                <button className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+                  <RxGear className="text-lg text-gray-500" />
+                  الإعدادات
+                </button>
+                <div className="border-t border-gray-100 my-1"></div>
+                <button className="w-full text-right px-4 py-2.5 text-sm text-red-500 font-bold hover:bg-red-50 transition-colors flex items-center gap-2">
+                  <RxExit className="text-lg" />
+                  تسجيل الخروج
                 </button>
               </div>
             </div>
