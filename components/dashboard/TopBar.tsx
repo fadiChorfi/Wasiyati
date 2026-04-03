@@ -10,6 +10,8 @@ import {
   RxExit,
 } from "react-icons/rx";
 import { useState, useRef, useEffect } from "react";
+import { useUser } from "@/context/UserContext";
+import Image from "next/image";
 
 export default function TopBar() {
   const pathname = usePathname();
@@ -17,6 +19,7 @@ export default function TopBar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const profile = useUser();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -164,10 +167,22 @@ export default function TopBar() {
             aria-label="قائمة المستخدم"
           >
             <div className="w-8 h-8 rounded-full bg-[#c6a96a] text-white flex items-center justify-center font-bold text-sm overflow-hidden border border-gray-200">
-              <span className="leading-none pb-1">م</span>
+              {profile?.avatar_url ? (
+                <Image
+                  width={32}
+                  height={32}
+                  src={profile.avatar_url}
+                  alt={profile.full_name || "مستخدم"}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-xl font-bold text-white">
+                  {profile?.full_name?.charAt(0) || "م"}
+                </span>
+              )}
             </div>
             <span className="hidden md:block text-sm font-bold text-[#06281e]">
-              محمد أحمد
+              {profile?.full_name || "مستخدم"}
             </span>
           </button>
 

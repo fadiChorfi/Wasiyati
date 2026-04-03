@@ -1,3 +1,4 @@
+"use client";
 import {
   RxFileText,
   RxClock,
@@ -9,6 +10,8 @@ import {
   RxPlus,
 } from "react-icons/rx";
 import Link from "next/link";
+import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
+import { useUser } from "@/context/UserContext";
 
 export default function DashboardPage() {
   const stats = [
@@ -70,23 +73,12 @@ export default function DashboardPage() {
     }
   };
 
+  const profile = useUser();
+
   return (
-    <div
-      className="space-y-5 px-4 md:px-6 py-4 md:py-6 pb-24 md:pb-6"
-      dir="rtl"
-    >
+    <div className="space-y-5 px-4 md:px-6 py-4  pb-24 md:pb-6" dir="rtl">
       {/* WELCOME BANNER */}
-      <div className="bg-primary rounded-3xl p-6 md:p-8 overflow-hidden relative">
-        <div className="absolute w-64 h-64 rounded-full bg-primary-foreground/5 -bottom-12 -right-12"></div>
-        <div className="relative z-10 text-right">
-          <h2 className="text-xl md:text-2xl font-bold text-primary-foreground">
-            مرحباً، محمد 👋
-          </h2>
-          <p className="text-sm text-primary-foreground/70 mt-1">
-            إليك ملخص وصاياك ونشاطك الأخير
-          </p>
-        </div>
-      </div>
+      <WelcomeBanner profile={profile} />
 
       {/* STATS ROW */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
