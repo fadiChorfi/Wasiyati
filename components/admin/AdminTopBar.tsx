@@ -1,14 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import {
-  RxArchive,
-  RxBell,
-  RxExit,
-  RxGear,
-  RxMagnifyingGlass,
-  RxPerson,
-} from "react-icons/rx";
+import { RxArchive, RxBell, RxExit, RxGear, RxPerson } from "react-icons/rx";
 import { useState, useRef, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
 import Image from "next/image";
@@ -67,22 +60,6 @@ export default function AdminTopBar() {
       </div>
 
       <div className="flex items-center gap-3">
-        <button
-          className="md:hidden p-2 text-foreground hover:bg-black/5 rounded-lg min-h-11 min-w-11 flex items-center justify-center"
-          aria-label="بحث"
-        >
-          <RxMagnifyingGlass className="text-xl" />
-        </button>
-
-        <div className="hidden md:flex items-center bg-surface border border-border rounded-full px-4 py-2 focus-within:border-primary/30 focus-within:bg-background transition-all w-64 lg:w-80">
-          <input
-            type="text"
-            placeholder="ابحث عن مستخدم، وصية..."
-            className="bg-transparent border-none outline-none w-full text-sm text-foreground pr-2 placeholder:text-muted-foreground"
-          />
-          <RxMagnifyingGlass className="text-muted-foreground text-lg mr-2" />
-        </div>
-
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}
