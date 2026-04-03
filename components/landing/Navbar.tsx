@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { RxArrowTopLeft } from "react-icons/rx";
+import { RxArrowTopLeft, RxHamburgerMenu, RxCross2 } from "react-icons/rx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ActionButton from "./ActionButton";
@@ -20,6 +20,7 @@ export default function Navbar() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [showNav, setShowNav] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -50,13 +51,26 @@ export default function Navbar() {
       }`}
       dir="ltr"
     >
-      <div className="flex items-center justify-between rounded-full bg-white px-2.5 py-2.5 shadow-sm mx-auto max-w-6xl">
-        <ActionButton
-          label="احصل على استشارة"
-          variant="primary"
-          className="  text-base font-bold hidden md:inline-flex   text-white"
-          icon={<RxArrowTopLeft />}
-        />
+      <div className="flex items-center justify-between rounded-full bg-white px-2.5 py-2.5 shadow-sm mx-auto max-w-6xl relative z-50 transition-all duration-300">
+        <div className="flex items-center gap-2">
+          <ActionButton
+            label="احصل على استشارة"
+            variant="primary"
+            className="text-base font-bold hidden md:inline-flex text-white"
+            icon={<RxArrowTopLeft />}
+          />
+          <button
+            className="md:hidden flex items-center justify-center p-2.5 rounded-full bg-black/5 text-foreground hover:bg-black/10 transition-colors"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle mobile menu"
+          >
+            {isMobileMenuOpen ? (
+              <RxCross2 className="text-xl" />
+            ) : (
+              <RxHamburgerMenu className="text-xl" />
+            )}
+          </button>
+        </div>
         <nav
           className="flex items-center  text-sm font-bold text-primary relative"
           dir="rtl"
@@ -90,8 +104,46 @@ export default function Navbar() {
             }}
           />
         </nav>
-        <div className=" px-3 py-1 mr-2.5">
+        <div className=" px-3 py-1 mr-2.5 z-50 relative">
           <h2 className="text-2xl font-bold text-foreground">وصيتي</h2>
+        </div>
+      </div>
+
+      {/* Mobile Menu Dropdown */}
+      <div
+        className={`absolute top-24 left-6 right-6 bg-white border border-black/5 rounded-3xl p-4 shadow-xl md:hidden flex flex-col gap-2 z-40 transition-all duration-300 origin-top overflow-hidden ${
+          isMobileMenuOpen
+            ? "opacity-100 scale-y-100 pointer-events-auto"
+            : "opacity-0 scale-y-95 pointer-events-none"
+        }`}
+        dir="rtl"
+      >
+        {links.map((link) => {
+          const isActive = pathname === link.href;
+          return (
+            <Link
+              key={link.name}
+              href={link.href}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`px-4 py-3.5 rounded-2xl text-sm font-bold transition-colors ${
+                isActive
+                  ? "bg-primary/5 text-primary"
+                  : "text-foreground hover:bg-black/5"
+              }`}
+            >
+              {link.name}
+            </Link>
+          );
+        })}
+        <div className="mt-2 pt-4 border-t border-black/5">
+          <Link
+            href="#contact"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex w-full items-center justify-center gap-2 bg-primary text-primary-foreground py-3.5 rounded-2xl text-sm font-bold shadow-sm active:scale-95 transition-transform"
+          >
+            احصل على استشارة
+            <RxArrowTopLeft className="text-lg" />
+          </Link>
         </div>
       </div>
     </header>

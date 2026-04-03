@@ -31,8 +31,8 @@ export default function ActionButton({
 
   return (
     <button
-        onClick={onClick}
-      className={`group ${base} ${containerStyles} ${className}`}
+      onClick={onClick}
+      className={`group ${base} min-w-fit px-4 md:px-2 ${containerStyles} ${className}`}
       type="button"
     >
       <span className="pr-2.5 font-bold ">{label}</span>

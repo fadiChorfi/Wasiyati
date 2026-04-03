@@ -39,7 +39,7 @@ export default function ContactUsBanner() {
               <ActionButton
                 label="تواصل عبر الواتساب"
                 variant="primary"
-                className="text-base font-bold hidden md:flex md:flex-row bg-[#25D366] hover:bg-[#1ebe57] text-white border-[#25D366] hover:border-[#1ebe57]"
+                className="text-base font-bold flex bg-[#25D366] hover:bg-[#1ebe57] text-white border-[#25D366] hover:border-[#1ebe57]"
                 icon={<FaWhatsapp className="text-xl" />}
               />
             </Link>

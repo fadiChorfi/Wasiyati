@@ -31,7 +31,7 @@ export default function AboutWillBanner() {
               <ActionButton
                 label="اقرأ الدليل الآن"
                 variant="primary"
-                className="  text-base font-bold hidden md:flex md:flex-row "
+                className="  text-base font-bold flex "
                 icon={<RxArrowTopLeft />}
               />
             </Link>

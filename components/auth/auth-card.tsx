@@ -13,7 +13,7 @@ export default function AuthCard() {
   const { open } = useSignupModal();
   const supabase = createClient();
 
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(null);  
   const [loading, setLoading] = useState(true);
 
   // Login form state

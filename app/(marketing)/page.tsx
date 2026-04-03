@@ -14,7 +14,7 @@ export default function Page() {
       <div className="mx-auto w-full space-y-0">
         <HeroSection />
         <AboutSection />
-        <AboutWillBanner />
+        <AboutWillBanner /> 
         <ServicesSection />
         <ContactUsBanner />
       </div>
