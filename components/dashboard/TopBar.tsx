@@ -3,15 +3,16 @@
 import { usePathname } from "next/navigation";
 import {
   RxBell,
-  RxMagnifyingGlass,
   RxPerson,
   RxArchive,
   RxGear,
   RxExit,
+  RxPlus,
 } from "react-icons/rx";
 import { useState, useRef, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function TopBar() {
   const pathname = usePathname();
@@ -87,21 +88,13 @@ export default function TopBar() {
       </div>
 
       <div className="flex items-center gap-3">
-        <button
-          className="md:hidden p-2 text-[#06281e] hover:bg-gray-100 rounded-lg min-h-11 min-w-11 flex items-center justify-center"
-          aria-label="بحث"
+        <Link
+          href="/dashboard/new-request"
+          className="flex items-center justify-center gap-2 bg-[radial-gradient(circle_at_30%_20%,#19714f,transparent_55%),linear-gradient(160deg,#0a3f2f_0%,#06281e_70%)] bg-size-[200%_200%] hover:bg-position-[100%_100%] text-white px-5 min-h-11 rounded-full text-sm font-bold transition-all shadow-sm active:scale-95"
         >
-          <RxMagnifyingGlass className="text-xl" />
-        </button>
-
-        <div className="hidden md:flex items-center bg-gray-100 rounded-full px-4 py-2 border border-transparent focus-within:border-[#19714f]/30 focus-within:bg-white transition-all w-64 lg:w-80">
-          <input
-            type="text"
-            placeholder="ابحث عن وصية، مستند..."
-            className="bg-transparent border-none outline-none w-full text-sm text-[#06281e] pr-2"
-          />
-          <RxMagnifyingGlass className="text-gray-400 text-lg mr-2" />
-        </div>
+          <RxPlus className="text-xl" />
+          <span className="hidden md:block">وصية جديدة</span>
+        </Link>
 
         <div className="relative" ref={notifRef}>
           <button
