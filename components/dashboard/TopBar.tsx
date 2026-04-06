@@ -186,9 +186,14 @@ export default function TopBar() {
               dir="rtl"
             >
               <div className="py-2">
-                <button className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
-                  <RxArchive className="text-lg text-gray-500" />
-                  عروضي
+                <button className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center justify-between group">
+                  <div className="flex items-center gap-2">
+                    <RxArchive className="text-lg text-gray-500" />
+                    عروضي
+                  </div>
+                  <span className="text-[10px] bg-[#c6a96a] text-[#06281e] px-1.5 py-0.5 rounded-sm font-bold opacity-80 group-hover:opacity-100 transition">
+                    نشط
+                  </span>
                 </button>
                 <button className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
                   <RxPerson className="text-lg text-gray-500" />

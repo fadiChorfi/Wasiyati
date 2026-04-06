@@ -38,7 +38,7 @@ export default async function DashboardLayout({
         {/* Main Content Area */}
         <div className="flex-1 md:mr-65 pb-16 md:pb-0 flex flex-col min-h-screen">
           <TopBar />
-          <main className="p-4 pt-24 md:pt-8 flex-1">{children}</main>
+          <main className="p-4 pt-24 md:p-0 md:pt-0 flex-1">{children}</main>
         </div>
 
         {/* Mobile Bottom Navigation */}

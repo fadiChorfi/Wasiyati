@@ -8,12 +8,14 @@ import {
   RxDownload,
   RxChatBubble,
   RxPlus,
+  RxLockClosed,
 } from "react-icons/rx";
 import Link from "next/link";
-import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
-import { useUser } from "@/context/UserContext";
 
 export default function DashboardPage() {
+  // Toggle this flag to test the UI for users with and without an active subscription
+  const hasActiveSubscription = false;
+
   const stats = [
     {
       label: "إجمالي الوصايا",
@@ -73,15 +75,15 @@ export default function DashboardPage() {
     }
   };
 
-  const profile = useUser();
+  /* const profile = useUser(); */
 
   return (
     <div className="space-y-5 px-4 md:px-6 py-4  pb-24 md:pb-6" dir="rtl">
       {/* WELCOME BANNER */}
-      <WelcomeBanner profile={profile} />
+      {/* <WelcomeBanner profile={profile} /> */}
 
       {/* STATS ROW */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-5">
         {stats.map((stat, idx) => {
           const Icon = stat.icon;
           return (
@@ -102,6 +104,58 @@ export default function DashboardPage() {
           );
         })}
       </div>
+
+      {/* ACTIVE SUBSCRIPTION WIDGET */}
+      {hasActiveSubscription ? (
+        <div className="bg-linear-to-l from-primary to-[#0a3f2f] rounded-3xl p-6 shadow-[0px_10px_30px_rgba(15,92,63,0.15)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-accent/20 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-12 h-12 bg-accent/20 rounded-2xl flex items-center justify-center text-accent shrink-0">
+              <RxIdCard className="text-2xl" />
+            </div>
+            <div>
+              <h3 className="text-primary-foreground font-black text-lg flex items-center gap-2">
+                الباقة الشاملة{" "}
+                <span className="bg-accent/20 text-accent text-[10px] px-2 py-0.5 rounded-full font-bold">
+                  نشط
+                </span>
+              </h3>
+              <p className="text-primary-foreground/70 text-xs mt-1">
+                يتبقى 90 يوم على صلاحية المراجعة القانونية
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/payments"
+            className="bg-accent text-primary px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:opacity-90 transition w-full md:w-auto text-center relative z-10"
+          >
+            إدارة الاشتراك
+          </Link>
+        </div>
+      ) : (
+        <div className="bg-surface border-2 border-dashed border-border rounded-3xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-12 h-12 bg-muted-foreground/10 rounded-2xl flex items-center justify-center text-muted-foreground shrink-0">
+              <RxIdCard className="text-2xl" />
+            </div>
+            <div>
+              <h3 className="text-foreground font-black text-lg flex items-center gap-2">
+                لا يوجد اشتراك فعال
+              </h3>
+              <p className="text-muted-foreground text-xs mt-1">
+                يرجى اختيار باقة للتمكن من البدء في تعبئة وصيتك ومراجعتها من قبل
+                خبرائنا
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/payments"
+            className="bg-primary text-primary-foreground px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:opacity-90 transition w-full md:w-auto text-center relative z-10 flex items-center justify-center gap-2"
+          >
+            اشترك الآن <RxArrowLeft />
+          </Link>
+        </div>
+      )}
 
       {/* CURRENT WILL STATUS */}
       <div className="bg-surface rounded-3xl border border-border p-6 shadow-sm">
@@ -129,22 +183,46 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            {/* Step 2: Completed */}
+            {/* Step 2: Subscription */}
             <div className="flex flex-col items-center">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-primary bg-primary text-primary-foreground font-bold shadow-sm">
-                <RxCheck className="text-lg" />
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 font-bold shadow-sm transition-all ${
+                  hasActiveSubscription
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-primary bg-surface text-primary ring-4 ring-primary/20 animate-pulse"
+                }`}
+              >
+                {hasActiveSubscription ? <RxCheck className="text-lg" /> : "2"}
               </div>
-              <span className="text-xs text-center mt-2 max-w-15 text-primary font-medium leading-tight">
+              <span
+                className={`text-xs text-center mt-2 max-w-15 leading-tight ${
+                  hasActiveSubscription
+                    ? "text-primary font-medium"
+                    : "text-foreground font-bold"
+                }`}
+              >
                 الاشتراك
               </span>
             </div>
 
-            {/* Step 3: Current */}
+            {/* Step 3: Form Fill */}
             <div className="flex flex-col items-center">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-primary bg-surface text-primary font-bold ring-4 ring-primary/20 animate-pulse shadow-sm">
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 font-bold shadow-sm transition-all ${
+                  hasActiveSubscription
+                    ? "border-primary bg-surface text-primary ring-4 ring-primary/20 animate-pulse"
+                    : "border-border bg-surface text-muted-foreground"
+                }`}
+              >
                 3
               </div>
-              <span className="text-xs text-center mt-2 max-w-15 text-foreground font-bold leading-tight">
+              <span
+                className={`text-xs text-center mt-2 max-w-15 leading-tight ${
+                  hasActiveSubscription
+                    ? "text-foreground font-bold"
+                    : "text-muted-foreground"
+                }`}
+              >
                 تعبئة النموذج
               </span>
             </div>
@@ -163,35 +241,86 @@ export default function DashboardPage() {
 
         {/* Current Step Card */}
         <div className="bg-background rounded-2xl p-4 border border-border">
-          <h4 className="text-sm font-bold text-foreground">تعبئة النموذج</h4>
-          <p className="text-xs text-muted-foreground leading-6 mt-1">
-            يرجى استكمال البيانات المطلوبة لتقديم الطلب لمراجعته من قبل خبرائنا.
-          </p>
-          <button className="bg-primary text-primary-foreground rounded-xl px-5 py-2.5 text-sm font-medium mt-4 hover:bg-primary/90 transition active:scale-95 shadow-sm inline-flex items-center gap-2">
-            متابعة النموذج <RxArrowLeft />
-          </button>
+          {hasActiveSubscription ? (
+            <>
+              <h4 className="text-sm font-bold text-foreground">
+                تعبئة النموذج
+              </h4>
+              <p className="text-xs text-muted-foreground leading-6 mt-1">
+                يرجى استكمال البيانات المطلوبة لتقديم الطلب لمراجعته من قبل
+                خبرائنا.
+              </p>
+              <button className="bg-primary text-primary-foreground rounded-xl px-5 py-2.5 text-sm font-medium mt-4 hover:bg-primary/90 transition active:scale-95 shadow-sm inline-flex items-center gap-2">
+                متابعة النموذج <RxArrowLeft />
+              </button>
+            </>
+          ) : (
+            <>
+              <h4 className="text-sm font-bold text-foreground">
+                اختر الباقة المناسبة
+              </h4>
+              <p className="text-xs text-muted-foreground leading-6 mt-1">
+                الخطوة التالية هي اختيار باقة الاشتراك للتمكن من الشروع في تجهيز
+                وتسجيل طلب وصيتك الخاصة.
+              </p>
+              <Link
+                href="/dashboard/payments"
+                className="bg-primary text-primary-foreground rounded-xl px-5 py-2.5 text-sm font-medium mt-4 hover:bg-primary/90 transition active:scale-95 shadow-sm inline-flex items-center gap-2"
+              >
+                الانتقال للدفع <RxArrowLeft />
+              </Link>
+            </>
+          )}
         </div>
       </div>
 
       {/* QUICK ACTIONS ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 my-5 mt-5">
         {/* Card 1 */}
-        <Link
-          href="/dashboard/new-request"
-          className="block bg-primary rounded-3xl p-6 relative overflow-hidden group hover:opacity-95 transition-opacity"
-        >
-          <div className="absolute top-4 left-4 bg-primary-foreground/20 rounded-xl p-2 text-primary-foreground">
-            <RxArrowLeft />
-          </div>
-          <div className="flex md:flex-col items-center md:items-start gap-4 md:gap-0">
-            <div className="bg-primary-foreground/20 rounded-2xl p-3 w-fit text-primary-foreground text-xl shrink-0">
-              <RxPlus />
+        {hasActiveSubscription ? (
+          <Link
+            href="/dashboard/new-request"
+            className="block bg-primary rounded-3xl p-6 relative overflow-hidden group hover:opacity-95 transition-opacity"
+          >
+            <div className="absolute top-4 left-4 bg-primary-foreground/20 rounded-xl p-2 text-primary-foreground">
+              <RxArrowLeft />
             </div>
-            <h4 className="text-base font-bold text-primary-foreground md:mt-4">
-              إنشاء وصية جديدة
-            </h4>
+            <div className="flex md:flex-col items-center md:items-start gap-4 md:gap-0">
+              <div className="bg-primary-foreground/20 rounded-2xl p-3 w-fit text-primary-foreground text-xl shrink-0">
+                <RxPlus />
+              </div>
+              <h4 className="text-base font-bold text-primary-foreground md:mt-4">
+                إنشاء وصية جديدة
+              </h4>
+            </div>
+          </Link>
+        ) : (
+          <div className="block bg-surface border border-border rounded-3xl p-6 relative overflow-hidden group">
+            <Link
+              href="/dashboard/payments"
+              className="absolute top-4 left-4 bg-primary/10 hover:bg-primary/20 rounded-xl p-2 text-primary transition-colors"
+            >
+              <RxArrowLeft />
+            </Link>
+            <div className="flex md:flex-col items-center md:items-start gap-4 md:gap-0">
+              <div className="bg-primary/10 rounded-2xl p-3 w-fit text-primary text-xl shrink-0 relative">
+                <RxPlus />
+                <div className="absolute -top-1 -right-1 bg-accent w-4 h-4 rounded-full flex items-center justify-center border-2 border-surface">
+                  <RxLockClosed className="text-[8px] text-primary" />
+                </div>
+              </div>
+              <div>
+                <h4 className="text-base font-bold text-foreground md:mt-4">
+                  إنشاء وصية جديدة
+                </h4>
+                <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1 font-medium">
+                  <RxLockClosed className="text-accent" />
+                  تتطلب باقة فعالة
+                </p>
+              </div>
+            </div>
           </div>
-        </Link>
+        )}
 
         {/* Card 2 */}
         <button className="bg-surface rounded-3xl p-6 border border-border text-right hover:shadow-md transition-shadow flex md:flex-col items-center md:items-start gap-4 md:gap-0">

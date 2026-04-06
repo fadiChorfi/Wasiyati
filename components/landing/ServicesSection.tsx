@@ -23,12 +23,6 @@ const services = [
       "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=400",
   },
   {
-    title: "وصية بالعقار",
-    description:
-      "توثيق وتنظيم توزيع العقارات والأملاك العقارية بطريقة قانونية واضحة تمنع النزاعات المستقبلية.",
-    image: "/estate.webp",
-  },
-  {
     title: "وصية مالية",
     description:
       "تنظيم الأموال والحسابات المالية والاستثمارات وتحديد آلية توزيعها بشكل قانوني وآمن.",
@@ -91,7 +85,7 @@ export default function ServicesSection() {
             setHoverStyle((prev) => ({ ...prev, opacity: 0 }))
           }
         >
-          <div className="grid gap-8 md:grid-cols-4 relative z-10">
+          <div className="grid gap-8 md:grid-cols-3 relative z-10">
             {services.map((service) => (
               <div
                 key={service.title}
