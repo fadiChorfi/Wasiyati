@@ -13,7 +13,7 @@ const services = [
     description:
       "خدمة تمكّنك من إنشاء وصية شاملة تشمل أموالك وأعمالك، مع احترام أحكام الشريعة الإسلامية والقانون الجزائري.",
     image:
-      "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&q=80&w=400",
+      "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=400",
   },
   {
     title: "وصية بالأموال",
