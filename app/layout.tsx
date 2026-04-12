@@ -41,6 +41,7 @@ const cairo = localFont({
   display: "swap",
 });
 
+
 export const metadata: Metadata = {
   title: "وصيتي",
   description: "منصة وصيتي",

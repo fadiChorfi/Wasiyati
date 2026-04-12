@@ -53,12 +53,15 @@ export default function Navbar() {
     >
       <div className="flex items-center justify-between rounded-full bg-white px-2.5 py-2.5 shadow-sm mx-auto max-w-6xl relative z-50 transition-all duration-300">
         <div className="flex items-center gap-2">
-          <ActionButton
-            label="احصل على استشارة"
-            variant="primary"
-            className="text-base font-bold hidden md:inline-flex text-white"
-            icon={<RxArrowTopLeft />}
-          />
+          <Link href="/consultation">
+            <ActionButton
+              label="احصل على استشارة"
+              variant="primary"
+              className="text-base font-bold hidden md:inline-flex text-white"
+              icon={<RxArrowTopLeft />}
+            />
+          </Link>
+          
           <button
             className="md:hidden flex items-center justify-center p-2.5 rounded-full bg-black/5 text-foreground hover:bg-black/10 transition-colors"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -137,7 +140,7 @@ export default function Navbar() {
         })}
         <div className="mt-2 pt-4 border-t border-black/5">
           <Link
-            href="#contact"
+            href="/consultation"
             onClick={() => setIsMobileMenuOpen(false)}
             className="flex w-full items-center justify-center gap-2 bg-primary text-primary-foreground py-3.5 rounded-2xl text-sm font-bold shadow-sm active:scale-95 transition-transform"
           >
