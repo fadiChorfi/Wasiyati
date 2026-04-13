@@ -27,7 +27,7 @@ export default function AboutWillBanner() {
           </div>
 
           <div className="relative z-10 shrink-0 w-full md:w-auto flex justify-end">
-            <Link href="/about-will" className="w-full md:w-auto">
+            <Link href="/about-will" className="w-full md:w-auto " dir="ltr">
               <ActionButton
                 label="اقرأ الدليل الآن"
                 variant="primary"
