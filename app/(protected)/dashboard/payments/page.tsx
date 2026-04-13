@@ -8,10 +8,31 @@ import {
   RxLockClosed,
   RxStar,
   RxArrowLeft,
+  RxUpload,
 } from "react-icons/rx";
 
 export default function PaymentsPage() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>("medium");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type.startsWith("image/")) {
+        const url = URL.createObjectURL(file);
+        setPreviewUrl(url);
+      } else if (file.type === "application/pdf") {
+        // Just show a generic PDF placeholder or the file name
+        setPreviewUrl("pdf-placeholder");
+      }
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setTimeout(() => setPreviewUrl(null), 200); // clear preview after animation
+  };
 
   const plans = [
     {
@@ -183,17 +204,140 @@ export default function PaymentsPage() {
 
               {/* CTA Button */}
               <button
-                className={`w-full py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 ${
-                  plan.colors.btn
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedPlan(plan.id);
+                  if (isSelected) {
+                    setIsModalOpen(true);
+                  }
+                }}
+                className={`w-full py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 mt-auto ${
+                  isSelected
+                    ? "bg-primary text-primary-foreground font-bold shadow-md hover:bg-primary/90"
+                    : plan.colors.btn
                 }`}
               >
-                {isSelected ? "الباقة المختارة" : "اختيار الباقة"}
-                {!isSelected && <RxArrowLeft />}
+                {isSelected ? "رفع إيصال الدفع" : "تحديد الباقة"}
+                {isSelected ? (
+                  <RxUpload className="text-base" />
+                ) : (
+                  <RxArrowLeft />
+                )}
               </button>
             </div>
           );
         })}
       </div>
+
+      {/* UPLOAD RECEIPT MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4 animate-in fade-in duration-200">
+          <div className="bg-surface w-full max-w-sm md:max-w-md rounded-3xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-5 border-b border-border">
+              <h2 className="text-xl font-bold text-foreground">
+                رفع إيصال الدفع
+              </h2>
+              <button
+                aria-label="إغلاق"
+                title="إغلاق"
+                onClick={closeModal}
+                className="text-muted-foreground hover:text-foreground transition-colors p-2 bg-gray-100 hover:bg-gray-200 rounded-full"
+              >
+                <RxCross2 className="text-xl" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              <p className="text-sm text-muted-foreground">
+                لإتمام الاشتراك في الباقة{" "}
+                <span className="font-bold text-primary">
+                  {plans.find((p) => p.id === selectedPlan)?.name}
+                </span>
+                ، يرجى الاستمرار برفع إيصال التحويل البنكي أو البريدي الخاص بك.
+                سيتم تفعيل حسابك فور التحقق.
+              </p>
+
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 text-center">
+                <p className="text-xs text-primary font-bold">
+                  الحساب البريدي (CCP)
+                </p>
+                <p
+                  className="text-base font-black text-foreground mt-1 tracking-[0.2em]"
+                  dir="ltr"
+                >
+                  12345678 99
+                </p>
+                <p className="text-xs text-muted-foreground mt-2 font-medium">
+                  الاسم: وصيتي
+                </p>
+              </div>
+
+              {previewUrl ? (
+                <div className="relative border-2 border-border rounded-2xl overflow-hidden group h-40 flex items-center justify-center bg-gray-50">
+                  {previewUrl === "pdf-placeholder" ? (
+                    <div className="flex flex-col items-center gap-2 text-primary">
+                      <RxFileText className="text-4xl" />
+                      <p className="text-sm font-bold">ملف PDF مرفق</p>
+                    </div>
+                  ) : (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={previewUrl}
+                      alt="معاينة الإيصال"
+                      className="w-full h-full object-contain"
+                    />
+                  )}
+
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <button
+                      onClick={() => setPreviewUrl(null)}
+                      title="حذف الصورة"
+                      className="bg-white/90 text-red-500 rounded-full p-3 shadow-md hover:bg-white hover:scale-110 transition-all"
+                    >
+                      <RxCross2 className="text-2xl font-bold" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label className="block border-2 border-dashed border-border rounded-2xl p-6 text-center hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer group">
+                  <RxUpload className="text-3xl text-gray-400 mx-auto mb-3 group-hover:text-primary transition-colors" />
+                  <p className="text-sm font-bold text-foreground">
+                    اضغط هنا لاختيار الملف
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    (PNG, JPG, PDF) بحد أقصى 5 ميجابايت
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                </label>
+              )}
+            </div>
+
+            <div className="p-5 bg-background border-t border-border flex gap-3">
+              <button
+                onClick={() => {
+                  alert("تم إرسال إيصالك للمراجعة بنجاح! سيتم إشعارك قريباً.");
+                  closeModal();
+                }}
+                disabled={!previewUrl}
+                className="flex-1 bg-primary text-primary-foreground py-3 rounded-xl text-sm font-bold shadow-sm hover:opacity-90 transition active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+              >
+                تأكيد الإرسال
+              </button>
+              <button
+                onClick={closeModal}
+                className="px-6 py-3 rounded-xl text-sm font-bold bg-surface border border-border text-foreground hover:bg-gray-50 transition active:scale-95"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

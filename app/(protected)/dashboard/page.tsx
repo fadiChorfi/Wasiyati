@@ -11,10 +11,13 @@ import {
   RxLockClosed,
 } from "react-icons/rx";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function DashboardPage() {
-  // Toggle this flag to test the UI for users with and without an active subscription
-  const hasActiveSubscription = false;
+  const hasActiveSubscription = true;
+
+
+  const router = useRouter();
 
   const stats = [
     {
@@ -250,7 +253,7 @@ export default function DashboardPage() {
                 يرجى استكمال البيانات المطلوبة لتقديم الطلب لمراجعته من قبل
                 خبرائنا.
               </p>
-              <button className="bg-primary text-primary-foreground rounded-xl px-5 py-2.5 text-sm font-medium mt-4 hover:bg-primary/90 transition active:scale-95 shadow-sm inline-flex items-center gap-2">
+              <button onClick={ ()=> router.push('/dashboard/new-request') } className="bg-primary text-primary-foreground rounded-xl px-5 py-2.5 text-sm font-medium mt-4 hover:bg-primary/90 transition active:scale-95 shadow-sm inline-flex items-center gap-2">
                 متابعة النموذج <RxArrowLeft />
               </button>
             </>
