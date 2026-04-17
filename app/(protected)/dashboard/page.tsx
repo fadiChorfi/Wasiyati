@@ -11,13 +11,21 @@ import {
   RxLockClosed,
 } from "react-icons/rx";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 export default function DashboardPage() {
-  const hasActiveSubscription = true;
+  const currentSubscription = useSubscription();
+  const hasActiveSubscription = currentSubscription?.status === "active";
+  const hasPendingSubscription = currentSubscription?.status === "pending";
 
-
-  const router = useRouter();
+  const diffDays = currentSubscription?.started_at
+    ? Math.ceil(
+        (new Date(currentSubscription.started_at).getTime() +
+          30 * 24 * 60 * 60 * 1000 -
+          new Date().getTime()) /
+          (1000 * 60 * 60 * 24),
+      )
+    : 0;
 
   const stats = [
     {
@@ -108,7 +116,7 @@ export default function DashboardPage() {
         })}
       </div>
 
-      {/* ACTIVE SUBSCRIPTION WIDGET */}
+      {/* SUBSCRIPTION WIDGET */}
       {hasActiveSubscription ? (
         <div className="bg-linear-to-l from-primary to-[#0a3f2f] rounded-3xl p-6 shadow-[0px_10px_30px_rgba(15,92,63,0.15)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-accent/20 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
@@ -118,13 +126,14 @@ export default function DashboardPage() {
             </div>
             <div>
               <h3 className="text-primary-foreground font-black text-lg flex items-center gap-2">
-                الباقة الشاملة{" "}
+                {currentSubscription?.offer?.name_ar || "باقة نشطة"}
                 <span className="bg-accent/20 text-accent text-[10px] px-2 py-0.5 rounded-full font-bold">
                   نشط
                 </span>
               </h3>
               <p className="text-primary-foreground/70 text-xs mt-1">
-                يتبقى 90 يوم على صلاحية المراجعة القانونية
+                يتبقى {diffDays > 0 ? diffDays : 0} يوم على صلاحية المراجعة
+                القانونية
               </p>
             </div>
           </div>
@@ -133,6 +142,32 @@ export default function DashboardPage() {
             className="bg-accent text-primary px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:opacity-90 transition w-full md:w-auto text-center relative z-10"
           >
             إدارة الاشتراك
+          </Link>
+        </div>
+      ) : hasPendingSubscription ? (
+        <div className="bg-blue-50 border border-blue-200 rounded-3xl p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden shadow-sm">
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 shrink-0">
+              <RxClock className="text-2xl animate-pulse" />
+            </div>
+            <div>
+              <h3 className="text-blue-900 font-black text-lg flex items-center gap-2">
+                الاشتراك قيد المراجعة
+                <span className="bg-blue-200 text-blue-800 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                  قيد الانتظار
+                </span>
+              </h3>
+              <p className="text-blue-700 text-xs mt-1">
+                لقد استلمنا إيصال الدفع. سنقوم بتفعيل باقتك فور مراجعته من قبل
+                الإدارة.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/payments"
+            className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:bg-blue-700 transition w-full md:w-auto text-center relative z-10 flex items-center justify-center gap-2"
+          >
+            عرض التفاصيل <RxArrowLeft />
           </Link>
         </div>
       ) : (
@@ -190,17 +225,27 @@ export default function DashboardPage() {
             <div className="flex flex-col items-center">
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center border-2 font-bold shadow-sm transition-all ${
-                  hasActiveSubscription
-                    ? "border-primary bg-primary text-primary-foreground"
+                  hasActiveSubscription || hasPendingSubscription
+                    ? hasActiveSubscription
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-blue-500 bg-blue-500 text-white ring-4 ring-blue-500/20 animate-pulse"
                     : "border-primary bg-surface text-primary ring-4 ring-primary/20 animate-pulse"
                 }`}
               >
-                {hasActiveSubscription ? <RxCheck className="text-lg" /> : "2"}
+                {hasActiveSubscription ? (
+                  <RxCheck className="text-lg" />
+                ) : hasPendingSubscription ? (
+                  <RxClock className="text-lg animate-pulse" />
+                ) : (
+                  "2"
+                )}
               </div>
               <span
                 className={`text-xs text-center mt-2 max-w-15 leading-tight ${
-                  hasActiveSubscription
-                    ? "text-primary font-medium"
+                  hasActiveSubscription || hasPendingSubscription
+                    ? hasActiveSubscription
+                      ? "text-primary font-medium"
+                      : "text-blue-600 font-bold"
                     : "text-foreground font-bold"
                 }`}
               >
@@ -253,9 +298,28 @@ export default function DashboardPage() {
                 يرجى استكمال البيانات المطلوبة لتقديم الطلب لمراجعته من قبل
                 خبرائنا.
               </p>
-              <button onClick={ ()=> router.push('/dashboard/new-request') } className="bg-primary text-primary-foreground rounded-xl px-5 py-2.5 text-sm font-medium mt-4 hover:bg-primary/90 transition active:scale-95 shadow-sm inline-flex items-center gap-2">
+              <Link
+                href="/dashboard/new-request"
+                className="bg-primary text-primary-foreground rounded-xl px-5 py-2.5 text-sm font-medium mt-4 hover:bg-primary/90 transition active:scale-95 shadow-sm inline-flex items-center gap-2"
+              >
                 متابعة النموذج <RxArrowLeft />
-              </button>
+              </Link>
+            </>
+          ) : hasPendingSubscription ? (
+            <>
+              <h4 className="text-sm font-bold text-blue-800">
+                الاشتراك قيد المراجعة
+              </h4>
+              <p className="text-xs text-blue-700 leading-6 mt-1">
+                لا يمكنك الشروع في تعبئة النموذج حتى تتم الموافقة على اشتراكك.
+                يرجى الانتظار.
+              </p>
+              <Link
+                href="/dashboard/payments"
+                className="bg-blue-600 text-white rounded-xl px-5 py-2.5 text-sm font-medium mt-4 hover:bg-blue-700 transition active:scale-95 shadow-sm inline-flex items-center gap-2"
+              >
+                تتبع الطلب <RxArrowLeft />
+              </Link>
             </>
           ) : (
             <>
