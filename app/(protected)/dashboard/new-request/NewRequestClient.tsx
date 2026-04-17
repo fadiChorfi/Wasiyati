@@ -10,7 +10,11 @@ import {
   RxInfoCircled,
 } from "react-icons/rx";
 
-export default function NewRequestClient() {
+export default function NewRequestClient({
+  hasActiveSubscription,
+}: {
+  hasActiveSubscription: boolean;
+}) {
   const [selectedWill, setSelectedWill] = useState<string | null>(null);
   const [isTermsAccepted, setIsTermsAccepted] = useState(false);
 
@@ -41,13 +45,13 @@ export default function NewRequestClient() {
     },
   ];
 
-  const subscription = {
+  /* const subscription = {
     isPaid: true,
     status: "cancelled",
   };
 
   const hasActiveSubscription =
-    subscription.isPaid && subscription.status === "active";
+    subscription.isPaid && subscription.status === "active"; */
 
   const openModal = (id: string) => {
     setSelectedWill(id);
@@ -115,27 +119,24 @@ export default function NewRequestClient() {
       {/* TERMS MODAL */}
       {selectedWill &&
         (!hasActiveSubscription ? (
-          <div>
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4 animate-in fade-in duration-200">
-              <div className="bg-surface w-full max-w-lg md:max-w-2xl rounded-3xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
-                <div className="flex justify-between items-center p-5 border-b border-border shrink-0">
-                  <h2 className="text-xl font-bold text-foreground">
-                    تنبيه الاشتراك
-                  </h2>
-                  <button
-                    onClick={closeModal}
-                    className="text-muted-foreground hover:text-foreground transition-colors p-2 bg-gray-100 hover:bg-gray-200 rounded-full"
-                    aria-label="إغلاق"
-                  >
-                    <RxCross2 className="text-xl" />
-                  </button>
-                </div>
-                <div className="p-6 md:p-8 space-y-6 overflow-y-auto flex-1 flex items-center justify-center">
-                  <p className="text-lg font-bold text-foreground text-center">
-                    لا يوجد اشتراك فعال. يرجى الاشتراك لتتمكن من إنشاء وصية.
-                  </p>
-                </div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4 animate-in fade-in duration-200">
+            <div className="bg-surface w-full max-w-sm rounded-3xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col p-8 text-center text-red-600 border border-red-100">
+              <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shrink-0">
+                <RxCross2 className="text-3xl" />
               </div>
+              <h2 className="text-2xl font-black text-foreground mb-3">
+                تنبيه الاشتراك
+              </h2>
+              <p className="text-sm font-bold text-muted-foreground leading-7 mb-8">
+                عذراً، يجب أن يكون لديك اشتراك فعال لتتمكن من إنشاء وصية جديدة
+                ومتابعة الإجراءات.
+              </p>
+              <button
+                onClick={closeModal}
+                className="w-full bg-red-50 hover:bg-red-100 text-red-600 py-3.5 rounded-xl text-sm font-bold transition-all"
+              >
+                إغلاق
+              </button>
             </div>
           </div>
         ) : (
