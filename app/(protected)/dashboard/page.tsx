@@ -196,7 +196,7 @@ export default function DashboardPage() {
       )}
 
       {/* CURRENT WILL STATUS */}
-      <div className="bg-surface rounded-3xl border border-border p-6 shadow-sm">
+      {/* <div className="bg-surface rounded-3xl border border-border p-6 shadow-sm">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-base font-bold text-foreground">وصيتك الحالية</h3>
           <span className="text-xs font-medium bg-primary/10 text-primary rounded-full px-3 py-1">
@@ -204,14 +204,11 @@ export default function DashboardPage() {
           </span>
         </div>
 
-        {/* Stepper */}
         <div className="relative w-full mb-8 z-10">
-          {/* Progress Lines */}
           <div className="absolute top-5 left-0 right-0 h-0.5 bg-border -z-10 mx-5"></div>
           <div className="absolute top-5 right-0 w-[50%] h-0.5 bg-primary -z-10 mx-5"></div>
 
           <div className="flex justify-between items-start">
-            {/* Step 1: Completed */}
             <div className="flex flex-col items-center">
               <div className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-primary bg-primary text-primary-foreground font-bold shadow-sm">
                 <RxCheck className="text-lg" />
@@ -221,7 +218,6 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            {/* Step 2: Subscription */}
             <div className="flex flex-col items-center">
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center border-2 font-bold shadow-sm transition-all ${
@@ -253,7 +249,6 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            {/* Step 3: Form Fill */}
             <div className="flex flex-col items-center">
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center border-2 font-bold shadow-sm transition-all ${
@@ -275,7 +270,6 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            {/* Step 4: Upcoming */}
             <div className="flex flex-col items-center">
               <div className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-border bg-surface text-muted-foreground font-bold shadow-sm">
                 4
@@ -287,7 +281,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Current Step Card */}
         <div className="bg-background rounded-2xl p-4 border border-border">
           {hasActiveSubscription ? (
             <>
@@ -339,7 +332,7 @@ export default function DashboardPage() {
             </>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* QUICK ACTIONS ROW */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 my-5 mt-5">
