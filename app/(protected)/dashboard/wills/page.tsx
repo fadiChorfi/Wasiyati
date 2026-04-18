@@ -11,65 +11,101 @@ import {
   RxCross2,
   RxTrash,
 } from "react-icons/rx";
+import { Will, WillType, WillStatus } from "@/types/database";
+import { useRouter } from "next/navigation";
 
-type WillStatus = "مكتملة" | "قيد المراجعة" | "بحاجة تعديل" | "مسودة";
-type WillType = "وصية عامة" | "وصية مالية" | "وصية بالأعمال" | "وصية بالأحسان";
-
-interface Will {
-  id: string;
-  type: WillType;
-  status: WillStatus;
-  dateStr: string;
-  dateObj: Date;
-  updatedAt: string;
-  progress: number;
-  stepName: string;
+// Extend the DB Will interface for UI specific needs
+interface WillUI extends Will {
+  progress?: number;
+  stepName?: string;
   reviewerNotes?: string;
   documents?: { name: string; url: string }[];
 }
 
-const mockWills: Will[] = [
+const getWillTypeLabel = (type: WillType): string => {
+  switch (type) {
+    case "general":
+      return "وصية عامة";
+    case "financial":
+      return "وصية مالية";
+    case "business":
+      return "وصية بالأعمال";
+    default:
+      return "وصية غير محددة";
+  }
+};
+
+const getWillStatusLabel = (status: WillStatus): string => {
+  switch (status) {
+    case "approved":
+      return "مكتملة";
+    case "under_review":
+      return "قيد المراجعة";
+    case "submitted":
+      return "تم الإرسال";
+    case "rejected":
+      return "بحاجة تعديل";
+    case "draft":
+      return "مسودة";
+    default:
+      return "غير معروف";
+  }
+};
+
+const mockWills: WillUI[] = [
   {
-    id: "# WAS-2026-002",
-    type: "وصية مالية",
-    status: "قيد المراجعة",
-    dateStr: "20 مارس 2026",
-    dateObj: new Date("2026-03-20"),
-    updatedAt: "21 مارس 2026",
+    id: "WAS-2026-002",
+    user_id: "user-1",
+    subscription_id: "sub-1",
+    will_type: "financial",
+    status: "under_review",
+    form_data: {},
+    created_at: "2026-03-20T00:00:00Z",
+    updated_at: "2026-03-21T00:00:00Z",
     progress: 75,
     stepName: "الخطوة 3 من 4: مراجعة الخبير",
     documents: [{ name: "مسودة_الحسابات.pdf", url: "#" }],
   },
   {
-    id: "# WAS-2026-005",
-    type: "وصية عامة",
-    status: "قيد المراجعة",
-    dateStr: "28 مارس 2026",
-    dateObj: new Date("2026-03-28"),
-    updatedAt: "29 مارس 2026",
+    id: "WAS-2026-005",
+    user_id: "user-1",
+    subscription_id: "sub-1",
+    will_type: "general",
+    status: "under_review",
+    form_data: {},
+    created_at: "2026-03-28T00:00:00Z",
+    updated_at: "2026-03-29T00:00:00Z",
     progress: 75,
     stepName: "الخطوة 3 من 4: المراجعة والتدقيق القانوني",
   },
 ];
 
 const priorityMap: Record<WillStatus, number> = {
-  "بحاجة تعديل": 1,
-  "قيد المراجعة": 2,
-  مسودة: 3,
-  مكتملة: 4,
+  rejected: 1,
+  under_review: 2,
+  submitted: 3,
+  draft: 4,
+  approved: 5,
 };
 
 export default function MyWillsPage() {
   const [loading, setLoading] = useState(true);
-  const [wills, setWills] = useState<Will[]>([]);
+  const [wills, setWills] = useState<WillUI[]>([]);
   const [sort] = useState<"الأولوية" | "الأحدث" | "الأقدم" | "النوع">("الأحدث");
-  const [selectedWill, setSelectedWill] = useState<Will | null>(null);
+  const [selectedWill, setSelectedWill] = useState<WillUI | null>(null);
   const [deleteWillId, setDeleteWillId] = useState<string | null>(null);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 
+  const router = useRouter();
+
   useEffect(() => {
+    // Simulated fetching
     const timer = setTimeout(() => {
-      setWills(mockWills.filter((w) => w.status === "قيد المراجعة"));
+      setWills(
+        mockWills.filter(
+          (w) => w.status === "under_review" || w.status === "draft",
+        ),
+      );
       setLoading(false);
     }, 1000);
     return () => clearTimeout(timer);
@@ -94,60 +130,67 @@ export default function MyWillsPage() {
   }, []);
 
   const sortedAndFilteredWills = wills.sort((a, b) => {
+    const dateA = new Date(a.created_at).getTime();
+    const dateB = new Date(b.created_at).getTime();
+
     if (sort === "الأولوية") {
       if (priorityMap[a.status] !== priorityMap[b.status]) {
         return priorityMap[a.status] - priorityMap[b.status];
       }
-      return b.dateObj.getTime() - a.dateObj.getTime();
+      return dateB - dateA;
     } else if (sort === "الأحدث") {
-      return b.dateObj.getTime() - a.dateObj.getTime();
+      return dateB - dateA;
     } else if (sort === "الأقدم") {
-      return a.dateObj.getTime() - b.dateObj.getTime();
+      return dateA - dateB;
     } else if (sort === "النوع") {
-      return a.type.localeCompare(b.type, "ar");
+      return getWillTypeLabel(a.will_type).localeCompare(
+        getWillTypeLabel(b.will_type),
+        "ar",
+      );
     }
     return 0;
   });
 
   const getTopBarColor = (type: WillType) => {
     switch (type) {
-      case "وصية عامة":
+      case "general":
         return "bg-primary";
-      case "وصية مالية":
+      case "financial":
         return "bg-accent";
-      case "وصية بالأعمال":
+      case "business":
         return "bg-primary/60";
-      case "وصية بالأحسان":
-        return "bg-accent/60";
+      default:
+        return "bg-primary";
     }
   };
 
   const getIconColors = (type: WillType) => {
     switch (type) {
-      case "وصية عامة":
+      case "general":
         return "bg-primary/10 text-primary";
-      case "وصية مالية":
+      case "financial":
         return "bg-accent/10 text-accent-foreground";
-      case "وصية بالأعمال":
+      case "business":
         return "bg-primary/10 text-primary";
-      case "وصية بالأحسان":
-        return "bg-accent/10 text-accent-foreground";
+      default:
+        return "bg-primary/10 text-primary";
     }
   };
 
   const getBadgeColors = (status: WillStatus) => {
     switch (status) {
-      case "مكتملة":
+      case "approved":
         return { bg: "bg-primary/10", text: "text-primary", dot: "bg-primary" };
-      case "قيد المراجعة":
+      case "under_review":
+      case "submitted":
         return {
           bg: "bg-accent/10",
           text: "text-accent-foreground",
           dot: "bg-accent",
         };
-      case "بحاجة تعديل":
+      case "rejected":
         return { bg: "bg-red-500/10", text: "text-red-600", dot: "bg-red-500" };
-      case "مسودة":
+      case "draft":
         return {
           bg: "bg-border",
           text: "text-muted-foreground",
@@ -158,20 +201,21 @@ export default function MyWillsPage() {
 
   const getPrimaryButtonText = (status: WillStatus) => {
     switch (status) {
-      case "مسودة":
+      case "draft":
         return "متابعة الإدخال →";
-      case "قيد المراجعة":
+      case "submitted":
+      case "under_review":
         return "عرض التفاصيل →";
-      case "بحاجة تعديل":
+      case "rejected":
         return "تصحيح الآن →";
-      case "مكتملة":
+      case "approved":
         return "عرض الوصية →";
     }
   };
 
   const getPrimaryButtonClasses = (status: WillStatus) => {
     switch (status) {
-      case "بحاجة تعديل":
+      case "rejected":
         return "bg-red-600 text-white hover:bg-red-700";
       default:
         return "bg-primary text-primary-foreground hover:bg-primary/90";
@@ -195,7 +239,10 @@ export default function MyWillsPage() {
             إدارة وصاياك القانونية ومتابعة حالتها
           </p>
         </div>
-        <button className="bg-primary text-primary-foreground rounded-xl px-5 py-2.5 font-medium text-sm hover:bg-primary/90 transition active:scale-95 shadow-sm flex items-center justify-center gap-2 max-md:w-full">
+        <button
+          onClick={() => router.push("/dashboard/new-request")}
+          className="bg-primary text-primary-foreground rounded-xl px-5 py-2.5 font-medium text-sm hover:bg-primary/90 transition active:scale-95 shadow-sm flex items-center justify-center gap-2 max-md:w-full"
+        >
           <span>
             <RxPlus className="text-lg" />
           </span>
@@ -262,7 +309,7 @@ export default function MyWillsPage() {
                 >
                   {/* Top Bar */}
                   <div
-                    className={`h-1 w-full ${getTopBarColor(will.type)}`}
+                    className={`h-1 w-full ${getTopBarColor(will.will_type)}`}
                   ></div>
 
                   {/* Header */}
@@ -272,16 +319,16 @@ export default function MyWillsPage() {
                   >
                     <div className="flex gap-3">
                       <div
-                        className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${getIconColors(will.type)}`}
+                        className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${getIconColors(will.will_type)}`}
                       >
                         <RxFileText className="text-xl" />
                       </div>
                       <div>
                         <h3 className="text-base font-bold text-foreground mt-1">
-                          {will.type}
+                          {getWillTypeLabel(will.will_type)}
                         </h3>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {will.id}
+                          {will.id.replace("WAS-", "# WAS-")}
                         </p>
                       </div>
                     </div>
@@ -291,7 +338,7 @@ export default function MyWillsPage() {
                       <div
                         className={`w-1.5 h-1.5 rounded-full ${b.dot}`}
                       ></div>
-                      {will.status}
+                      {getWillStatusLabel(will.status)}
                     </div>
                   </div>
 
@@ -306,12 +353,16 @@ export default function MyWillsPage() {
                       تاريخ الإنشاء
                     </span>
                     <span className="text-xs text-foreground font-medium">
-                      {will.dateStr}
+                      {new Date(will.created_at).toLocaleDateString("ar-DZ", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
                     </span>
                   </div>
 
                   {/* Progress (if not complete or draft) */}
-                  {will.status !== "مكتملة" && will.status !== "مسودة" && (
+                  {will.status !== "approved" && will.status !== "draft" && (
                     <div
                       className="px-5 pb-3 cursor-pointer"
                       onClick={() => setSelectedWill(will)}
@@ -331,7 +382,7 @@ export default function MyWillsPage() {
                         ></div>
                       </div>
 
-                      {will.status === "بحاجة تعديل" && (
+                      {will.status === "rejected" && (
                         <div className="bg-red-500/10 rounded-xl px-3 py-2 mt-2 flex items-center gap-2">
                           <RxExclamationTriangle className="text-red-500 text-sm shrink-0" />
                           <span className="text-red-600 text-xs font-medium">
@@ -399,7 +450,7 @@ export default function MyWillsPage() {
                       )}
                     </div>
 
-                    {will.status === "مكتملة" && (
+                    {will.status === "approved" && (
                       <button
                         title="تحميل PDF"
                         className="bg-background border border-border hover:bg-border/50 rounded-xl p-2 w-10 h-10 flex items-center justify-center text-primary transition-colors"
@@ -433,14 +484,14 @@ export default function MyWillsPage() {
           <div className="relative w-full md:w-120 bg-background h-full shadow-2xl flex flex-col transform transition-transform duration-300 ease-out translate-x-0">
             {/* Drawer Header */}
             <div
-              className={`p-6 flex items-start justify-between ${getTopBarColor(selectedWill.type)}`}
+              className={`p-6 flex items-start justify-between ${getTopBarColor(selectedWill.will_type)}`}
             >
               <div>
                 <h2 className="text-primary-foreground text-lg font-bold">
-                  {selectedWill.type}
+                  {getWillTypeLabel(selectedWill.will_type)}
                 </h2>
                 <p className="text-primary-foreground/60 text-xs mt-0.5">
-                  {selectedWill.id}
+                  {selectedWill.id.replace("WAS-", "# WAS-")}
                 </p>
               </div>
               <div className="flex items-center gap-4">
@@ -450,7 +501,7 @@ export default function MyWillsPage() {
                   <div
                     className={`w-1.5 h-1.5 rounded-full bg-primary-foreground`}
                   ></div>
-                  {selectedWill.status}
+                  {getWillStatusLabel(selectedWill.status)}
                 </div>
                 <button
                   title="إغلاق النافذة"
@@ -473,7 +524,7 @@ export default function MyWillsPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">النوع</span>
                     <span className="text-sm text-foreground font-medium">
-                      {selectedWill.type}
+                      {getWillTypeLabel(selectedWill.will_type)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -481,7 +532,7 @@ export default function MyWillsPage() {
                       الحالة
                     </span>
                     <span className="text-sm text-foreground font-medium">
-                      {selectedWill.status}
+                      {getWillStatusLabel(selectedWill.status)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -489,7 +540,14 @@ export default function MyWillsPage() {
                       تاريخ الإنشاء
                     </span>
                     <span className="text-sm text-foreground font-medium">
-                      {selectedWill.dateStr}
+                      {new Date(selectedWill.created_at).toLocaleDateString(
+                        "ar-DZ",
+                        {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        },
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -497,7 +555,14 @@ export default function MyWillsPage() {
                       آخر تعديل
                     </span>
                     <span className="text-sm text-foreground font-medium">
-                      {selectedWill.updatedAt}
+                      {new Date(selectedWill.updated_at).toLocaleDateString(
+                        "ar-DZ",
+                        {
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        },
+                      )}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -505,14 +570,14 @@ export default function MyWillsPage() {
                       رقم الملف
                     </span>
                     <span className="text-sm text-foreground font-medium">
-                      {selectedWill.id.replace("# ", "")}
+                      {selectedWill.id.replace("# ", "").replace("WAS-", "")}
                     </span>
                   </div>
                 </div>
               </div>
 
               {/* Block 2: Notes (If Needs Fix) */}
-              {selectedWill.status === "بحاجة تعديل" &&
+              {selectedWill.status === "rejected" &&
                 selectedWill.reviewerNotes && (
                   <div>
                     <h4 className="text-xs text-red-500 font-medium mb-3">
@@ -542,48 +607,52 @@ export default function MyWillsPage() {
                           البيانات الأساسية
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {selectedWill.dateStr}
+                          {new Date(selectedWill.created_at).toLocaleDateString(
+                            "ar-DZ",
+                          )}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex gap-4 relative z-10 mb-4">
-                      {selectedWill.progress >= 50 ? (
+                      {(selectedWill.progress ?? 0) >= 50 ? (
                         <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground shrink-0 border-2 border-surface">
                           <RxCheck />
                         </div>
                       ) : (
                         <div
-                          className={`w-8 h-8 rounded-full ${selectedWill.status === "مسودة" ? "bg-primary ring-4 ring-primary/20 animate-pulse" : "bg-border"} shrink-0 border-2 border-surface`}
+                          className={`w-8 h-8 rounded-full ${selectedWill.status === "draft" ? "bg-primary ring-4 ring-primary/20 animate-pulse" : "bg-border"} shrink-0 border-2 border-surface`}
                         ></div>
                       )}
                       <div className="pt-1">
                         <p
-                          className={`text-sm ${selectedWill.progress >= 50 ? "font-medium text-foreground" : selectedWill.status === "مسودة" ? "font-bold text-primary" : "text-muted-foreground"}`}
+                          className={`text-sm ${(selectedWill.progress ?? 0) >= 50 ? "font-medium text-foreground" : selectedWill.status === "draft" ? "font-bold text-primary" : "text-muted-foreground"}`}
                         >
                           تفاصيل الأصول والمستفيدين
                         </p>
-                        {selectedWill.progress >= 50 && (
+                        {(selectedWill.progress ?? 0) >= 50 && (
                           <p className="text-xs text-muted-foreground mt-0.5">
-                            {selectedWill.updatedAt}
+                            {new Date(
+                              selectedWill.updated_at,
+                            ).toLocaleDateString("ar-DZ")}
                           </p>
                         )}
                       </div>
                     </div>
 
                     <div className="flex gap-4 relative z-10 mb-4">
-                      {selectedWill.progress >= 75 ? (
+                      {(selectedWill.progress ?? 0) >= 75 ? (
                         <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground shrink-0 border-2 border-surface">
                           <RxCheck />
                         </div>
                       ) : (
                         <div
-                          className={`w-8 h-8 rounded-full ${selectedWill.progress >= 50 && selectedWill.status !== "مسودة" && selectedWill.status !== "مكتملة" ? "bg-primary ring-4 ring-primary/20 animate-pulse" : "bg-border"} shrink-0 border-2 border-surface`}
+                          className={`w-8 h-8 rounded-full ${(selectedWill.progress ?? 0) >= 50 && selectedWill.status !== "draft" && selectedWill.status !== "approved" ? "bg-primary ring-4 ring-primary/20 animate-pulse" : "bg-border"} shrink-0 border-2 border-surface`}
                         ></div>
                       )}
                       <div className="pt-1">
                         <p
-                          className={`text-sm ${selectedWill.progress >= 75 ? "font-medium text-foreground" : selectedWill.progress >= 50 && selectedWill.status !== "مسودة" && selectedWill.status !== "مكتملة" ? "font-bold text-primary" : "text-muted-foreground"}`}
+                          className={`text-sm ${(selectedWill.progress ?? 0) >= 75 ? "font-medium text-foreground" : (selectedWill.progress ?? 0) >= 50 && selectedWill.status !== "draft" && selectedWill.status !== "approved" ? "font-bold text-primary" : "text-muted-foreground"}`}
                         >
                           المراجعة والتدقيق القانوني
                         </p>
@@ -591,7 +660,7 @@ export default function MyWillsPage() {
                     </div>
 
                     <div className="flex gap-4 relative z-10">
-                      {selectedWill.status === "مكتملة" ? (
+                      {selectedWill.status === "approved" ? (
                         <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground shrink-0 border-2 border-surface">
                           <RxCheck />
                         </div>
@@ -600,7 +669,7 @@ export default function MyWillsPage() {
                       )}
                       <div className="pt-1">
                         <p
-                          className={`text-sm ${selectedWill.status === "مكتملة" ? "font-medium text-foreground" : "text-muted-foreground"}`}
+                          className={`text-sm ${selectedWill.status === "approved" ? "font-medium text-foreground" : "text-muted-foreground"}`}
                         >
                           اعتماد الوصية النهائي
                         </p>
