@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   RxFileText,
   RxArchive,
@@ -15,6 +16,7 @@ export default function NewRequestClient({
 }: {
   hasActiveSubscription: boolean;
 }) {
+  const router = useRouter();
   const [selectedWill, setSelectedWill] = useState<string | null>(null);
   const [isTermsAccepted, setIsTermsAccepted] = useState(false);
 
@@ -64,9 +66,8 @@ export default function NewRequestClient({
   };
 
   const handleProceed = () => {
-    if (isTermsAccepted) {
-      alert("تم قبول الشروط. سيتم توجيهك لنموذج الوصية الآن.");
-      // TODO: Redirect to the actual form flow
+    if (isTermsAccepted && selectedWill) {
+      router.push(`/dashboard/new-request/${selectedWill}`);
       closeModal();
     }
   };
