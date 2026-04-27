@@ -156,6 +156,14 @@ export default function PaymentsClient({
               الأيام المتبقية:{" "}
               <strong>{diffDays > 0 ? diffDays : 0} يوماً</strong>
             </p>
+            <div className="mt-8">
+              <button
+                onClick={() => setShowPricing(true)}
+                className="bg-green-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-green-700 transition"
+              >
+                تصفح الباقات الأخرى
+              </button>
+            </div>
           </div>
         </div>
       );
@@ -172,8 +180,10 @@ export default function PaymentsClient({
               للأسف، تعذر قبول الإيصال الخاص بك للأسباب التالية:
             </p>
             <p className="text-red-900 font-bold mt-4 p-4 bg-red-100 rounded-xl inline-block">
+              {/* @ts-expect-error type missing */}
               {currentSubscription.admin_notes
-                ? currentSubscription.admin_notes
+                ? /* @ts-expect-error type missing */
+                  currentSubscription.admin_notes
                 : "مراجعة غير صالحة، يرجى إعادة المحاولة."}
             </p>
             <div className="mt-8">
