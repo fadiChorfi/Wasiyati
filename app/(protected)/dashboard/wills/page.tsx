@@ -36,11 +36,11 @@ interface WillUI {
 const getWillTypeLabel = (category: string | null): string => {
   switch (category) {
     case "general":
-      return "عامة";
+      return "الوصية العامة";
     case "money":
-      return "مالية ومواريث";
+      return "وصية بالأموال";
     case "business":
-      return "أعمال وتجارة";
+      return "وصية بالأعمال";
     default:
       return "وصية غير محددة";
   }
