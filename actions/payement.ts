@@ -60,11 +60,23 @@ export async function submitPayment(formData: FormData) {
         receipt_path: path,
         receipt_url: signedUrl,
       })
-      .select()
+      .select("*")
       .single();
 
     if (insertError) throw insertError;
 
+    // Attach offer manually to avoid join errors
+    if (newSubscription && newSubscription.offer_id) {
+      const { data: offerData } = await supabase
+        .from("offers")
+        .select("*")
+        .eq("id", newSubscription.offer_id)
+        .single();
+
+      if (offerData) {
+        newSubscription.offer = offerData;
+      }
+    }
     revalidatePath("/dashboard");
     return { success: true, data: newSubscription, isNew: true };
   } catch (error: unknown) {
@@ -91,11 +103,28 @@ export async function getUserSubscription() {
       .limit(1)
       .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase Error fetching subscription:", error);
+      throw error;
+    }
+
+    if (subscription && subscription.offer_id) {
+      const { data: offerData } = await supabase
+        .from("offers")
+        .select("*")
+        .eq("id", subscription.offer_id)
+        .single();
+
+      if (offerData) {
+        subscription.offer = offerData;
+      }
+    }
+
     console.log("Fetched subscription:", subscription);
 
     return { success: true, data: subscription };
   } catch (error: unknown) {
+    console.error("🚨 catch block in getUserSubscription:", error);
     const message =
       error instanceof Error ? error.message : "Failed to fetch subscription";
     return { success: false, error: message };

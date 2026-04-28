@@ -129,14 +129,14 @@ export default function PaymentsClient({
       );
     }
 
-    if (
-      currentSubscription.status === "active" &&
-      currentSubscription.started_at
-    ) {
+    if (currentSubscription.status === "active") {
       const today = new Date();
+      const startedAt = currentSubscription.started_at
+        ? currentSubscription.started_at
+        : currentSubscription.created_at; // Fallback to created_at if started_at is missing
+
       const expiration =
-        new Date(currentSubscription.started_at).getTime() +
-        30 * 24 * 60 * 60 * 1000;
+        new Date(startedAt).getTime() + 30 * 24 * 60 * 60 * 1000;
       const diffTime = expiration - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 

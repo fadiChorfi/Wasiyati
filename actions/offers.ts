@@ -26,5 +26,6 @@ export async function getOffers(): Promise<ActionResult<Offer[]>> {
     .order("price_dzd", {ascending: true})
 
     if (error) return {data: null, error: error.message}
+
     return {data, error: null}
 }
