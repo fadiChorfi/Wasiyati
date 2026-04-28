@@ -11,25 +11,36 @@ import {
   RxCross2,
   RxTrash,
 } from "react-icons/rx";
-import { Will, WillType, WillStatus } from "@/types/database";
+import { WillStatus } from "@/types/database";
 import { useRouter } from "next/navigation";
+import { getUserWills } from "@/actions/wills";
 
 // Extend the DB Will interface for UI specific needs
-interface WillUI extends Will {
+interface WillUI {
+  id: string;
+  will_category: string | null;
+  will_type: string;
+  status: WillStatus;
+  created_at: string;
+  updated_at: string;
+  testator: {
+    first_name: string;
+    last_name: string;
+  } | null;
   progress?: number;
   stepName?: string;
   reviewerNotes?: string;
   documents?: { name: string; url: string }[];
 }
 
-const getWillTypeLabel = (type: WillType): string => {
-  switch (type) {
+const getWillTypeLabel = (category: string | null): string => {
+  switch (category) {
     case "general":
-      return "وصية عامة";
-    case "financial":
-      return "وصية مالية";
+      return "عامة";
+    case "money":
+      return "مالية ومواريث";
     case "business":
-      return "وصية بالأعمال";
+      return "أعمال وتجارة";
     default:
       return "وصية غير محددة";
   }
@@ -52,34 +63,6 @@ const getWillStatusLabel = (status: WillStatus): string => {
   }
 };
 
-const mockWills: WillUI[] = [
-  {
-    id: "WAS-2026-002",
-    user_id: "user-1",
-    subscription_id: "sub-1",
-    will_type: "financial",
-    status: "under_review",
-    form_data: {},
-    created_at: "2026-03-20T00:00:00Z",
-    updated_at: "2026-03-21T00:00:00Z",
-    progress: 75,
-    stepName: "الخطوة 3 من 4: مراجعة الخبير",
-    documents: [{ name: "مسودة_الحسابات.pdf", url: "#" }],
-  },
-  {
-    id: "WAS-2026-005",
-    user_id: "user-1",
-    subscription_id: "sub-1",
-    will_type: "general",
-    status: "under_review",
-    form_data: {},
-    created_at: "2026-03-28T00:00:00Z",
-    updated_at: "2026-03-29T00:00:00Z",
-    progress: 75,
-    stepName: "الخطوة 3 من 4: المراجعة والتدقيق القانوني",
-  },
-];
-
 const priorityMap: Record<WillStatus, number> = {
   rejected: 1,
   under_review: 2,
@@ -99,16 +82,14 @@ export default function MyWillsPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Simulated fetching
-    const timer = setTimeout(() => {
-      setWills(
-        mockWills.filter(
-          (w) => w.status === "under_review" || w.status === "draft",
-        ),
-      );
+    async function loadWills() {
+      const res = await getUserWills();
+      if (res.success && res.data) {
+        setWills(res.data as unknown as WillUI[]);
+      }
       setLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
+    }
+    loadWills();
   }, []);
 
   useEffect(() => {
@@ -143,15 +124,15 @@ export default function MyWillsPage() {
     } else if (sort === "الأقدم") {
       return dateA - dateB;
     } else if (sort === "النوع") {
-      return getWillTypeLabel(a.will_type).localeCompare(
-        getWillTypeLabel(b.will_type),
+      return getWillTypeLabel(a.will_category).localeCompare(
+        getWillTypeLabel(b.will_category),
         "ar",
       );
     }
     return 0;
   });
 
-  const getTopBarColor = (type: WillType) => {
+  const getTopBarColor = (type: string) => {
     switch (type) {
       case "general":
         return "bg-primary";
@@ -164,7 +145,7 @@ export default function MyWillsPage() {
     }
   };
 
-  const getIconColors = (type: WillType) => {
+  const getIconColors = (type: string) => {
     switch (type) {
       case "general":
         return "bg-primary/10 text-primary";
@@ -309,7 +290,7 @@ export default function MyWillsPage() {
                 >
                   {/* Top Bar */}
                   <div
-                    className={`h-1 w-full ${getTopBarColor(will.will_type)}`}
+                    className={`h-1 w-full ${getTopBarColor(will.will_category || will.will_type)}`}
                   ></div>
 
                   {/* Header */}
@@ -319,13 +300,13 @@ export default function MyWillsPage() {
                   >
                     <div className="flex gap-3">
                       <div
-                        className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${getIconColors(will.will_type)}`}
+                        className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${getIconColors(will.will_category || will.will_type)}`}
                       >
                         <RxFileText className="text-xl" />
                       </div>
                       <div>
                         <h3 className="text-base font-bold text-foreground mt-1">
-                          {getWillTypeLabel(will.will_type)}
+                          {getWillTypeLabel(will.will_category)}
                         </h3>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {will.id.replace("WAS-", "# WAS-")}
@@ -484,11 +465,11 @@ export default function MyWillsPage() {
           <div className="relative w-full md:w-120 bg-background h-full shadow-2xl flex flex-col transform transition-transform duration-300 ease-out translate-x-0">
             {/* Drawer Header */}
             <div
-              className={`p-6 flex items-start justify-between ${getTopBarColor(selectedWill.will_type)}`}
+              className={`p-6 flex items-start justify-between ${getTopBarColor(selectedWill.will_category || selectedWill.will_type)}`}
             >
               <div>
                 <h2 className="text-primary-foreground text-lg font-bold">
-                  {getWillTypeLabel(selectedWill.will_type)}
+                  {getWillTypeLabel(selectedWill.will_category)}
                 </h2>
                 <p className="text-primary-foreground/60 text-xs mt-0.5">
                   {selectedWill.id.replace("WAS-", "# WAS-")}
@@ -524,7 +505,7 @@ export default function MyWillsPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">النوع</span>
                     <span className="text-sm text-foreground font-medium">
-                      {getWillTypeLabel(selectedWill.will_type)}
+                      {getWillTypeLabel(selectedWill.will_category)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">

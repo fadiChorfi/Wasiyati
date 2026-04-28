@@ -127,6 +127,7 @@ export default function WillFormByType() {
   const isReviewStep = currentStep === steps.length - 1;
 
   const validateAndNext = async () => {
+    if (isSubmitting) return;
     const fieldsToValidate = steps[currentStep]
       .fields as (keyof WillFormData)[];
     const isStepValid = await trigger(fieldsToValidate);
@@ -150,11 +151,34 @@ export default function WillFormByType() {
     }
   };
 
-  const submitForm = () => {
-    const data = getValues();
-    console.log("Submitting:", { willType: willTypeParam, ...data });
-    alert("تم تقديم الوصية بنجاح!");
-    router.push("/dashboard/wills");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const submitForm = async () => {
+    setIsSubmitting(true);
+    try {
+      const data = getValues();
+      console.log("Submitting:", { willType: willTypeParam, ...data });
+
+      const payload = { willType: willTypeParam, ...data };
+      const { submitWill } = await import("@/actions/wills");
+
+      const result = await submitWill(payload);
+
+      if (result?.success) {
+        alert("تم تقديم الوصية بنجاح!");
+        router.push("/dashboard/wills");
+      } else {
+        alert(
+          result?.error ||
+            "حدث خطأ أثناء المحاولة، يرجى التحقق من اشتراكك أو المحاولة لاحقاً.",
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      alert("حدث خطأ غير متوقع.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
