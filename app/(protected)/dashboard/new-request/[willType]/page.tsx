@@ -41,6 +41,10 @@ const willSchema = z
     totalChildren: z.number().int().min(0).optional(),
     maleChildren: z.number().int().min(0).optional(),
     femaleChildren: z.number().int().min(0).optional(),
+    totalMoney: z
+      .number()
+      .min(0, "المبلغ الإجمالي يجب أن يكون موجباً")
+      .optional(),
   })
   .superRefine((data, ctx) => {
     // Validate total children if not null
@@ -75,9 +79,22 @@ export default function WillFormByType() {
     resolver: zodResolver(willSchema),
     mode: "onTouched",
     defaultValues: {
-      totalChildren: willTypeParam === "money" ? 0 : undefined,
-      maleChildren: willTypeParam === "money" ? 0 : undefined,
-      femaleChildren: willTypeParam === "money" ? 0 : undefined,
+      totalChildren:
+        willTypeParam === "money" || willTypeParam === "general"
+          ? 0
+          : undefined,
+      maleChildren:
+        willTypeParam === "money" || willTypeParam === "general"
+          ? 0
+          : undefined,
+      femaleChildren:
+        willTypeParam === "money" || willTypeParam === "general"
+          ? 0
+          : undefined,
+      totalMoney:
+        willTypeParam === "money" || willTypeParam === "general"
+          ? 0
+          : undefined,
     },
   });
 
@@ -114,10 +131,10 @@ export default function WillFormByType() {
   ];
 
   // Add conditional step for financial
-  if (willTypeParam === "money") {
+  if (willTypeParam === "money" || willTypeParam === "general") {
     steps.push({
-      title: "الضمة المالية",
-      fields: ["totalChildren", "maleChildren", "femaleChildren"],
+      title: "الذمة المالية",
+      fields: ["totalChildren", "maleChildren", "femaleChildren", "totalMoney"],
     });
   }
 
@@ -483,46 +500,63 @@ export default function WillFormByType() {
                 </div>
               )}
 
-              {/* STEP 5: Financial (Only if 'money') */}
-              {willTypeParam === "money" && currentStep === 4 && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="flex flex-col gap-3">
-                    <label className="text-sm font-bold text-foreground">
-                      عدد الأبناء الإجمالي
-                    </label>
-                    <input
-                      type="number"
-                      {...register("totalChildren", { valueAsNumber: true })}
-                      className="w-full px-4 py-3 bg-background border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <label className="text-sm font-bold text-foreground">
-                      عدد الذكور
-                    </label>
-                    <input
-                      type="number"
-                      {...register("maleChildren", { valueAsNumber: true })}
-                      className="w-full px-4 py-3 bg-background border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    <label className="text-sm font-bold text-foreground">
-                      عدد الإناث
-                    </label>
-                    <input
-                      type="number"
-                      {...register("femaleChildren", { valueAsNumber: true })}
-                      className="w-full px-4 py-3 bg-background border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
-                    />
-                  </div>
-                  {errors.totalChildren && (
-                    <div className="col-span-1 md:col-span-3 p-4 bg-red-50 text-red-600 rounded-xl flex items-center gap-2 font-bold text-sm border border-red-100">
-                      {errors.totalChildren.message}
+              {/* STEP 5: Financial (Only if 'money' or 'general') */}
+              {(willTypeParam === "money" || willTypeParam === "general") &&
+                currentStep === 4 && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="flex flex-col gap-3">
+                      <label className="text-sm font-bold text-foreground">
+                        عدد الأبناء الإجمالي
+                      </label>
+                      <input
+                        type="number"
+                        {...register("totalChildren", { valueAsNumber: true })}
+                        className="w-full px-4 py-3 bg-background border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                      />
                     </div>
-                  )}
-                </div>
-              )}
+                    <div className="flex flex-col gap-3">
+                      <label className="text-sm font-bold text-foreground">
+                        عدد الذكور
+                      </label>
+                      <input
+                        type="number"
+                        {...register("maleChildren", { valueAsNumber: true })}
+                        className="w-full px-4 py-3 bg-background border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      <label className="text-sm font-bold text-foreground">
+                        عدد الإناث
+                      </label>
+                      <input
+                        type="number"
+                        {...register("femaleChildren", { valueAsNumber: true })}
+                        className="w-full px-4 py-3 bg-background border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                      />
+                    </div>
+                    <div className="col-span-1 md:col-span-3 flex flex-col gap-3 mt-2">
+                      <label className="text-sm font-bold text-foreground">
+                        إجمالي الأموال المراد تفريقها (اختياري)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        {...register("totalMoney", { valueAsNumber: true })}
+                        className="w-full px-4 py-3 bg-background border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                      />
+                      {errors.totalMoney && (
+                        <p className="text-xs font-bold text-red-500">
+                          {errors.totalMoney.message}
+                        </p>
+                      )}
+                    </div>
+                    {errors.totalChildren && (
+                      <div className="col-span-1 md:col-span-3 p-4 bg-red-50 text-red-600 rounded-xl flex items-center gap-2 font-bold text-sm border border-red-100">
+                        {errors.totalChildren.message}
+                      </div>
+                    )}
+                  </div>
+                )}
 
               {/* FINAL REVIEW STEP */}
               {isReviewStep && (

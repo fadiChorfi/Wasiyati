@@ -1,4 +1,3 @@
-
 import { OfferKey, OfferPrivileges } from "../config/offers";
 
 /** Subscription tier — controls which detail table is used */
@@ -16,11 +15,11 @@ export type WillStatus =
   | "approved"
   | "rejected";
 
-export type ReviewStatus   = "pending" | "approved" | "rejected";
+export type ReviewStatus = "pending" | "approved" | "rejected";
 export type DeliveryStatus = "not_sent" | "scheduled" | "sent" | "confirmed";
 export type DeliveryMethod = "email" | "sms" | "physical" | "in_app";
-export type UserRole       = "user" | "admin";
-export type MaritalStatus  = "single" | "married" | "divorced" | "widowed";
+export type UserRole = "user" | "admin";
+export type MaritalStatus = "single" | "married" | "divorced" | "widowed";
 
 export type NotificationType =
   | "submission_received"
@@ -28,7 +27,6 @@ export type NotificationType =
   | "will_rejected"
   | "delivery_confirmed"
   | "subscription_expiring";
-
 
 // ─────────────────────────────────────────────
 // Core table interfaces
@@ -116,6 +114,7 @@ export interface FinancialStatus {
   number_of_children: number;
   boys: number;
   girls: number;
+  total_money: number | null;
 }
 
 // ─────────────────────────────────────────────
@@ -192,11 +191,14 @@ export interface WillProDetails extends WillMediumDetails {
 // ─────────────────────────────────────────────
 
 export type WillDetails =
-  | { will_type: "basic";  details: WillBasicDetails }
+  | { will_type: "basic"; details: WillBasicDetails }
   | { will_type: "medium"; details: WillMediumDetails }
-  | { will_type: "pro";    details: WillProDetails };
+  | { will_type: "pro"; details: WillProDetails };
 
-export function asWillDetails(will_type: WillTier, details: WillBasicDetails): WillDetails {
+export function asWillDetails(
+  will_type: WillTier,
+  details: WillBasicDetails,
+): WillDetails {
   return { will_type, details } as WillDetails;
 }
 
@@ -256,10 +258,22 @@ interface NotificationBase {
 }
 
 export type Notification =
-  | (NotificationBase & { type: "submission_received"; will_id: string; submission_id: string })
-  | (NotificationBase & { type: "will_approved" | "will_rejected"; will_id: string; submission_id: string })
+  | (NotificationBase & {
+      type: "submission_received";
+      will_id: string;
+      submission_id: string;
+    })
+  | (NotificationBase & {
+      type: "will_approved" | "will_rejected";
+      will_id: string;
+      submission_id: string;
+    })
   | (NotificationBase & { type: "delivery_confirmed"; will_id: string })
-  | (NotificationBase & { type: "subscription_expiring"; subscription_id: string; days_remaining: number });
+  | (NotificationBase & {
+      type: "subscription_expiring";
+      subscription_id: string;
+      days_remaining: number;
+    });
 
 export function parseNotification(row: NotificationRow): Notification {
   switch (row.type) {
@@ -267,17 +281,32 @@ export function parseNotification(row: NotificationRow): Notification {
     case "will_approved":
     case "will_rejected":
       if (!row.will_id || !row.submission_id)
-        throw new Error(`Missing will_id or submission_id for type: ${row.type}`);
-      return { ...row, type: row.type, will_id: row.will_id, submission_id: row.submission_id };
+        throw new Error(
+          `Missing will_id or submission_id for type: ${row.type}`,
+        );
+      return {
+        ...row,
+        type: row.type,
+        will_id: row.will_id,
+        submission_id: row.submission_id,
+      };
 
     case "delivery_confirmed":
-      if (!row.will_id) throw new Error("Missing will_id for delivery_confirmed");
+      if (!row.will_id)
+        throw new Error("Missing will_id for delivery_confirmed");
       return { ...row, type: row.type, will_id: row.will_id };
 
     case "subscription_expiring":
       if (!row.subscription_id || row.days_remaining === null)
-        throw new Error("Missing subscription_id or days_remaining for subscription_expiring");
-      return { ...row, type: row.type, subscription_id: row.subscription_id, days_remaining: row.days_remaining };
+        throw new Error(
+          "Missing subscription_id or days_remaining for subscription_expiring",
+        );
+      return {
+        ...row,
+        type: row.type,
+        subscription_id: row.subscription_id,
+        days_remaining: row.days_remaining,
+      };
   }
 }
 

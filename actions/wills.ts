@@ -133,7 +133,7 @@ export async function submitWill(payload: Record<string, unknown>) {
     }
 
     // Financial Status
-    if (willType === "money" && testator) {
+    if ((willType === "money" || willType === "general") && testator) {
       const { error: finError } = await supabase
         .from("financial_status")
         .insert({
@@ -141,6 +141,7 @@ export async function submitWill(payload: Record<string, unknown>) {
           number_of_children: formData.totalChildren || 0,
           boys: formData.maleChildren || 0,
           girls: formData.femaleChildren || 0,
+          total_money: formData.totalMoney || null,
         });
       if (finError) {
         console.error("Financial status insert error:", finError);
