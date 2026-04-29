@@ -5,17 +5,14 @@ import {
   RxFileText,
   RxCheck,
   RxExclamationTriangle,
-  RxPlus,
   RxDownload,
   RxDotsHorizontal,
   RxCross2,
   RxTrash,
 } from "react-icons/rx";
 import { WillStatus } from "@/types/database";
-import { useRouter } from "next/navigation";
 import { getUserWills } from "@/actions/wills";
 
-// Extend the DB Will interface for UI specific needs
 interface WillUI {
   id: string;
   will_category: string | null;
@@ -27,11 +24,42 @@ interface WillUI {
     first_name: string;
     last_name: string;
   } | null;
-  progress?: number;
-  stepName?: string;
   reviewerNotes?: string;
   documents?: { name: string; url: string }[];
 }
+
+const getWillProgress = (status: WillStatus): number => {
+  switch (status) {
+    case "draft":
+      return 25;
+    case "submitted":
+      return 50;
+    case "under_review":
+    case "rejected":
+      return 75;
+    case "approved":
+      return 100;
+    default:
+      return 0;
+  }
+};
+
+const getWillStepName = (status: WillStatus): string => {
+  switch (status) {
+    case "draft":
+      return "الخطوة 1 من 4: مسودة";
+    case "submitted":
+      return "الخطوة 2 من 4: الإرسال";
+    case "under_review":
+      return "الخطوة 3 من 4: قيد المراجعة";
+    case "rejected":
+      return "الخطوة 3 من 4: قيد المراجعة (بحاجة تعديل)";
+    case "approved":
+      return "الخطوة 4 من 4: مكتملة";
+    default:
+      return "";
+  }
+};
 
 const getWillTypeLabel = (category: string | null): string => {
   switch (category) {
@@ -78,8 +106,6 @@ export default function MyWillsPage() {
   const [selectedWill, setSelectedWill] = useState<WillUI | null>(null);
   const [deleteWillId, setDeleteWillId] = useState<string | null>(null);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
-
-  const router = useRouter();
 
   useEffect(() => {
     async function loadWills() {
@@ -211,26 +237,10 @@ export default function MyWillsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground" dir="rtl">
-      {/* 1. PAGE HEADER */}
-      <header className="w-full bg-surface border-b border-border px-6 py-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">وصاياي</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            إدارة وصاياك القانونية ومتابعة حالتها
-          </p>
-        </div>
-        <button
-          onClick={() => router.push("/dashboard/new-request")}
-          className="bg-primary text-primary-foreground rounded-xl px-5 py-2.5 font-medium text-sm hover:bg-primary/90 transition active:scale-95 shadow-sm flex items-center justify-center gap-2 max-md:w-full"
-        >
-          <span>
-            <RxPlus className="text-lg" />
-          </span>
-          <span className="md:inline">إنشاء وصية جديدة</span>
-        </button>
-      </header>
-
+    <div
+      className="min-h-screen bg-background text-foreground mx-1.5 "
+      dir="rtl"
+    >
       {/* 4. WILL CARDS GRID / STATE */}
       <div className="py-6 bg-background max-w-7xl">
         {loading ? (
@@ -350,16 +360,16 @@ export default function MyWillsPage() {
                     >
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-xs text-muted-foreground">
-                          {will.stepName}
+                          {getWillStepName(will.status)}
                         </span>
                         <span className="text-xs font-bold text-primary">
-                          {will.progress}%
+                          {getWillProgress(will.status)}%
                         </span>
                       </div>
                       <div className="h-1.5 bg-border rounded-full w-full overflow-hidden">
                         <div
                           className="h-full bg-primary rounded-full transition-all"
-                          style={{ width: `${will.progress}%` }}
+                          style={{ width: `${getWillProgress(will.status)}%` }}
                         ></div>
                       </div>
 
@@ -596,7 +606,7 @@ export default function MyWillsPage() {
                     </div>
 
                     <div className="flex gap-4 relative z-10 mb-4">
-                      {(selectedWill.progress ?? 0) >= 50 ? (
+                      {getWillProgress(selectedWill.status) >= 50 ? (
                         <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground shrink-0 border-2 border-surface">
                           <RxCheck />
                         </div>
@@ -607,11 +617,11 @@ export default function MyWillsPage() {
                       )}
                       <div className="pt-1">
                         <p
-                          className={`text-sm ${(selectedWill.progress ?? 0) >= 50 ? "font-medium text-foreground" : selectedWill.status === "draft" ? "font-bold text-primary" : "text-muted-foreground"}`}
+                          className={`text-sm ${getWillProgress(selectedWill.status) >= 50 ? "font-medium text-foreground" : selectedWill.status === "draft" ? "font-bold text-primary" : "text-muted-foreground"}`}
                         >
                           تفاصيل الأصول والمستفيدين
                         </p>
-                        {(selectedWill.progress ?? 0) >= 50 && (
+                        {getWillProgress(selectedWill.status) >= 50 && (
                           <p className="text-xs text-muted-foreground mt-0.5">
                             {new Date(
                               selectedWill.updated_at,
@@ -622,18 +632,18 @@ export default function MyWillsPage() {
                     </div>
 
                     <div className="flex gap-4 relative z-10 mb-4">
-                      {(selectedWill.progress ?? 0) >= 75 ? (
+                      {getWillProgress(selectedWill.status) >= 75 ? (
                         <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground shrink-0 border-2 border-surface">
                           <RxCheck />
                         </div>
                       ) : (
                         <div
-                          className={`w-8 h-8 rounded-full ${(selectedWill.progress ?? 0) >= 50 && selectedWill.status !== "draft" && selectedWill.status !== "approved" ? "bg-primary ring-4 ring-primary/20 animate-pulse" : "bg-border"} shrink-0 border-2 border-surface`}
+                          className={`w-8 h-8 rounded-full ${getWillProgress(selectedWill.status) >= 50 && selectedWill.status !== "draft" && selectedWill.status !== "approved" ? "bg-primary ring-4 ring-primary/20 animate-pulse" : "bg-border"} shrink-0 border-2 border-surface`}
                         ></div>
                       )}
                       <div className="pt-1">
                         <p
-                          className={`text-sm ${(selectedWill.progress ?? 0) >= 75 ? "font-medium text-foreground" : (selectedWill.progress ?? 0) >= 50 && selectedWill.status !== "draft" && selectedWill.status !== "approved" ? "font-bold text-primary" : "text-muted-foreground"}`}
+                          className={`text-sm ${getWillProgress(selectedWill.status) >= 75 ? "font-medium text-foreground" : getWillProgress(selectedWill.status) >= 50 && selectedWill.status !== "draft" && selectedWill.status !== "approved" ? "font-bold text-primary" : "text-muted-foreground"}`}
                         >
                           المراجعة والتدقيق القانوني
                         </p>
