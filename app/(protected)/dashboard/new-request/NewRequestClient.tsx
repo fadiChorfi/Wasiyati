@@ -209,6 +209,14 @@ export default function NewRequestClient({
               </div>
 
               <div className="p-5 bg-background border-t border-border flex gap-3 shrink-0">
+                <a
+                  href={`/docs/${selectedWill === "business" ? "bussiness-will.pdf" : selectedWill === "money" ? "money-will.pdf" : "general-will.pdf"}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 bg-surface border-2 border-primary text-primary py-3 rounded-xl text-sm font-bold shadow-sm hover:bg-primary/5 transition active:scale-95 flex items-center justify-center gap-2"
+                >
+                  الاطلاع على النموذج
+                </a>
                 <button
                   onClick={handleProceed}
                   disabled={!isTermsAccepted}
