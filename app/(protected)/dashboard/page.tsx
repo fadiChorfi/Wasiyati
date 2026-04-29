@@ -12,11 +12,71 @@ import {
 } from "react-icons/rx";
 import Link from "next/link";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { useEffect, useState } from "react";
+import { getUserWills } from "@/actions/wills";
+
+const getWillTypeLabel = (category: string | null): string => {
+  switch (category) {
+    case "general":
+      return "الوصية العامة";
+    case "money":
+      return "وصية بالأموال";
+    case "business":
+      return "وصية بالأعمال";
+    default:
+      return "وصية غير محددة";
+  }
+};
+
+const getWillStatusLabel = (status: string): string => {
+  switch (status) {
+    case "approved":
+      return "مكتملة";
+    case "under_review":
+      return "قيد المراجعة";
+    case "submitted":
+      return "تم الإرسال";
+    case "rejected":
+      return "بحاجة تعديل";
+    case "draft":
+      return "مسودة";
+    default:
+      return "غير معروف";
+  }
+};
 
 export default function DashboardPage() {
   const currentSubscription = useSubscription();
   const hasActiveSubscription = currentSubscription?.status === "active";
   const hasPendingSubscription = currentSubscription?.status === "pending";
+
+  const [wills, setWills] = useState<Record<string, unknown>[]>([]);
+  const [totalWills, setTotalWills] = useState(0);
+  const [underReview, setUnderReview] = useState(0);
+  const [completed, setCompleted] = useState(0);
+
+  useEffect(() => {
+    async function loadData() {
+      const res = await getUserWills();
+      if (res.success && res.data) {
+        const fetchedWills = res.data;
+        setWills(fetchedWills);
+        setTotalWills(fetchedWills.length);
+        setUnderReview(
+          fetchedWills.filter(
+            (w: Record<string, unknown>) =>
+              w.status !== "approved" && w.status !== "rejected",
+          ).length,
+        );
+        setCompleted(
+          fetchedWills.filter(
+            (w: Record<string, unknown>) => w.status === "approved",
+          ).length,
+        );
+      }
+    }
+    loadData();
+  }, []);
 
   const diffDays = currentSubscription?.started_at
     ? Math.ceil(
@@ -30,34 +90,43 @@ export default function DashboardPage() {
   const stats = [
     {
       label: "إجمالي الوصايا",
-      value: "3",
+      value: totalWills.toString(),
       icon: RxFileText,
       colors: "bg-primary/10 text-primary",
     },
     {
       label: "قيد المراجعة",
-      value: "2",
+      value: underReview.toString(),
       icon: RxClock,
       colors: "bg-accent/10 text-accent-foreground",
     },
     {
       label: "مكتملة",
-      value: "1",
+      value: completed.toString(),
       icon: RxCheck,
       colors: "bg-primary/10 text-primary",
     },
     {
       label: "المدفوعات",
-      value: "15,000 د.ج",
+      value: currentSubscription?.offer?.price_dzd
+        ? `${currentSubscription.offer.price_dzd} د.ج`
+        : "0 د.ج",
       icon: RxIdCard,
       colors: "bg-accent/10 text-accent-foreground",
     },
   ];
 
-  const recentActivity = [
-    { type: "وصية عامة", date: "28 مارس 2026", status: "قيد المراجعة" },
-    { type: "وصية مالية", date: "20 مارس 2026", status: "مكتملة" },
-  ];
+  const recentActivity = wills
+    .slice(0, 5)
+    .map((w: Record<string, unknown>) => ({
+      type: getWillTypeLabel(w.will_category as string | null),
+      date: new Date(w.created_at as string).toLocaleDateString("ar-DZ", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+      status: getWillStatusLabel(w.status as string),
+    }));
 
   const getBadgeStyle = (status: string) => {
     switch (status) {
@@ -396,7 +465,10 @@ export default function DashboardPage() {
         </button>
 
         {/* Card 3 */}
-        <button className="bg-surface rounded-3xl p-6 border border-border text-right hover:shadow-md transition-shadow flex md:flex-col items-center md:items-start gap-4 md:gap-0">
+        <Link
+          href="/consultation"
+          className="bg-surface rounded-3xl p-6 border border-border text-right hover:shadow-md transition-shadow flex md:flex-col items-center md:items-start gap-4 md:gap-0"
+        >
           <div className="bg-accent/10 rounded-2xl p-3 w-fit text-accent-foreground shrink-0">
             <RxChatBubble className="text-xl" />
           </div>
@@ -408,7 +480,7 @@ export default function DashboardPage() {
               رد خلال 24 ساعة
             </p>
           </div>
-        </button>
+        </Link>
       </div>
 
       {/* RECENT ACTIVITY */}
