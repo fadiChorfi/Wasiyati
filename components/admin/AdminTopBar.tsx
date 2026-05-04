@@ -1,19 +1,28 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { RxArchive, RxBell, RxExit, RxGear, RxPerson } from "react-icons/rx";
 import { useState, useRef, useEffect } from "react";
 import { useUser } from "@/context/UserContext";
 import Image from "next/image";
+import { createClient } from "@/lib/supabase/client";
 
 export default function AdminTopBar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createClient();
   const [showNotifications, setShowNotifications] = useState(false);
   const profile = useUser();
 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/admin/login");
+    router.refresh();
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -167,7 +176,10 @@ export default function AdminTopBar() {
                   الإعدادات
                 </button>
                 <div className="border-t border-gray-100 my-1"></div>
-                <button className="w-full text-right px-4 py-2.5 text-sm text-red-500 font-bold hover:bg-red-50 transition-colors flex items-center gap-2">
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-right px-4 py-2.5 text-sm text-red-500 font-bold hover:bg-red-50 transition-colors flex items-center gap-2"
+                >
                   <RxExit className="text-lg" />
                   تسجيل الخروج
                 </button>
