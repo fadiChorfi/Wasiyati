@@ -8,10 +8,10 @@ export default function AdminSidebar() {
   const pathname = usePathname();
 
   const navItems = [
-    { label: "لوحة القيادة", href: "/admin", icon: RxDashboard },
-    { label: "إدارة الوصايا", href: "/admin/wills", icon: RxFileText },
-    { label: "إدارة المستخدمين", href: "/admin/users", icon: RxPerson },
-    { label: "الإعدادات", href: "/admin/settings", icon: RxGear },
+    { label: "لوحة القيادة", href: "/admin/dashboard", icon: RxDashboard },
+    { label: "إدارة الوصايا", href: "/admin/dashboard/wills", icon: RxFileText },
+    { label: "إدارة المستخدمين", href: "/admin/dashboard/users", icon: RxPerson },
+    { label: "الإعدادات", href: "/admin/dashboard/settings", icon: RxGear },
   ];
 
   return (

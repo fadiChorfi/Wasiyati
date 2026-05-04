@@ -8,61 +8,42 @@ import {
   RxEnvelopeClosed,
 } from "react-icons/rx";
 import Link from "next/link";
+import { getAdminDashboardData } from "@/actions/wills";
 
-export default function AdminDashboardPage() {
+export default async function AdminDashboardPage() {
+  const result = await getAdminDashboardData();
+  const data = result.data;
+
   const stats = [
     {
       label: "المستخدمين",
-      value: "142",
+      value: data?.stats.usersCount.toString() || "0",
       icon: RxPerson,
       colors: "bg-primary/10 text-primary",
     },
     {
       label: "وصايا قيد المراجعة",
-      value: "12",
+      value: data?.stats.underReviewWillsCount.toString() || "0",
       icon: RxActivityLog,
       colors: "bg-accent/10 text-accent-foreground",
     },
     {
       label: "وصايا مكتملة",
-      value: "45",
+      value: data?.stats.approvedWillsCount.toString() || "0",
       icon: RxCheck,
       colors: "bg-primary/10 text-primary",
     },
     {
       label: "إجمالي الطلبات",
-      value: "57",
+      value: data?.stats.totalWillsCount.toString() || "0",
       icon: RxLayers,
       colors: "bg-accent/10 text-accent-foreground",
     },
   ];
 
-  const recentUsers = [
-    { name: "أحمد بن علي", email: "ahmed@example.com", date: "اليوم 10:30 ص" },
-    { name: "سارة محمد", email: "sara@example.com", date: "أمس 14:15 م" },
-    { name: "كريم حسن", email: "karim@example.com", date: "28 مارس 2026" },
-  ];
+  const recentUsers = data?.recentUsers || [];
 
-  const recentActivity = [
-    {
-      user: "محمد عمر",
-      action: "تقديم وصية مالية",
-      status: "قيد المراجعة",
-      time: "قبل ساعتين",
-    },
-    {
-      user: "ليلى علي",
-      action: "دفع رسوم الخدمة",
-      status: "مكتمل",
-      time: "قبل 5 ساعات",
-    },
-    {
-      user: "عبدالله حسن",
-      action: "تحديث مسودة الوصية",
-      status: "مسودة",
-      time: "قبل يوم",
-    },
-  ];
+  const recentActivity = data?.recentActivity || [];
 
   const getBadgeStyle = (status: string) => {
     switch (status) {
