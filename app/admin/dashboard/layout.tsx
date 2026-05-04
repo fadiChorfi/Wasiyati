@@ -16,14 +16,14 @@ export default async function AdminLayout({
     data: { user },
     error,
   } = await supabase.auth.getUser();
-  if (error || !user) redirect("/");
+  if (error || !user) redirect("/admin/login");
 
   const { data: profile } = await supabase
     .from("profiles")
     .select("id, full_name, avatar_url, updated_at, role")
     .eq("id", user.id)
     .single();
-  if (!profile || profile.role !== "admin") redirect("/");
+  if (!profile || profile.role !== "admin") redirect("/dashboard");
 
   return (
     <UserProvider profile={profile}>
