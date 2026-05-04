@@ -14,6 +14,7 @@ import {
   WillBeneficiary,
   Witness,
 } from "@/types/database";
+import Image from "next/image";
 import {
   RxPerson,
   RxCheck,
@@ -21,15 +22,11 @@ import {
   RxFileText,
   RxArrowLeft,
   RxCardStack,
-  RxCalendar,
-  RxStar,
-  RxMagnifyingGlass,
-  RxChatBubble,
   RxClock,
+  RxChevronRight,
 } from "react-icons/rx";
 import { getAdminUserById, updateUserRole } from "@/actions/wills";
 
-// Extended interfaces for user details
 interface UserWithDetails extends Profile {
   subscriptions: (Subscription & { offers: Offer | null })[] | null;
   wills:
@@ -55,501 +52,495 @@ export default function UserDetailsPage() {
   const [userData, setUserData] = useState<UserWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
+  const [updatingRole, setUpdatingRole] = useState(false);
+
+  const showToast = (
+    message: string,
+    type: "success" | "error" = "success",
+  ) => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const fetchUserData = useCallback(async (userId: string) => {
     try {
       setLoading(true);
       setError(null);
       const result = await getAdminUserById(userId);
-
       if (result.success && result.data) {
         setUserData(result.data as UserWithDetails);
         generateActivityLogs(result.data as UserWithDetails);
       } else {
         setError(result.error || "فشل جلب بيانات المستخدم");
       }
-    } catch (err) {
-      console.error("Error fetching user data:", err);
+    } catch {
       setError("حدث خطأ غير متوقع");
     } finally {
       setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (params.userId) {
-      fetchUserData(params.userId);
-    }
+    if (params.userId) fetchUserData(params.userId);
   }, [params.userId, fetchUserData]);
 
   const generateActivityLogs = (user: UserWithDetails) => {
     const logs: ActivityLog[] = [];
-
-    // Profile creation log
     logs.push({
       id: "profile-1",
       action: "إنشاء حساب",
       description: "تم إنشاء حساب المستخدم",
-      date: user.updated_at || "غير محدد",
+      date: user.updated_at || "",
       type: "profile",
     });
-
-    // Subscription logs
-    if (user.subscriptions && user.subscriptions.length > 0) {
-      user.subscriptions.forEach((sub, index) => {
-        logs.push({
-          id: `sub-${sub.id}`,
-          action: "اشتراك",
-          description: `اشتراك ${sub.offers?.name_ar || "غير محدد"} - ${getSubscriptionLabel(sub.status)}`,
-          date: sub.created_at,
-          type: "subscription",
-        });
+    user.subscriptions?.forEach((sub) => {
+      logs.push({
+        id: `sub-${sub.id}`,
+        action: "اشتراك جديد",
+        description: `${sub.offers?.name_ar || "غير محدد"} — ${getSubscriptionLabel(sub.status)}`,
+        date: sub.created_at,
+        type: "subscription",
       });
-    }
-
-    // Will logs
-    if (user.wills && user.wills.length > 0) {
-      user.wills.forEach((will) => {
-        logs.push({
-          id: `will-${will.id}`,
-          action: "وصية",
-          description: `إنشاء وصية ${getWillStatusLabel(will.status)}`,
-          date: will.created_at,
-          type: "will",
-        });
+    });
+    user.wills?.forEach((will) => {
+      logs.push({
+        id: `will-${will.id}`,
+        action: "وصية",
+        description: `إنشاء وصية — ${getWillStatusLabel(will.status)}`,
+        date: will.created_at,
+        type: "will",
       });
-    }
-
-    // Sort by date (most recent first)
+    });
     logs.sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
     );
     setActivityLogs(logs);
   };
 
-  // Status labels and colors
-  const getRoleBadgeStyle = (role: UserRole) => {
-    switch (role) {
-      case "admin":
-        return {
-          bg: "bg-purple-500/10",
-          text: "text-purple-600",
-          dot: "bg-purple-500",
-        };
-      case "user":
-        return {
-          bg: "bg-blue-500/10",
-          text: "text-blue-600",
-          dot: "bg-blue-500",
-        };
-      default:
-        return {
-          bg: "bg-border",
-          text: "text-muted-foreground",
-          dot: "bg-muted-foreground",
-        };
-    }
-  };
+  const getRoleConfig = (role: UserRole) =>
+    ({
+      admin: {
+        bg: "bg-purple-500/10",
+        text: "text-purple-600",
+        border: "border-purple-200",
+        dot: "bg-purple-500",
+        label: "مدير",
+      },
+      user: {
+        bg: "bg-blue-500/10",
+        text: "text-blue-600",
+        border: "border-blue-200",
+        dot: "bg-blue-500",
+        label: "مستخدم",
+      },
+    })[role] ?? {
+      bg: "bg-border",
+      text: "text-muted-foreground",
+      border: "border-transparent",
+      dot: "bg-muted-foreground",
+      label: "غير محدد",
+    };
 
-  const getRoleLabel = (role: UserRole): string => {
-    switch (role) {
-      case "admin":
-        return "مدير";
-      case "user":
-        return "مستخدم";
-      default:
-        return "غير محدد";
-    }
-  };
+  const getSubscriptionConfig = (status: SubscriptionStatus) =>
+    ({
+      active: {
+        bg: "bg-green-500/10",
+        text: "text-green-600",
+        border: "border-green-200",
+        dot: "bg-green-500",
+        label: "نشط",
+      },
+      expired: {
+        bg: "bg-red-500/10",
+        text: "text-red-600",
+        border: "border-red-200",
+        dot: "bg-red-500",
+        label: "منتهي",
+      },
+      pending: {
+        bg: "bg-yellow-500/10",
+        text: "text-yellow-600",
+        border: "border-yellow-200",
+        dot: "bg-yellow-500",
+        label: "معلق",
+      },
+      cancelled: {
+        bg: "bg-gray-500/10",
+        text: "text-gray-600",
+        border: "border-gray-200",
+        dot: "bg-gray-500",
+        label: "ملغي",
+      },
+    })[status] ?? {
+      bg: "bg-border",
+      text: "text-muted-foreground",
+      border: "border-transparent",
+      dot: "bg-muted-foreground",
+      label: "غير محدد",
+    };
 
-  const getSubscriptionBadgeStyle = (status: SubscriptionStatus) => {
-    switch (status) {
-      case "active":
-        return {
-          bg: "bg-green-500/10",
-          text: "text-green-600",
-          dot: "bg-green-500",
-        };
-      case "expired":
-        return { bg: "bg-red-500/10", text: "text-red-600", dot: "bg-red-500" };
-      case "pending":
-        return {
-          bg: "bg-yellow-500/10",
-          text: "text-yellow-600",
-          dot: "bg-yellow-500",
-        };
-      case "cancelled":
-        return {
-          bg: "bg-gray-500/10",
-          text: "text-gray-600",
-          dot: "bg-gray-500",
-        };
-      default:
-        return {
-          bg: "bg-border",
-          text: "text-muted-foreground",
-          dot: "bg-muted-foreground",
-        };
-    }
-  };
+  const getWillConfig = (status: WillStatus) =>
+    ({
+      approved: {
+        bg: "bg-green-500/10",
+        text: "text-green-600",
+        border: "border-green-200",
+        dot: "bg-green-500",
+        label: "موافق عليها",
+      },
+      rejected: {
+        bg: "bg-red-500/10",
+        text: "text-red-600",
+        border: "border-red-200",
+        dot: "bg-red-500",
+        label: "مرفوضة",
+      },
+      under_review: {
+        bg: "bg-blue-500/10",
+        text: "text-blue-600",
+        border: "border-blue-200",
+        dot: "bg-blue-500",
+        label: "تحت المراجعة",
+      },
+      submitted: {
+        bg: "bg-yellow-500/10",
+        text: "text-yellow-600",
+        border: "border-yellow-200",
+        dot: "bg-yellow-500",
+        label: "معلقة",
+      },
+      draft: {
+        bg: "bg-border",
+        text: "text-muted-foreground",
+        border: "border-transparent",
+        dot: "bg-muted-foreground",
+        label: "مسودة",
+      },
+    })[status] ?? {
+      bg: "bg-border",
+      text: "text-muted-foreground",
+      border: "border-transparent",
+      dot: "bg-muted-foreground",
+      label: "مسودة",
+    };
 
-  const getSubscriptionLabel = (status: SubscriptionStatus): string => {
-    switch (status) {
-      case "active":
-        return "نشط";
-      case "expired":
-        return "منتهي";
-      case "pending":
-        return "معلق";
-      case "cancelled":
-        return "ملغي";
-      default:
-        return "غير محدد";
-    }
-  };
+  const getSubscriptionLabel = (status: SubscriptionStatus) =>
+    getSubscriptionConfig(status).label;
+  const getWillStatusLabel = (status: WillStatus) =>
+    getWillConfig(status).label;
 
-  const getWillStatusLabel = (status: WillStatus): string => {
-    switch (status) {
-      case "submitted":
-        return "معلقة";
-      case "under_review":
-        return "تحت المراجعة";
-      case "approved":
-        return "موافق عليها";
-      case "rejected":
-        return "مرفوضة";
-      default:
-        return "مسودة";
-    }
-  };
-
-  const formatDate = (dateString: string | null): string => {
+  const formatShortDate = (dateString: string | null): string => {
     if (!dateString) return "غير محدد";
     return new Date(dateString).toLocaleDateString("ar-DZ", {
       year: "numeric",
-      month: "long",
+      month: "short",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
   const handleRoleChange = async (newRole: UserRole) => {
     if (!userData) return;
-
+    setUpdatingRole(true);
     try {
       const result = await updateUserRole(userData.id, newRole);
       if (result.success) {
-        setToastMessage(`تم تحديث دور المستخدم إلى ${getRoleLabel(newRole)}`);
-        setShowToast(true);
-        // Refresh data
+        showToast(`تم تحديث الدور بنجاح`, "success");
         fetchUserData(userData.id);
       } else {
-        setToastMessage(result.error || "فشل تحديث دور المستخدم");
-        setShowToast(true);
+        showToast(result.error || "فشل تحديث الدور", "error");
       }
-    } catch (err) {
-      console.error("Error updating user role:", err);
-      setToastMessage("حدث خطأ غير متوقع");
-      setShowToast(true);
+    } catch {
+      showToast("حدث خطأ غير متوقع", "error");
+    } finally {
+      setUpdatingRole(false);
     }
   };
 
+  // ─── Loading ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <RxClock className="text-4xl text-muted-foreground animate-pulse mx-auto mb-4" />
-            <p className="text-muted-foreground">
-              جاري تحميل بيانات المستخدم...
-            </p>
-          </div>
+      <div className="min-h-screen flex items-center justify-center" dir="rtl">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto" />
+          <p className="text-muted-foreground text-sm">
+            جاري تحميل بيانات المستخدم...
+          </p>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  // ─── Error / Not found ─────────────────────────────────────────────────────
+  if (error || !userData) {
     return (
-      <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <RxCross2 className="text-4xl text-red-500 mx-auto mb-4" />
-            <p className="text-red-500 mb-4">{error}</p>
-            <button
-              onClick={() => router.back()}
-              className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
-            >
-              العودة
-            </button>
+      <div className="min-h-screen flex items-center justify-center" dir="rtl">
+        <div className="text-center space-y-4 max-w-sm">
+          <div className="w-16 h-16 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center mx-auto">
+            <RxCross2 className="text-2xl text-red-500" />
           </div>
+          <p className="text-foreground font-semibold">
+            {error || "لم يتم العثور على المستخدم"}
+          </p>
+          <button
+            onClick={() => router.back()}
+            className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition"
+          >
+            العودة
+          </button>
         </div>
       </div>
     );
   }
 
-  if (!userData) {
-    return (
-      <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <RxCross2 className="text-4xl text-red-500 mx-auto mb-4" />
-            <p className="text-red-500">لم يتم العثور على المستخدم</p>
-            <button
-              onClick={() => router.back()}
-              className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
-            >
-              العودة
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const roleBadge = getRoleBadgeStyle(userData.role);
+  const roleConfig = getRoleConfig(userData.role);
   const subscription = userData.subscriptions?.[0];
   const wills = userData.wills || [];
 
   return (
-    <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
-      {/* Toast Notification */}
-      {showToast && (
-        <div className="fixed top-4 left-4 z-50 bg-primary text-primary-foreground px-6 py-3 rounded-xl shadow-lg animate-pulse">
-          {toastMessage}
+    <div className="min-h-screen bg-background" dir="rtl">
+      {/* Toast */}
+      {toast && (
+        <div
+          className={`fixed top-4 left-4 z-50 px-6 py-3 rounded-xl shadow-lg text-sm font-bold transition-all flex items-center gap-2 animate-pulse ${
+            toast.type === "success"
+              ? "bg-primary text-primary-foreground"
+              : "bg-red-500 text-white"
+          }`}
+        >
+          {toast.type === "success" ? (
+            <RxCheck className="text-xl" />
+          ) : (
+            <RxCross2 className="text-xl" />
+          )}
+          {toast.message}
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-5">
-        <button
-          onClick={() => router.back()}
-          className="p-2 bg-surface border border-border rounded-xl hover:bg-gray-50 transition-colors"
-          title="العودة"
-        >
-          <RxArrowLeft className="text-xl text-foreground" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-            تفاصيل المستخدم
-          </h1>
-          <div className="flex items-center gap-4">
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1.5 w-fit ${roleBadge.bg} ${roleBadge.text}`}
-            >
-              <div
-                className={`w-1.5 h-1.5 rounded-full ${roleBadge.dot}`}
-              ></div>
-              {getRoleLabel(userData.role)}
-            </span>
-            <span className="text-sm text-muted-foreground">
-              {userData.full_name || "غير محدد"}
-            </span>
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 pb-24 space-y-6">
+        {/* ── Header ── */}
+        <div className="flex items-center gap-3">
+          <button
+            title="عودة للخلف"
+            onClick={() => router.back()}
+            className="p-2.5 bg-surface border border-border rounded-xl hover:bg-black/5 transition-colors shadow-sm"
+          >
+            <RxArrowLeft className="text-lg text-muted-foreground" />
+          </button>
+          <div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+              <span>المستخدمون</span>
+              <RxChevronRight className="text-muted-foreground" />
+              <span className="text-foreground font-bold">
+                {userData.full_name || "مستخدم"}
+              </span>
+            </div>
+            <h1 className="text-2xl font-bold text-foreground">
+              تفاصيل المستخدم
+            </h1>
           </div>
         </div>
-      </div>
 
-      {/* User Details */}
-      <div className="space-y-6">
-        {/* Profile Information */}
+        {/* ── Hero Card ── */}
         <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-border bg-gray-50">
-            <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-              <RxPerson className="text-primary" />
-              معلومات المستخدم
-            </h3>
-          </div>
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  الاسم الكامل
-                </label>
-                <p className="font-medium text-foreground">
-                  {userData.full_name || "غير محدد"}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  رقم الهاتف
-                </label>
-                <p className="font-medium text-foreground" dir="ltr">
-                  {userData.phone || "غير محدد"}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  المدينة
-                </label>
-                <p className="font-medium text-foreground">
-                  {userData.city || "غير محدد"}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  الدور
-                </label>
-                <div className="flex items-center gap-2">
-                  <div
-                    className={`rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1.5 w-fit ${roleBadge.bg} ${roleBadge.text}`}
-                  >
-                    <div
-                      className={`w-1.5 h-1.5 rounded-full ${roleBadge.dot}`}
-                    ></div>
-                    {getRoleLabel(userData.role)}
-                  </div>
-                  <select
-                    value={userData.role}
-                    onChange={(e) =>
-                      handleRoleChange(e.target.value as UserRole)
-                    }
-                    className="px-3 py-1 rounded-lg text-sm border border-border bg-surface focus:outline-none focus:ring-2 focus:ring-primary"
-                    title="تغيير دور المستخدم"
-                  >
-                    <option value="user">مستخدم</option>
-                    <option value="admin">مدير</option>
-                  </select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  تاريخ الانضمام
-                </label>
-                <p className="font-medium text-foreground">
-                  {formatDate(userData.updated_at)}
-                </p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  الصورة الشخصية
-                </label>
-                <div className="flex items-center gap-3">
+          <div className="h-24 bg-linear-to-l from-primary/10 via-primary/5 to-transparent" />
+          <div className="px-6 pb-6 -mt-10">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+              <div className="flex items-end gap-4">
+                {/* Avatar */}
+                <div className="w-20 h-20 rounded-3xl border-4 border-surface shadow-sm overflow-hidden bg-primary/10 flex items-center justify-center shrink-0 relative">
                   {userData.avatar_url ? (
-                    <img
+                    <Image
                       src={userData.avatar_url}
-                      alt={userData.full_name || "مستخدم"}
-                      className="w-16 h-16 rounded-full object-cover"
+                      alt={userData.full_name || ""}
+                      fill
+                      className="object-cover"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                      <RxPerson className="text-primary text-2xl" />
-                    </div>
+                    <RxPerson className="text-3xl text-primary" />
                   )}
                 </div>
+                <div className="pb-1">
+                  <h2 className="text-xl font-bold text-foreground">
+                    {userData.full_name || "غير محدد"}
+                  </h2>
+                  <p className="text-sm text-muted-foreground font-medium">
+                    {userData.phone || "لا يوجد رقم هاتف"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Role badge + selector */}
+              <div className="flex items-center gap-2 pb-1">
+                <span
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold border-transparent flex items-center gap-1.5 ${roleConfig.bg} ${roleConfig.text}`}
+                >
+                  <div
+                    className={`w-1.5 h-1.5 rounded-full ${roleConfig.dot}`}
+                  />
+                  {roleConfig.label}
+                </span>
+                <select
+                  title="تغيير دور المستخدم"
+                  value={userData.role}
+                  onChange={(e) => handleRoleChange(e.target.value as UserRole)}
+                  disabled={updatingRole}
+                  className="px-4 py-2 rounded-2xl text-sm font-bold border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 cursor-pointer shadow-sm"
+                >
+                  <option value="user">ترقية/تخفيض لمستخدم</option>
+                  <option value="admin">ترقية/تخفيض لمدير</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Quick stats */}
+            <div className="grid grid-cols-3 gap-3 mt-6 border-t border-border pt-6">
+              <div className="bg-background rounded-2xl p-4 text-center border border-border/50">
+                <p className="text-2xl font-bold text-foreground">
+                  {wills.length}
+                </p>
+                <p className="text-xs text-muted-foreground font-bold mt-1">
+                  وصايا
+                </p>
+              </div>
+              <div className="bg-background rounded-2xl p-4 text-center border border-border/50">
+                <p className="text-2xl font-bold text-foreground">
+                  {userData.subscriptions?.length || 0}
+                </p>
+                <p className="text-xs text-muted-foreground font-bold mt-1">
+                  اشتراكات
+                </p>
+              </div>
+              <div className="bg-background rounded-2xl p-4 text-center border border-border/50">
+                <p className="text-sm font-bold text-foreground mt-2">
+                  {userData.city || "—"}
+                </p>
+                <p className="text-xs text-muted-foreground font-bold mt-1">
+                  المدينة
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Subscription Information */}
+        {/* ── Subscription Card ── */}
         {subscription && (
           <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-border bg-gray-50">
-              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                <RxCardStack className="text-primary" />
-                معلومات الاشتراك
+            <div className="px-6 py-5 border-b border-border flex items-center justify-between bg-black/5">
+              <h3 className="font-bold text-foreground flex items-center gap-2 text-base">
+                <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <RxCardStack className="text-primary text-lg" />
+                </div>
+                الاشتراك الحالي
               </h3>
+              {(() => {
+                const cfg = getSubscriptionConfig(subscription.status);
+                return (
+                  <span
+                    className={`px-4 py-1.5 rounded-full text-xs font-bold border-transparent flex items-center gap-1.5 ${cfg.bg} ${cfg.text}`}
+                  >
+                    <div className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                    {cfg.label}
+                  </span>
+                );
+              })()}
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">
-                    نوع الاشتراك
-                  </label>
-                  <p className="font-medium text-foreground">
+
+            <div className="p-6 space-y-6">
+              {/* Plan name + price */}
+              <div className="flex items-center justify-between bg-background p-4 rounded-2xl border border-border/50">
+                <div>
+                  <p className="text-xs text-muted-foreground font-bold mb-1">
+                    خطة الاشتراك
+                  </p>
+                  <p className="font-bold text-xl text-foreground">
                     {subscription.offers?.name_ar || "غير محدد"}
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">
-                    الحالة
-                  </label>
-                  <div
-                    className={`rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1.5 w-fit ${getSubscriptionBadgeStyle(subscription.status).bg} ${getSubscriptionBadgeStyle(subscription.status).text}`}
-                  >
-                    <div
-                      className={`w-1.5 h-1.5 rounded-full ${getSubscriptionBadgeStyle(subscription.status).dot}`}
-                    ></div>
-                    {getSubscriptionLabel(subscription.status)}
+                {subscription.offers?.price_dzd && (
+                  <div className="text-left">
+                    <p className="font-black text-2xl text-primary" dir="ltr">
+                      {subscription.offers.price_dzd.toLocaleString("ar-DZ")}{" "}
+                      <span className="text-sm font-bold text-muted-foreground">
+                        د.ج
+                      </span>
+                    </p>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">
-                    تاريخ البدء
-                  </label>
-                  <p className="font-medium text-foreground">
-                    {formatDate(subscription.started_at)}
+                )}
+              </div>
+
+              {/* Dates row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-background rounded-2xl p-4 border border-border/50">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-bold mb-2">
+                    <RxClock className="text-sm" /> تاريخ البدء
+                  </div>
+                  <p className="font-bold text-sm text-foreground">
+                    {formatShortDate(subscription.started_at)}
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">
-                    تاريخ الانتهاء
-                  </label>
-                  <p className="font-medium text-foreground">
-                    {formatDate(subscription.expires_at)}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">
-                    السعر
-                  </label>
-                  <p className="font-medium text-foreground">
-                    {subscription.offers?.price_dzd
-                      ? `${subscription.offers.price_dzd.toLocaleString("ar-DZ")} د.ج`
-                      : "غير محدد"}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">
-                    تاريخ الإنشاء
-                  </label>
-                  <p className="font-medium text-foreground">
-                    {formatDate(subscription.created_at)}
+                <div className="bg-background rounded-2xl p-4 border border-border/50">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-bold mb-2">
+                    <RxClock className="text-sm" /> تاريخ الانتهاء
+                  </div>
+                  <p className="font-bold text-sm text-foreground">
+                    {formatShortDate(subscription.expires_at)}
                   </p>
                 </div>
               </div>
 
-              {/* Subscription Features */}
+              {/* Features */}
               {subscription.offers && (
-                <div className="mt-6 pt-6 border-t border-border">
-                  <h4 className="text-sm font-medium text-foreground mb-3">
+                <div className="pt-2">
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-3 px-1">
                     المميزات
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {subscription.offers.has_legal_will_creation && (
-                      <div className="flex items-center gap-2 text-sm text-foreground">
-                        <RxCheck className="text-green-500" />
-                        إنشاء وصية قانونية
-                      </div>
-                    )}
-                    {subscription.offers.has_approved_template && (
-                      <div className="flex items-center gap-2 text-sm text-foreground">
-                        <RxCheck className="text-green-500" />
-                        قوالب معتمدة
-                      </div>
-                    )}
-                    {subscription.offers.has_secure_digital_storage && (
-                      <div className="flex items-center gap-2 text-sm text-foreground">
-                        <RxCheck className="text-green-500" />
-                        تخزين رقمي آمن
-                      </div>
-                    )}
-                    {subscription.offers.has_edit_later && (
-                      <div className="flex items-center gap-2 text-sm text-foreground">
-                        <RxCheck className="text-green-500" />
-                        تعديل لاحق
-                      </div>
-                    )}
-                    {subscription.offers.has_heir_notification && (
-                      <div className="flex items-center gap-2 text-sm text-foreground">
-                        <RxCheck className="text-green-500" />
-                        إشعارات للورثة
-                      </div>
-                    )}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {[
+                      {
+                        key: "has_legal_will_creation",
+                        label: "إنشاء وصية قانونية",
+                      },
+                      { key: "has_approved_template", label: "قوالب معتمدة" },
+                      {
+                        key: "has_secure_digital_storage",
+                        label: "تخزين رقمي آمن",
+                      },
+                      { key: "has_edit_later", label: "تعديل لاحق" },
+                      { key: "has_heir_notification", label: "إشعارات للورثة" },
+                    ].map(({ key, label }) => {
+                      const enabled = subscription.offers?.[
+                        key as keyof Offer
+                      ] as boolean;
+                      return (
+                        <div
+                          key={key}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold border ${
+                            enabled
+                              ? "bg-green-500/10 border-transparent text-green-700"
+                              : "bg-background border-border/50 text-muted-foreground"
+                          }`}
+                        >
+                          <div
+                            className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
+                              enabled ? "bg-green-500" : "bg-border"
+                            }`}
+                          >
+                            {enabled ? (
+                              <RxCheck className="text-white text-sm" />
+                            ) : (
+                              <RxCross2 className="text-muted-foreground text-sm" />
+                            )}
+                          </div>
+                          {label}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -557,148 +548,133 @@ export default function UserDetailsPage() {
           </div>
         )}
 
-        {/* User Wills */}
+        {/* ── Wills ── */}
         {wills.length > 0 && (
           <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-border bg-gray-50">
-              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-                <RxFileText className="text-primary" />
-                وصايا المستخدم ({wills.length})
+            <div className="px-6 py-5 border-b border-border flex items-center justify-between bg-black/5">
+              <h3 className="font-bold text-foreground flex items-center gap-2 text-base">
+                <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <RxFileText className="text-primary text-lg" />
+                </div>
+                الوصايا
               </h3>
+              <span className="px-3 py-1 bg-background border border-border text-foreground rounded-lg text-xs font-bold shadow-sm">
+                {wills.length}
+              </span>
             </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                {wills.map((will) => (
-                  <div key={will.id} className="bg-gray-50 rounded-xl p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h4 className="font-medium text-foreground mb-1">
-                          الوصية #{will.id}
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          {will.subject_of_will || "لا يوجد عنوان"}
+            <div className="divide-y divide-border/50">
+              {wills.map((will) => {
+                const cfg = getWillConfig(will.status);
+                return (
+                  <div
+                    key={will.id}
+                    className="px-6 py-5 hover:bg-black/5 transition-colors group"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span
+                            className={`px-3 py-1 rounded-full text-xs font-bold border-transparent flex items-center gap-1.5 ${cfg.bg} ${cfg.text}`}
+                          >
+                            <div
+                              className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`}
+                            />
+                            {cfg.label}
+                          </span>
+                          <span className="text-xs font-bold text-muted-foreground bg-background px-2 py-1 rounded-lg border border-border/50">
+                            {will.will_category === "general"
+                              ? "عامة"
+                              : will.will_category === "financial"
+                                ? "مالية"
+                                : will.will_category === "business"
+                                  ? "أعمال"
+                                  : "غير محدد"}
+                          </span>
+                        </div>
+                        <p className="text-base font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                          {will.subject_of_will ||
+                            `وصية #${will.id.slice(0, 8)}`}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-medium mt-1 flex items-center gap-1">
+                          <RxClock />
+                          {formatShortDate(will.created_at)}
                         </p>
                       </div>
-                      <div
-                        className={`rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1.5 w-fit ${
-                          will.status === "approved"
-                            ? "bg-green-500/10 text-green-600"
-                            : will.status === "rejected"
-                              ? "bg-red-500/10 text-red-600"
-                              : will.status === "under_review"
-                                ? "bg-blue-500/10 text-blue-600"
-                                : "bg-yellow-500/10 text-yellow-600"
-                        }`}
-                      >
-                        <div
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            will.status === "approved"
-                              ? "bg-green-500"
-                              : will.status === "rejected"
-                                ? "bg-red-500"
-                                : will.status === "under_review"
-                                  ? "bg-blue-500"
-                                  : "bg-yellow-500"
-                          }`}
-                        ></div>
-                        {getWillStatusLabel(will.status)}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">النوع:</span>
-                        <span className="mr-2 font-medium">
-                          {will.will_category === "general"
-                            ? "عامة"
-                            : will.will_category === "financial"
-                              ? "مالية"
-                              : will.will_category === "business"
-                                ? "أعمال"
-                                : "غير محدد"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">المستوى:</span>
-                        <span className="mr-2 font-medium">
-                          {will.will_type === "basic"
-                            ? "أساسي"
-                            : will.will_type === "medium"
-                              ? "متوسط"
-                              : will.will_type === "pro"
-                                ? "احترافي"
-                                : "غير محدد"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">التاريخ:</span>
-                        <span className="mr-2 font-medium">
-                          {formatDate(will.created_at)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mt-3 pt-3 border-t border-gray-200">
                       <button
+                        title="التفاصيل"
                         onClick={() =>
                           router.push(`/admin/dashboard/wills/${will.id}`)
                         }
-                        className="text-sm text-primary hover:underline font-medium"
+                        className="shrink-0 flex items-center gap-2 px-4 py-2 bg-background border border-border group-hover:border-primary/30 text-muted-foreground group-hover:text-primary rounded-xl text-sm font-bold transition-all hover:shadow-sm"
                       >
-                        عرض التفاصيل
+                        التفاصيل
+                        <RxArrowLeft className="text-lg" />
                       </button>
                     </div>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* Activity Log */}
+        {/* ── Activity Log ── */}
         <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-border bg-gray-50">
-            <h3 className="text-base font-bold text-foreground flex items-center gap-2">
-              <RxClock className="text-primary" />
+          <div className="px-6 py-5 border-b border-border bg-black/5">
+            <h3 className="font-bold text-foreground flex items-center gap-2 text-base">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                <RxClock className="text-primary text-lg" />
+              </div>
               سجل النشاط
             </h3>
           </div>
           <div className="p-6">
-            <div className="space-y-4">
-              {activityLogs.map((log) => (
-                <div key={log.id} className="bg-gray-50 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
+            <div className="relative">
+              {/* Timeline line */}
+              <div className="absolute right-4 top-2 bottom-2 w-0.5 bg-border/80 rounded-full" />
+              <div className="space-y-6 relative">
+                {activityLogs.map((log) => {
+                  const iconBg =
+                    log.type === "will"
+                      ? "bg-blue-500 text-white"
+                      : log.type === "subscription"
+                        ? "bg-green-500 text-white"
+                        : "bg-purple-500 text-white";
+                  return (
+                    <div
+                      key={log.id}
+                      className="flex items-start gap-4 relative group"
+                    >
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          log.type === "will"
-                            ? "bg-blue-500/10 text-blue-600"
-                            : log.type === "subscription"
-                              ? "bg-green-500/10 text-green-600"
-                              : "bg-purple-500/10 text-purple-600"
-                        }`}
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 z-10 shadow-sm ring-4 ring-surface ${iconBg}`}
                       >
                         {log.type === "will" ? (
-                          <RxFileText className="text-sm" />
+                          <RxFileText className="text-sm border-transparent" />
                         ) : log.type === "subscription" ? (
-                          <RxCardStack className="text-sm" />
+                          <RxCardStack className="text-sm border-transparent" />
                         ) : (
-                          <RxPerson className="text-sm" />
+                          <RxPerson className="text-sm border-transparent" />
                         )}
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {log.action}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          {log.description}
-                        </p>
+                      <div className="flex-1 min-w-0 bg-background rounded-2xl p-4 border border-border/50 group-hover:border-border transition-colors">
+                        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                          <div>
+                            <p className="text-sm font-bold text-foreground">
+                              {log.action}
+                            </p>
+                            <p className="text-sm text-muted-foreground font-medium mt-1">
+                              {log.description}
+                            </p>
+                          </div>
+                          <span className="text-xs font-bold text-muted-foreground bg-black/5 px-2 py-1 rounded-lg shrink-0 whitespace-nowrap">
+                            {formatShortDate(log.date)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(log.date)}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
