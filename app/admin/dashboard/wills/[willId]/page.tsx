@@ -173,16 +173,19 @@ export default function WillReviewPage() {
       if (result.success) {
         setToastMessage("تمت الموافقة على الوصية بنجاح");
         setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
         // Refresh data
         fetchWillData(willData.id);
       } else {
         setToastMessage(result.error || "فشل الموافقة على الوصية");
         setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
       }
     } catch (err) {
       console.error("Error approving will:", err);
       setToastMessage("حدث خطأ غير متوقع");
       setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
     }
   };
 

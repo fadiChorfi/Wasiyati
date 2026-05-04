@@ -536,15 +536,8 @@ export async function getAdminUserById(userId: string) {
   try {
     const supabase = await createClient();
 
-    // Check if user is admin
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return { success: false, error: "يجب تسجيل الدخول" };
-    }
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return { success: false, error: "يجب تسجيل الدخول" };
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -552,15 +545,12 @@ export async function getAdminUserById(userId: string) {
       .eq("id", user.id)
       .single();
 
-    if (profile?.role !== "admin") {
-      return { success: false, error: "غير مصرح لك بالوصول" };
-    }
+    if (profile?.role !== "admin") return { success: false, error: "غير مصرح لك بالوصول" };
 
-    // Fetch specific user with all related data
+    // 1️⃣ Fetch profile + wills (no offers join)
     const { data: userProfile, error } = await supabase
       .from("profiles")
-      .select(
-        `
+      .select(`
         *,
         subscriptions (
           id,
@@ -570,18 +560,7 @@ export async function getAdminUserById(userId: string) {
           created_at,
           receipt_url,
           receipt_path,
-          offers (
-            id,
-            offer_key,
-            name_ar,
-            price_dzd,
-            tier_rank,
-            has_legal_will_creation,
-            has_approved_template,
-            has_secure_digital_storage,
-            has_edit_later,
-            has_heir_notification
-          )
+          offer_id
         ),
         wills (
           id,
@@ -616,8 +595,7 @@ export async function getAdminUserById(userId: string) {
             last_name
           )
         )
-      `,
-      )
+      `)
       .eq("id", userId)
       .single();
 
@@ -626,11 +604,45 @@ export async function getAdminUserById(userId: string) {
       return { success: false, error: "فشل جلب بيانات المستخدم" };
     }
 
-    if (!userProfile) {
-      return { success: false, error: "لم يتم العثور على المستخدم" };
+    if (!userProfile) return { success: false, error: "لم يتم العثور على المستخدم" };
+
+    // 2️⃣ Fetch offers separately for each subscription
+    const offerIds = userProfile.subscriptions
+      ?.map((s: { offer_id: string }) => s.offer_id)
+      .filter(Boolean) ?? [];
+
+    let offersMap: Record<string, unknown> = {};
+
+    if (offerIds.length > 0) {
+      const { data: offers } = await supabase
+        .from("offers")
+        .select(`
+          id,
+          offer_key,
+          name_ar,
+          price_dzd,
+          tier_rank,
+          has_legal_will_creation,
+          has_approved_template,
+          has_secure_digital_storage,
+          has_edit_later,
+          has_heir_notification
+        `)
+        .in("id", offerIds);
+
+      offersMap = Object.fromEntries((offers ?? []).map((o) => [o.id, o]));
     }
 
-    return { success: true, data: userProfile };
+    // 3️⃣ Merge offers into subscriptions
+    const enrichedProfile = {
+      ...userProfile,
+      subscriptions: userProfile.subscriptions?.map((sub: { offer_id: string }) => ({
+        ...sub,
+        offers: offersMap[sub.offer_id] ?? null,
+      })),
+    };
+
+    return { success: true, data: enrichedProfile };
   } catch (error) {
     console.error("Admin user error:", error);
     return { success: false, error: "حدث خطأ غير متوقع" };

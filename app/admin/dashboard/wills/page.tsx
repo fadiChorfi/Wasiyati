@@ -68,21 +68,6 @@ export default function Wills() {
     }
   };
 
-  // Calculate statistics
-  const stats = useMemo(() => {
-    const total = wills.length;
-    const underReview = wills.filter(
-      (w) =>
-        w.status !== "approved" &&
-        w.status !== "rejected" &&
-        w.status !== "draft",
-    ).length;
-    const approved = wills.filter((w) => w.status === "approved").length;
-    const rejected = wills.filter((w) => w.status === "rejected").length;
-
-    return { total, underReview, approved, rejected };
-  }, [wills]);
-
   // Filter wills
   const filteredWills = useMemo(() => {
     return wills.filter((will) => {
@@ -265,57 +250,7 @@ export default function Wills() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="mb-5">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-          إدارة الوصايا
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          مراجعة والموافقة على الوصايا المقدمة
-        </p>
-      </div>
-
       {/* Stats Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-5">
-        <div className="bg-surface rounded-3xl p-4 md:p-6 border border-border shadow-sm flex flex-col items-start transition-all hover:shadow-md">
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center self-start mb-4 bg-primary/10 text-primary">
-            <RxFileText className="text-xl" />
-          </div>
-          <h3 className="text-sm font-medium text-muted-foreground">الكل</h3>
-          <p className="text-3xl font-bold text-foreground mt-2">
-            {stats.total}
-          </p>
-        </div>
-        <div className="bg-surface rounded-3xl p-4 md:p-6 border border-border shadow-sm flex flex-col items-start transition-all hover:shadow-md">
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center self-start mb-4 bg-primary/10 text-primary">
-            <RxClock className="text-xl" />
-          </div>
-          <h3 className="text-sm font-medium text-muted-foreground">
-            قيد المراجعة
-          </h3>
-          <p className="text-3xl font-bold text-primary mt-2">
-            {stats.underReview}
-          </p>
-        </div>
-        <div className="bg-surface rounded-3xl p-4 md:p-6 border border-border shadow-sm flex flex-col items-start transition-all hover:shadow-md">
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center self-start mb-4 bg-green-500/10 text-green-600">
-            <RxCheck className="text-xl" />
-          </div>
-          <h3 className="text-sm font-medium text-muted-foreground">معتمدة</h3>
-          <p className="text-3xl font-bold text-green-600 mt-2">
-            {stats.approved}
-          </p>
-        </div>
-        <div className="bg-surface rounded-3xl p-4 md:p-6 border border-border shadow-sm flex flex-col items-start transition-all hover:shadow-md">
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center self-start mb-4 bg-red-500/10 text-red-600">
-            <RxCross2 className="text-xl" />
-          </div>
-          <h3 className="text-sm font-medium text-muted-foreground">مرفوضة</h3>
-          <p className="text-3xl font-bold text-red-500 mt-2">
-            {stats.rejected}
-          </p>
-        </div>
-      </div>
 
       {/* Filters and Search */}
       <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden">
@@ -332,7 +267,6 @@ export default function Wills() {
             {[
               { key: "all", label: "الكل" },
               { key: "submitted", label: "معلقة" },
-              { key: "under_review", label: "تحت المراجعة" },
               { key: "approved", label: "موافق عليها" },
               { key: "rejected", label: "مرفوضة" },
             ].map((filter) => (
