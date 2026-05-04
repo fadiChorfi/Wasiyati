@@ -9,15 +9,23 @@ export default function AdminSidebar() {
 
   const navItems = [
     { label: "لوحة القيادة", href: "/admin/dashboard", icon: RxDashboard },
-    { label: "إدارة الوصايا", href: "/admin/dashboard/wills", icon: RxFileText },
-    { label: "إدارة المستخدمين", href: "/admin/dashboard/users", icon: RxPerson },
+    {
+      label: "إدارة الوصايا",
+      href: "/admin/dashboard/wills",
+      icon: RxFileText,
+    },
+    {
+      label: "إدارة المستخدمين",
+      href: "/admin/dashboard/users",
+      icon: RxPerson,
+    },
     { label: "الإعدادات", href: "/admin/dashboard/settings", icon: RxGear },
   ];
 
   return (
     <aside className="hidden md:flex flex-col w-65 h-screen bg-surface border-l border-border shadow-sm fixed top-0 right-0 z-40">
       <div className="p-6 h-20 flex items-center border-b border-border">
-        <h1 className="text-2xl font-black text-foreground">وصيتي - الإدارة</h1>
+        <h1 className="text-2xl font-black text-foreground">وصيتي</h1>
       </div>
 
       <div className="flex-1 overflow-y-auto py-6 px-4">
