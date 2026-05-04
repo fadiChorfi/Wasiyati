@@ -13,12 +13,10 @@ import {
   RxEyeOpen,
   RxStar,
 } from "react-icons/rx";
-import { getAdminUsers, updateUserRole } from "@/actions/wills";
+import { getAdminUsers } from "@/actions/wills";
 
-// Extended interfaces for admin view
-interface UserWithDetails extends Profile {
-  // Simplified interface for now - will add relationships later
-}
+// Extended type for admin view
+type UserWithDetails = Profile;
 
 type FilterRole = "all" | UserRole;
 type FilterStatus = "all" | SubscriptionStatus;
@@ -31,8 +29,6 @@ export default function Users() {
   const [filterRole, setFilterRole] = useState<FilterRole>("all");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
 
   // Fetch users data on component mount
   useEffect(() => {
@@ -124,7 +120,7 @@ export default function Users() {
     }
   };
 
- /*  const getSubscriptionBadgeStyle = (status: SubscriptionStatus) => {
+  /*  const getSubscriptionBadgeStyle = (status: SubscriptionStatus) => {
     switch (status) {
       case "active":
         return {
@@ -155,26 +151,6 @@ export default function Users() {
     }
   }; */
 
-  // Handle role change
-  const handleRoleChange = async (userId: string, newRole: UserRole) => {
-    try {
-      const result = await updateUserRole(userId, newRole);
-      if (result.success) {
-        setToastMessage(`تم تحديث دور المستخدم إلى ${getRoleLabel(newRole)}`);
-        setShowToast(true);
-        // Refresh data
-        fetchUsers();
-      } else {
-        setToastMessage(result.error || "فشل تحديث دور المستخدم");
-        setShowToast(true);
-      }
-    } catch (err) {
-      console.error("Error updating user role:", err);
-      setToastMessage("حدث خطأ غير متوقع");
-      setShowToast(true);
-    }
-  };
-
   const formatDate = (dateString: string | null): string => {
     if (!dateString) return "غير محدد";
     return new Date(dateString).toLocaleDateString("ar-DZ", {
@@ -184,7 +160,7 @@ export default function Users() {
     });
   };
 
-  const getUserSubscriptionStatus = (user: UserWithDetails) => {
+  const getUserSubscriptionStatus = () => {
     // TODO: Implement when subscriptions are added to the data structure
     return { status: "none", label: "لا يوجد اشتراك" };
   };
@@ -228,13 +204,6 @@ export default function Users() {
       className="space-y-6 px-4 md:px-6 py-4 pb-24 md:pb-6 max-w-7xl mx-auto"
       dir="rtl"
     >
-      {/* Toast Notification */}
-      {showToast && (
-        <div className="fixed top-4 left-4 z-50 bg-primary text-primary-foreground px-6 py-3 rounded-xl shadow-lg animate-pulse">
-          {toastMessage}
-        </div>
-      )}
-
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-foreground">إدارة المستخدمين</h1>
@@ -353,45 +322,48 @@ export default function Users() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-right text-sm">
-              <thead className="bg-background/50 text-muted-foreground border-b border-border">
+              <thead className="bg-black/5 text-muted-foreground border-b border-border">
                 <tr>
-                  <th className="px-6 py-4 font-medium whitespace-nowrap">
+                  <th className="px-6 py-5 font-bold whitespace-nowrap">
                     المستخدم
                   </th>
-                  <th className="px-6 py-4 font-medium whitespace-nowrap">
+                  <th className="px-6 py-5 font-bold whitespace-nowrap">
                     الهاتف
                   </th>
-                  <th className="px-6 py-4 font-medium whitespace-nowrap">
+                  <th className="px-6 py-5 font-bold whitespace-nowrap">
                     المدينة
                   </th>
-                  <th className="px-6 py-4 font-medium whitespace-nowrap">
+                  <th className="px-6 py-5 font-bold whitespace-nowrap">
                     تاريخ الانضمام
                   </th>
-                  <th className="px-6 py-4 font-medium whitespace-nowrap">
+                  <th className="px-6 py-5 font-bold whitespace-nowrap">
                     الاشتراك
                   </th>
-                  <th className="px-6 py-4 font-medium whitespace-nowrap">
+                  <th className="px-6 py-5 font-bold whitespace-nowrap">
                     الدور
                   </th>
-                  <th className="px-6 py-4 font-medium whitespace-nowrap text-left">
+                  <th className="px-6 py-5 font-bold whitespace-nowrap text-left">
                     الإجراءات
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-y divide-border/50">
                 {filteredUsers.map((user) => {
                   const roleBadge = getRoleBadgeStyle(user.role);
-                  const subscriptionStatus = getUserSubscriptionStatus(user);
+                  const subscriptionStatus = getUserSubscriptionStatus();
 
                   return (
                     <tr
                       key={user.id}
-                      className="hover:bg-background/50 transition-colors group"
+                      onClick={() =>
+                        router.push(`/admin/dashboard/users/${user.id}`)
+                      }
+                      className="hover:bg-primary/5 transition-all group cursor-pointer"
                     >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-4">
                           <div
-                            className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
+                            className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-border/40 ${
                               user.role === "admin"
                                 ? "bg-purple-500/10 text-purple-600"
                                 : "bg-primary/10 text-primary"
@@ -401,40 +373,40 @@ export default function Users() {
                               <Image
                                 src={user.avatar_url}
                                 alt={user.full_name || "مستخدم"}
-                                width={40}
-                                height={40}
+                                width={44}
+                                height={44}
                                 className="w-full h-full rounded-2xl object-cover"
                               />
                             ) : (
-                              <RxPerson className="text-lg" />
+                              <RxPerson className="text-xl" />
                             )}
                           </div>
-                          <span className="font-bold text-foreground">
+                          <span className="font-bold text-foreground group-hover:text-primary transition-colors text-base">
                             {user.full_name || "مستخدم غير معروف"}
                           </span>
                         </div>
                       </td>
                       <td
-                        className="px-6 py-4 text-muted-foreground"
+                        className="px-6 py-5 text-muted-foreground font-medium"
                         dir="ltr"
                         style={{ textAlign: "right" }}
                       >
                         {user.phone || "غير متوفر"}
                       </td>
-                      <td className="px-6 py-4 text-muted-foreground">
+                      <td className="px-6 py-5 text-muted-foreground font-medium">
                         {user.city || "غير محدد"}
                       </td>
-                      <td className="px-6 py-4 text-muted-foreground">
+                      <td className="px-6 py-5 text-muted-foreground font-medium">
                         {formatDate(user.updated_at)}
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="text-muted-foreground">
+                      <td className="px-6 py-5">
+                        <span className="text-muted-foreground font-medium">
                           {subscriptionStatus.label}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-5">
                         <span
-                          className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 w-fit ${roleBadge.bg} ${roleBadge.text}`}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 w-fit ${roleBadge.bg} ${roleBadge.text}`}
                         >
                           <span
                             className={`w-1.5 h-1.5 rounded-full ${roleBadge.dot}`}
@@ -442,31 +414,17 @@ export default function Users() {
                           {getRoleLabel(user.role)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-left">
-                        <div className="flex items-center justify-end gap-3">
-                          <select
-                            title={`تغيير دور المستخدم ${user.full_name || "غير محدد"}`}
-                            value={user.role}
-                            onChange={(e) =>
-                              handleRoleChange(
-                                user.id,
-                                e.target.value as UserRole,
-                              )
-                            }
-                            onClick={(e) => e.stopPropagation()}
-                            className="px-3 py-1.5 rounded-xl text-xs border border-border bg-surface focus:outline-none focus:ring-2 focus:ring-primary font-medium"
-                          >
-                            <option value="user">ترقية/تخفيض لمستخدم</option>
-                            <option value="admin">ترقية/تخفيض لمدير</option>
-                          </select>
+                      <td className="px-6 py-5 text-left">
+                        <div className="flex items-center justify-end">
                           <button
-                            onClick={() =>
-                              router.push(`/admin/dashboard/users/${user.id}`)
-                            }
-                            className="text-primary hover:text-primary/80 font-medium opacity-0 group-hover:opacity-100 transition-opacity min-w-17.5 flex items-center gap-1 justify-end"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              router.push(`/admin/dashboard/users/${user.id}`);
+                            }}
+                            className="bg-surface border border-border group-hover:border-primary/30 text-muted-foreground group-hover:text-primary px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all hover:shadow-sm"
                           >
-                            <RxEyeOpen />
-                            عرض
+                            <RxEyeOpen className="text-lg" />
+                            التفاصيل
                           </button>
                         </div>
                       </td>
