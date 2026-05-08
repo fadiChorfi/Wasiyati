@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   RxFileText,
   RxCheck,
@@ -100,6 +101,7 @@ const priorityMap: Record<WillStatus, number> = {
 };
 
 export default function MyWillsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [wills, setWills] = useState<WillUI[]>([]);
   const [sort] = useState<"الأولوية" | "الأحدث" | "الأقدم" | "النوع">("الأحدث");
@@ -234,6 +236,16 @@ export default function MyWillsPage() {
       setWills(wills.filter((w) => w.id !== deleteWillId));
       setDeleteWillId(null);
     }
+  };
+
+  const getTemplateHref = (willCategory: string | null) => {
+    const file =
+      willCategory === "business"
+        ? "business-will.pdf"
+        : willCategory === "money"
+          ? "money-will.pdf"
+          : "general-will.pdf";
+    return `/docs/${file}`;
   };
 
   return (
@@ -414,14 +426,20 @@ export default function MyWillsPage() {
                         >
                           <button
                             onClick={() => {
-                              setSelectedWill(will);
+                              router.push(`/dashboard/wills/${will.id}`);
                               setMenuOpenId(null);
                             }}
                             className="w-full text-right px-4 py-2 text-sm text-foreground hover:bg-background transition-colors"
                           >
                             عرض التفاصيل
                           </button>
-                          <button className="w-full text-right px-4 py-2 text-sm text-foreground hover:bg-background transition-colors">
+                          <button
+                            onClick={() => {
+                              router.push(`/dashboard/wills/${will.id}`);
+                              setMenuOpenId(null);
+                            }}
+                            className="w-full text-right px-4 py-2 text-sm text-foreground hover:bg-background transition-colors"
+                          >
                             تعديل
                           </button>
                           <button className="w-full text-right px-4 py-2 text-sm text-foreground hover:bg-background transition-colors">
@@ -442,16 +460,19 @@ export default function MyWillsPage() {
                     </div>
 
                     {will.status === "approved" && (
-                      <button
+                      <a
+                        href={getTemplateHref(will.will_category)}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         title="تحميل PDF"
                         className="bg-background border border-border hover:bg-border/50 rounded-xl p-2 w-10 h-10 flex items-center justify-center text-primary transition-colors"
                       >
                         <RxDownload className="text-lg" />
-                      </button>
+                      </a>
                     )}
 
                     <button
-                      onClick={() => setSelectedWill(will)}
+                      onClick={() => router.push(`/dashboard/wills/${will.id}`)}
                       className={`flex-1 rounded-xl py-2 text-sm font-medium text-center transition active:scale-95 ${getPrimaryButtonClasses(will.status)}`}
                     >
                       {getPrimaryButtonText(will.status)}
@@ -707,6 +728,7 @@ export default function MyWillsPage() {
             {/* Drawer Footer */}
             <div className="p-5 bg-surface border-t border-border flex items-center gap-3">
               <button
+                onClick={() => router.push(`/dashboard/wills/${selectedWill.id}`)}
                 className={`flex-1 rounded-xl py-3 font-bold text-sm shadow-sm transition active:scale-95 ${getPrimaryButtonClasses(selectedWill.status)}`}
               >
                 {getPrimaryButtonText(selectedWill.status)}

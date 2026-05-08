@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+  <head>
+    <meta charset="UTF-8" />
+    <title>عقد وصية - عامة</title>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      @page {
+        size: A4;
+        margin: 18mm 16mm;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background: #fff;
+        color: #000;
+        direction: rtl;
+        font-family: "Arial", "Tahoma", sans-serif;
+        font-size: 15px;
+        line-height: 2;
+      }
+
+      .page {
+        width: 210mm;
+        min-height: 297mm;
+        margin: auto;
+        padding: 20mm 18mm;
+      }
+
+      .document-title {
+        text-align: center;
+        font-size: 24px;
+        font-weight: 700;
+        text-decoration: underline;
+        margin-bottom: 30px;
+      }
+
+      .section {
+        margin-top: 28px;
+      }
+
+      .section-title {
+        font-size: 17px;
+        font-weight: 700;
+        margin-bottom: 16px;
+      }
+
+      .paragraph {
+        margin-bottom: 18px;
+        text-align: justify;
+      }
+
+      .field-row {
+        margin-bottom: 14px;
+      }
+
+      .field {
+        display: inline-block;
+        border-bottom: 1px solid #000;
+        min-width: 150px;
+        padding: 0 6px 2px;
+        text-align: center;
+        font-weight: 700;
+      }
+
+      .field-wide {
+        min-width: 280px;
+      }
+
+      .field-medium {
+        min-width: 180px;
+      }
+
+      .field-small {
+        min-width: 120px;
+      }
+
+      .subject-box {
+        width: 100%;
+        min-height: 90px;
+        border: 1px solid #000;
+        padding: 12px;
+        line-height: 2.2;
+        text-align: justify;
+        margin-top: 12px;
+      }
+
+      ul {
+        padding-right: 24px;
+        margin-top: 10px;
+      }
+
+      li {
+        margin-bottom: 12px;
+        text-align: justify;
+      }
+
+      .sub-item {
+        margin-top: 14px;
+        text-align: justify;
+      }
+
+      .sub-label {
+        font-weight: 700;
+      }
+
+      .signature-section {
+        margin-top: 60px;
+      }
+
+      .signature-grid {
+        display: flex;
+        justify-content: space-between;
+        gap: 40px;
+      }
+
+      .signature-box {
+        width: 45%;
+      }
+
+      .signature-title {
+        text-align: center;
+        font-weight: 700;
+        margin-bottom: 50px;
+      }
+
+      .signature-line {
+        border-bottom: 1px solid #000;
+      }
+
+      .footer-row {
+        margin-top: 40px;
+      }
+
+      @media print {
+        .page {
+          margin: 0;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="page">
+
+      <div class="document-title">
+        عقد وصية
+      </div>
+
+      <div class="section-title">
+        أنا الموقع أسفله:
+      </div>
+
+      <div class="field-row">
+        السيد(ة):
+        <span class="field field-wide">{{testator_full_name}}</span>
+
+        المولود(ة) بتاريخ:
+        <span class="field field-medium">{{testator_birth_date}}</span>
+
+        بـ:
+        <span class="field field-medium">{{testator_birth_place}}</span>
+      </div>
+
+      <div class="field-row">
+        المهنة:
+        <span class="field field-medium">{{testator_profession}}</span>
+
+        المقيم بـ:
+        <span class="field field-wide">{{testator_residence}}</span>
+      </div>
+
+      <div class="field-row">
+        الحامل لبطاقة التعريف الوطنية رقم:
+        <span class="field field-medium">{{testator_national_id}}</span>
+
+        الصادرة بتاريخ:
+        <span class="field field-small">{{testator_id_issue_date}}</span>
+
+        عن دائرة:
+        <span class="field field-medium">{{testator_id_issue_place}}</span>
+      </div>
+
+      <div class="paragraph">
+        أصرح وأشهد وأنا في كامل قواي العقلية والجسدية، وبمحض إرادتي وبدون ضغط أو إكراه، أنني أوصي بما يلي:
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          1- المستفيد (الموصى له)
+        </div>
+
+        <div class="field-row">
+          أوصي للسيد(ة):
+          <span class="field field-wide">{{beneficiary_full_name}}</span>
+
+          المولود بتاريخ:
+          <span class="field field-medium">{{beneficiary_birth_date}}</span>
+        </div>
+
+        <div class="field-row">
+          بـ:
+          <span class="field field-medium">{{beneficiary_birth_place}}</span>
+
+          والمقيم بـ:
+          <span class="field field-wide">{{beneficiary_residence}}</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          2- موضوع الوصية (محل وصية عامة)
+        </div>
+
+        <div class="paragraph">
+          لقد خصصت للموصى له المذكور أعلاه.
+        </div>
+
+        <div class="paragraph">
+          (تحديد دقيق للمال، مثلاً: "مبلغ مالي قدره ... دج")
+        </div>
+
+        <div class="subject-box">
+          {{subject_of_will}}
+        </div>
+
+        <div class="sub-item">
+          <span class="sub-label">إبراء الذمة:</span>
+          أوصي بتعجيل إخراج ديوني (إن وجدت) ومصاريف جنازتي من أصل التركة قبل أي تقسيم.
+        </div>
+
+        <div class="sub-item">
+          <span class="sub-label">وصية البر (الثلث):</span>
+          أوصي بإخراج مقدار لا يتجاوز ثلث صافي تركتي، ويخصص لعمل خيري مستدام (كصدقة جارية).
+        </div>
+
+        <div class="sub-item">
+          <span class="sub-label">أعمال الخير الأخرى:</span>
+          أوصي بتوزيع مبلغ مالي على الفقراء والمحتاجين من الأقارب غير الوارثين والجيران.
+        </div>
+
+        <div class="sub-item">
+          <span class="sub-label">التوجيه المعنوي:</span>
+          أوصي أبنائي وورثتي بتقوى الله، وصلة الرحم، والحفاظ على وحدة العائلة.
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          3- الشروط القانونية والشرعية
+        </div>
+
+        <ul>
+          <li>
+            أقر بأن هذه الوصية لا تتجاوز ثلث (1/3) تركتي الإجمالية، التزاماً بالمادة 185 من قانون الأسرة الجزائري.
+          </li>
+
+          <li>
+            هذه الوصية لا تنفذ إلا بعد وفاتي، ولدي الحق الكامل في الرجوع عنها أو تعديلها حال حياتي.
+          </li>
+
+          <li>
+            الموصى له ليس من الورثة الشرعيين / أو هو وارث وتبقى الوصية خاضعة لإجازة الورثة بعد الوفاة.
+          </li>
+        </ul>
+      </div>
+
+      <div class="section">
+        <div class="section-title">
+          4- الشهود
+        </div>
+
+        <div class="paragraph">
+          نشهد نحن الموقعون أسفله على صحة ما ورد في هذه الوصية وأن الموصي أدلى بها وهو في كامل وعيه وإرادته.
+        </div>
+
+        <ul>
+          <li>
+            الشاهد الأول:
+            <span class="field field-medium">{{witness_1}}</span>
+
+            التوقيع:
+            <span class="field field-small">{{witness_1_signature}}</span>
+          </li>
+
+          <li>
+            الشاهد الثاني:
+            <span class="field field-medium">{{witness_2}}</span>
+
+            التوقيع:
+            <span class="field field-small">{{witness_2_signature}}</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="signature-section">
+
+        <div class="signature-grid">
+
+          <div class="signature-box">
+            <div class="signature-title">
+              توقيع الموصي
+            </div>
+
+            <div class="signature-line"></div>
+          </div>
+
+          <div class="signature-box">
+            <div class="signature-title">
+              ختم / مصادقة
+            </div>
+
+            <div class="signature-line"></div>
+          </div>
+
+        </div>
+
+        <div class="footer-row">
+          حرر بـ:
+          <span class="field field-medium">{{testator_birth_place}}</span>
+
+          في:
+          <span class="field field-medium">{{created_at}}</span>
+        </div>
+
+      </div>
+
+    </div>
+  </body>
+</html>

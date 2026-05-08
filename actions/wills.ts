@@ -222,6 +222,391 @@ export async function getUserWills() {
   }
 }
 
+export async function getUserWillById(willId: string) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const { data: will, error } = await supabase
+      .from("wills")
+      .select(
+        `
+        *,
+        testators (
+          id,
+          first_name,
+          last_name,
+          birth_date,
+          birth_place,
+          profession,
+          residence_place,
+          national_id,
+          id_issue_date,
+          id_issue_place,
+          financial_status (
+            id,
+            number_of_children,
+            boys,
+            girls,
+            total_money
+          )
+        ),
+        will_beneficiaries (
+          id,
+          full_name,
+          last_name,
+          relationship,
+          birth_date,
+          birth_place,
+          residence_place,
+          share_percentage
+        ),
+        witnesses (
+          id,
+          witness_number,
+          first_name,
+          last_name
+        )
+      `,
+      )
+      .eq("id", willId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching user will:", error);
+      return { success: false, error: "Failed to fetch will" };
+    }
+
+    if (!will) {
+      return { success: false, error: "Will not found" };
+    }
+
+    type FinancialStatusRow = {
+      id: string;
+      number_of_children: number | null;
+      boys: number | null;
+      girls: number | null;
+      total_money: number | null;
+    };
+
+    type TestatorRow = {
+      id: string;
+      financial_status?: FinancialStatusRow[] | null;
+      [key: string]: unknown;
+    };
+
+    type WillWithRelations = typeof will & {
+      testator?: TestatorRow | null;
+      testators?: TestatorRow[] | null;
+    };
+
+    const willWithRelations = will as WillWithRelations;
+
+    // Some setups / RLS policies can cause joined relations to come back empty.
+    // Fallback: fetch the 1-1 testator + financial_status directly.
+    const hasTestatorJoin =
+      Array.isArray(willWithRelations.testators) &&
+      willWithRelations.testators.length > 0;
+
+    if (!hasTestatorJoin) {
+      const { data: testator, error: testatorError } = await supabase
+        .from("testators")
+        .select(
+          `
+          id,
+          first_name,
+          last_name,
+          birth_date,
+          birth_place,
+          profession,
+          residence_place,
+          national_id,
+          id_issue_date,
+          id_issue_place,
+          financial_status (
+            id,
+            number_of_children,
+            boys,
+            girls,
+            total_money
+          )
+        `,
+        )
+        .eq("will_id", willId)
+        .maybeSingle();
+
+      if (testatorError) {
+        console.error("Error fetching testator fallback:", testatorError);
+      } else if (testator) {
+        const typedTestator = testator as TestatorRow;
+        willWithRelations.testator = typedTestator;
+        willWithRelations.testators = [typedTestator];
+      }
+    }
+
+    // Ensure financial_status is present even if nested join is empty.
+    const resolvedTestator =
+      willWithRelations.testator ??
+      (Array.isArray(willWithRelations.testators)
+        ? willWithRelations.testators[0]
+        : null);
+
+    const hasFinancialJoin =
+      Array.isArray(resolvedTestator?.financial_status) &&
+      resolvedTestator.financial_status.length > 0;
+
+    if (resolvedTestator?.id && !hasFinancialJoin) {
+      const { data: financialStatus, error: financialError } = await supabase
+        .from("financial_status")
+        .select("id, number_of_children, boys, girls, total_money")
+        .eq("testator_id", resolvedTestator.id)
+        .maybeSingle();
+
+      if (financialError) {
+        console.error("Error fetching financial_status fallback:", financialError);
+      } else if (financialStatus) {
+        resolvedTestator.financial_status = [financialStatus];
+        willWithRelations.testator = resolvedTestator;
+        willWithRelations.testators = [resolvedTestator];
+      }
+    }
+
+    return { success: true, data: will };
+  } catch (error) {
+    console.error("Get user will error:", error);
+    return { success: false, error: "Unexpected error" };
+  }
+}
+
+export async function updateUserWill(
+  willId: string,
+  payload: Record<string, unknown>,
+) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { success: false, error: "يجب تسجيل الدخول لتعديل الوصية" };
+    }
+
+    const parseDate = (val: unknown) =>
+      typeof val === "string" && val.trim() !== "" ? val : null;
+
+    const { data: will, error: willError } = await supabase
+      .from("wills")
+      .select("id, user_id, will_category, status")
+      .eq("id", willId)
+      .single();
+
+    if (willError || !will) {
+      console.error("Will fetch for update error:", willError);
+      return { success: false, error: "تعذر العثور على الوصية" };
+    }
+
+    if (will.user_id !== user.id) {
+      return { success: false, error: "غير مصرح لك بتعديل هذه الوصية" };
+    }
+
+    // Update main will row (resubmission)
+    const { error: willUpdateError } = await supabase
+      .from("wills")
+      .update({
+        subject_of_will: (payload.willBody as string) || null,
+        status: "submitted",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", willId);
+
+    if (willUpdateError) {
+      console.error("Will update error:", willUpdateError);
+      return { success: false, error: "فشل تحديث بيانات الوصية" };
+    }
+
+    // Testator
+    const { data: existingTestator, error: testatorFetchError } = await supabase
+      .from("testators")
+      .select("id")
+      .eq("will_id", willId)
+      .maybeSingle();
+
+    if (testatorFetchError) {
+      console.error("Testator fetch error:", testatorFetchError);
+      return { success: false, error: "فشل تحميل بيانات الموصي" };
+    }
+
+    const testatorPayload = {
+      will_id: willId,
+      last_name: payload.testatorSurnam as string,
+      first_name: payload.testatorName as string,
+      birth_date: parseDate(payload.testatorDob),
+      birth_place: (payload.testatorPob as string) || null,
+      profession: (payload.testatorJob as string) || null,
+      residence_place: (payload.testatorRes as string) || null,
+      national_id: (payload.testatorNin as string) || null,
+      id_issue_date: parseDate(payload.testatorIDDate),
+      id_issue_place: (payload.testatorIDPlace as string) || null,
+    };
+
+    let testatorId: string | null = null;
+    if (existingTestator?.id) {
+      testatorId = existingTestator.id;
+      const { error } = await supabase
+        .from("testators")
+        .update(testatorPayload)
+        .eq("id", existingTestator.id);
+      if (error) {
+        console.error("Testator update error:", error);
+        return { success: false, error: "فشل تحديث بيانات الموصي" };
+      }
+    } else {
+      const { data, error } = await supabase
+        .from("testators")
+        .insert(testatorPayload)
+        .select("id")
+        .single();
+      if (error || !data) {
+        console.error("Testator insert error:", error);
+        return { success: false, error: "فشل تحديث بيانات الموصي" };
+      }
+      testatorId = data.id;
+    }
+
+    // Beneficiary (first/primary beneficiary)
+    const { data: existingBeneficiary, error: benFetchError } = await supabase
+      .from("will_beneficiaries")
+      .select("id, relationship, share_percentage")
+      .eq("will_id", willId)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (benFetchError) {
+      console.error("Beneficiary fetch error:", benFetchError);
+      return { success: false, error: "فشل تحميل بيانات الموصى له" };
+    }
+
+    const beneficiaryPayload = {
+      will_id: willId,
+      full_name: `${(payload.beneficiaryName as string) || ""} ${(payload.beneficiarySurname as string) || ""}`.trim(),
+      last_name: payload.beneficiarySurname as string,
+      birth_date: parseDate(payload.beneficiaryDob),
+      birth_place: (payload.beneficiaryPob as string) || null,
+      residence_place: (payload.beneficiaryRes as string) || null,
+      relationship:
+        typeof existingBeneficiary?.relationship === "string" &&
+        existingBeneficiary.relationship.trim() !== ""
+          ? existingBeneficiary.relationship
+          : "غير محدد",
+    };
+
+    if (existingBeneficiary?.id) {
+      const { error } = await supabase
+        .from("will_beneficiaries")
+        .update(beneficiaryPayload)
+        .eq("id", existingBeneficiary.id);
+      if (error) {
+        console.error("Beneficiary update error:", error);
+        return { success: false, error: "فشل تحديث بيانات الموصى له" };
+      }
+    } else {
+      const { error } = await supabase
+        .from("will_beneficiaries")
+        .insert(beneficiaryPayload);
+      if (error) {
+        console.error("Beneficiary insert error:", error);
+        return { success: false, error: "فشل تحديث بيانات الموصى له" };
+      }
+    }
+
+    // Witnesses (by witness_number)
+    const witnessesToUpsert = [
+      {
+        will_id: willId,
+        witness_number: 1,
+        first_name:
+          typeof payload.witness1 === "string"
+            ? payload.witness1.split(" ")[0] || "غير محدد"
+            : "غير محدد",
+        last_name:
+          typeof payload.witness1 === "string"
+            ? payload.witness1.split(" ").slice(1).join(" ") || "غير محدد"
+            : "غير محدد",
+      },
+      {
+        will_id: willId,
+        witness_number: 2,
+        first_name:
+          typeof payload.witness2 === "string"
+            ? payload.witness2.split(" ")[0] || "غير محدد"
+            : "غير محدد",
+        last_name:
+          typeof payload.witness2 === "string"
+            ? payload.witness2.split(" ").slice(1).join(" ") || "غير محدد"
+            : "غير محدد",
+      },
+    ];
+
+    const { error: witnessUpsertError } = await supabase
+      .from("witnesses")
+      .upsert(witnessesToUpsert, { onConflict: "will_id,witness_number" });
+
+    if (witnessUpsertError) {
+      console.error("Witnesses upsert error:", witnessUpsertError);
+      return { success: false, error: "فشل تحديث بيانات الشهود" };
+    }
+
+    // Financial status (optional, only if provided)
+    const shouldUpdateFinancial =
+      payload.totalChildren !== undefined ||
+      payload.maleChildren !== undefined ||
+      payload.femaleChildren !== undefined ||
+      payload.totalMoney !== undefined;
+
+    if (shouldUpdateFinancial && testatorId) {
+      const finPayload = {
+        testator_id: testatorId,
+        number_of_children: (payload.totalChildren as number) || 0,
+        boys: (payload.maleChildren as number) || 0,
+        girls: (payload.femaleChildren as number) || 0,
+        total_money:
+          payload.totalMoney === undefined || payload.totalMoney === null
+            ? null
+            : (payload.totalMoney as number),
+      };
+
+      const { error: finUpsertError } = await supabase
+        .from("financial_status")
+        .upsert(finPayload, { onConflict: "testator_id" });
+
+      if (finUpsertError) {
+        console.error("Financial status upsert error:", finUpsertError);
+        return { success: false, error: "فشل تحديث الذمة المالية" };
+      }
+    }
+
+    revalidatePath(`/dashboard/wills/${willId}`);
+    revalidatePath("/dashboard/wills");
+    return { success: true };
+  } catch (error) {
+    console.error("Update will error:", error);
+    return { success: false, error: "حدث خطأ غير متوقع أثناء تعديل الوصية." };
+  }
+}
+
 export interface AdminDashboardData {
   stats: {
     usersCount: number;
