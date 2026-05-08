@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
+import { createClient } from "@/utils/supabase/client";
 
 // Define the full schema
 const willSchema = z
@@ -65,15 +66,19 @@ type WillFormData = z.infer<typeof willSchema>;
 export default function WillFormByType() {
   const params = useParams<{ willType: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const willTypeParam = params.willType;
+  const willId = searchParams.get("willId");
 
   const [currentStep, setCurrentStep] = useState(0);
+  const [prefillLoading, setPrefillLoading] = useState(false);
 
   const {
     register,
     control,
     trigger,
     getValues,
+    reset,
     formState: { errors },
   } = useForm<WillFormData>({
     resolver: zodResolver(willSchema),
@@ -97,6 +102,133 @@ export default function WillFormByType() {
           : undefined,
     },
   });
+
+  useEffect(() => {
+    const load = async () => {
+      if (!willId) return;
+      setPrefillLoading(true);
+      try {
+        const supabase = createClient();
+        const { data: willRow, error } = await supabase
+          .from("wills")
+          .select(
+            `
+            id,
+            subject_of_will,
+            testators (
+              first_name,
+              last_name,
+              birth_date,
+              birth_place,
+              profession,
+              residence_place,
+              national_id,
+              id_issue_date,
+              id_issue_place,
+              financial_status (
+                number_of_children,
+                boys,
+                girls,
+                total_money
+              )
+            ),
+            will_beneficiaries (
+              full_name,
+              last_name,
+              birth_date,
+              birth_place,
+              residence_place
+            ),
+            witnesses (
+              witness_number,
+              first_name,
+              last_name
+            )
+          `,
+          )
+          .eq("id", willId)
+          .single();
+
+        if (error || !willRow) return;
+
+        const testator = Array.isArray(willRow.testators)
+          ? willRow.testators[0]
+          : null;
+        const beneficiary = Array.isArray(willRow.will_beneficiaries)
+          ? willRow.will_beneficiaries[0]
+          : null;
+        const w1 = Array.isArray(willRow.witnesses)
+          ? willRow.witnesses.find(
+              (w: { witness_number: number }) => w.witness_number === 1,
+            )
+          : null;
+        const w2 = Array.isArray(willRow.witnesses)
+          ? willRow.witnesses.find(
+              (w: { witness_number: number }) => w.witness_number === 2,
+            )
+          : null;
+        const fin = testator?.financial_status
+          ? Array.isArray(testator.financial_status)
+            ? testator.financial_status[0]
+            : null
+          : null;
+
+        const beneficiaryFullName =
+          typeof beneficiary?.full_name === "string" ? beneficiary.full_name : "";
+        const beneficiaryLastName =
+          typeof beneficiary?.last_name === "string" ? beneficiary.last_name : "";
+        const beneficiaryFirst = beneficiaryLastName
+          ? beneficiaryFullName
+              .replace(new RegExp(`\\s*${beneficiaryLastName}\\s*$`), "")
+              .trim()
+          : beneficiaryFullName.trim();
+
+        reset({
+          testatorSurnam: testator?.last_name || "",
+          testatorName: testator?.first_name || "",
+          testatorDob: testator?.birth_date || "",
+          testatorPob: testator?.birth_place || "",
+          testatorJob: testator?.profession || "",
+          testatorRes: testator?.residence_place || "",
+          testatorNin: testator?.national_id || "",
+          testatorIDDate: testator?.id_issue_date || "",
+          testatorIDPlace: testator?.id_issue_place || "",
+
+          beneficiarySurname: beneficiaryLastName || "",
+          beneficiaryName: beneficiaryFirst,
+          beneficiaryDob: beneficiary?.birth_date || "",
+          beneficiaryPob: beneficiary?.birth_place || "",
+          beneficiaryRes: beneficiary?.residence_place || "",
+
+          willBody: willRow.subject_of_will || "",
+
+          witness1: `${w1?.first_name || ""} ${w1?.last_name || ""}`.trim(),
+          witness2: `${w2?.first_name || ""} ${w2?.last_name || ""}`.trim(),
+
+          totalChildren:
+            willTypeParam === "money" || willTypeParam === "general"
+              ? fin?.number_of_children ?? 0
+              : undefined,
+          maleChildren:
+            willTypeParam === "money" || willTypeParam === "general"
+              ? fin?.boys ?? 0
+              : undefined,
+          femaleChildren:
+            willTypeParam === "money" || willTypeParam === "general"
+              ? fin?.girls ?? 0
+              : undefined,
+          totalMoney:
+            willTypeParam === "money" || willTypeParam === "general"
+              ? fin?.total_money ?? 0
+              : undefined,
+        });
+      } finally {
+        setPrefillLoading(false);
+      }
+    };
+
+    void load();
+  }, [reset, willId, willTypeParam]);
 
   const willBodyValue = useWatch({ control, name: "willBody" }) || "";
 
@@ -177,13 +309,17 @@ export default function WillFormByType() {
       console.log("Submitting:", { willType: willTypeParam, ...data });
 
       const payload = { willType: willTypeParam, ...data };
-      const { submitWill } = await import("@/actions/wills");
+      const { submitWill, updateUserWill } = await import("@/actions/wills");
 
-      const result = await submitWill(payload);
+      const result = willId
+        ? await updateUserWill(willId, payload)
+        : await submitWill(payload);
 
       if (result?.success) {
-        alert("تم تقديم الوصية بنجاح!");
-        router.push("/dashboard/wills");
+        alert(
+          willId ? "تم تعديل الوصية وإعادة إرسالها بنجاح!" : "تم تقديم الوصية بنجاح!",
+        );
+        router.push(willId ? `/dashboard/wills/${willId}` : "/dashboard/wills");
       } else {
         alert(
           result?.error ||
@@ -202,6 +338,13 @@ export default function WillFormByType() {
     <div className="max-w-5xl mx-auto py-3 " dir="rtl">
       {/* FORM CARDS */}
       <div className="bg-surface rounded-3xl p-6 md:p-10 shadow-sm border border-border min-h-[50vh] relative overflow-hidden">
+        {prefillLoading && (
+          <div className="absolute inset-0 bg-background/60 backdrop-blur-[1px] z-10 flex items-center justify-center">
+            <div className="bg-surface border border-border rounded-2xl px-5 py-3 text-sm font-bold text-muted-foreground">
+              جاري تحميل بيانات الوصية...
+            </div>
+          </div>
+        )}
         <div className="text-xl font-bold mb-6 text-foreground border-b border-border pb-4 w-full flex items-center justify-between">
           <span>{steps[currentStep].title}</span>
           <span className="text-sm font-bold text-muted-foreground bg-surface border border-border px-3 py-1 rounded-full">
@@ -561,74 +704,108 @@ export default function WillFormByType() {
               {/* FINAL REVIEW STEP */}
               {isReviewStep && (
                 <div className="space-y-6">
-                  {[
-                    {
-                      title: "معلومات الموصي",
-                      target: 0,
-                      fields: [
-                        {
-                          l: "الاسم الكامل",
-                          v: `${getValues("testatorName") || ""} ${getValues("testatorSurnam") || ""}`,
-                        },
-                        { l: "رقم التعريف", v: getValues("testatorNin") },
-                      ],
-                    },
-                    {
-                      title: "معلومات الموصى له",
-                      target: 1,
-                      fields: [
-                        {
-                          l: "الاسم الكامل",
-                          v: `${getValues("beneficiaryName") || ""} ${getValues("beneficiarySurname") || ""}`,
-                        },
-                        { l: "مكان الإقامة", v: getValues("beneficiaryRes") },
-                      ],
-                    },
-                    {
-                      title: "موضوع الوصية",
-                      target: 2,
-                      fields: [{ l: "التفاصيل", v: getValues("willBody") }],
-                    },
-                    {
-                      title: "الشهود",
-                      target: 3,
-                      fields: [
-                        { l: "الشاهد الأول", v: getValues("witness1") },
-                        { l: "الشاهد الثاني", v: getValues("witness2") },
-                      ],
-                    },
-                  ].map((section, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-background border border-border rounded-2xl p-5 relative group transition-colors hover:border-primary/40"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStep(section.target)}
-                        className="absolute top-4 border left-4 px-3 py-1 bg-surface rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition text-xs font-bold"
+                  {(() => {
+                    const reviewSections: {
+                      title: string;
+                      target: number;
+                      fields: { l: string; v: string | number | null }[];
+                    }[] = [
+                      {
+                        title: "معلومات الموصي",
+                        target: 0,
+                        fields: [
+                          {
+                            l: "الاسم الكامل",
+                            v: `${getValues("testatorName") || ""} ${getValues("testatorSurnam") || ""}`,
+                          },
+                          { l: "رقم التعريف", v: getValues("testatorNin") },
+                        ],
+                      },
+                      {
+                        title: "معلومات الموصى له",
+                        target: 1,
+                        fields: [
+                          {
+                            l: "الاسم الكامل",
+                            v: `${getValues("beneficiaryName") || ""} ${getValues("beneficiarySurname") || ""}`,
+                          },
+                          { l: "مكان الإقامة", v: getValues("beneficiaryRes") },
+                        ],
+                      },
+                      {
+                        title: "موضوع الوصية",
+                        target: 2,
+                        fields: [{ l: "التفاصيل", v: getValues("willBody") }],
+                      },
+                      {
+                        title: "الشهود",
+                        target: 3,
+                        fields: [
+                          { l: "الشاهد الأول", v: getValues("witness1") },
+                          { l: "الشاهد الثاني", v: getValues("witness2") },
+                        ],
+                      },
+                    ];
+
+                    // Conditionally include financial review when applicable
+                    if (
+                      willTypeParam === "money" ||
+                      willTypeParam === "general"
+                    ) {
+                      reviewSections.push({
+                        title: "الذمة المالية",
+                        target: 4,
+                        fields: [
+                          {
+                            l: "إجمالي الأبناء",
+                            v: getValues("totalChildren") ?? null,
+                          },
+                          { l: "الذكور", v: getValues("maleChildren") ?? null },
+                          {
+                            l: "الإناث",
+                            v: getValues("femaleChildren") ?? null,
+                          },
+                          {
+                            l: "إجمالي الأموال",
+                            v: getValues("totalMoney") ?? null,
+                          },
+                        ],
+                      });
+                    }
+
+                    return reviewSections.map((section, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-background border border-border rounded-2xl p-5 relative group transition-colors hover:border-primary/40"
                       >
-                        تعديل
-                      </button>
-                      <h3 className="text-sm font-black text-foreground mb-4">
-                        {section.title}
-                      </h3>
-                      <div className="space-y-3">
-                        {section.fields.map((f, i) => (
-                          <div
-                            key={i}
-                            className="flex flex-col md:flex-row md:items-start gap-1 md:gap-4"
-                          >
-                            <span className="text-xs font-bold text-muted-foreground w-28 shrink-0">
-                              {f.l}
-                            </span>
-                            <span className="text-sm font-medium text-foreground">
-                              {f.v}
-                            </span>
-                          </div>
-                        ))}
+                        <button
+                          type="button"
+                          onClick={() => setCurrentStep(section.target)}
+                          className="absolute top-4 border left-4 px-3 py-1 bg-surface rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition text-xs font-bold"
+                        >
+                          تعديل
+                        </button>
+                        <h3 className="text-sm font-black text-foreground mb-4">
+                          {section.title}
+                        </h3>
+                        <div className="space-y-3">
+                          {section.fields.map((f, i) => (
+                            <div
+                              key={i}
+                              className="flex flex-col md:flex-row md:items-start gap-1 md:gap-4"
+                            >
+                              <span className="text-xs font-bold text-muted-foreground w-28 shrink-0">
+                                {f.l}
+                              </span>
+                              <span className="text-sm font-medium text-foreground">
+                                {f.v}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ));
+                  })()}
                 </div>
               )}
             </motion.div>

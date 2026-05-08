@@ -2,13 +2,24 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { RxDashboard, RxFileText, RxPerson, RxGear } from "react-icons/rx";
+import {
+  RxDashboard,
+  RxFileText,
+  RxPerson,
+  RxGear,
+  RxIdCard,
+} from "react-icons/rx";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
 
   const navItems = [
     { label: "لوحة القيادة", href: "/admin/dashboard", icon: RxDashboard },
+    {
+      label: "المدفوعات",
+      href: "/admin/dashboard/subscriptions",
+      icon: RxIdCard,
+    },
     {
       label: "إدارة الوصايا",
       href: "/admin/dashboard/wills",

@@ -276,7 +276,6 @@ export default function UserDetailsPage() {
     );
   }
 
-  // ─── Error / Not found ─────────────────────────────────────────────────────
   if (error || !userData) {
     return (
       <div className="min-h-screen flex items-center justify-center" dir="rtl">
@@ -348,8 +347,7 @@ export default function UserDetailsPage() {
 
         {/* ── Hero Card ── */}
         <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden">
-          <div className="h-24 bg-linear-to-l from-primary/10 via-primary/5 to-transparent" />
-          <div className="px-6 pb-6 -mt-10">
+          <div className="px-6 pb-6 pt-5">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
               <div className="flex items-end gap-4">
                 {/* Avatar */}

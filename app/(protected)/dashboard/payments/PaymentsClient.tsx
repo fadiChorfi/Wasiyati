@@ -19,11 +19,13 @@ import { useSubscription } from "@/context/SubscriptionContext";
 interface PaymentsClientProps {
   initialOfferKey: OfferKey;
   dbOffers: Offer[];
+  hasWill: boolean; 
 }
 
 export default function PaymentsClient({
   initialOfferKey,
   dbOffers,
+  hasWill,
 }: PaymentsClientProps) {
   const currentSubscription = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(
@@ -130,16 +132,38 @@ export default function PaymentsClient({
     }
 
     if (currentSubscription.status === "active") {
-      const today = new Date();
-      const startedAt = currentSubscription.started_at
-        ? currentSubscription.started_at
-        : currentSubscription.created_at; // Fallback to created_at if started_at is missing
+      // subscription consumed — will already exists
+      if (hasWill) {
+        return (
+          <div className="space-y-6 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+            <div className="bg-surface rounded-3xl border border-border p-8 shadow-sm text-center">
+              <h1 className="text-2xl font-black text-foreground mb-4">
+                تم استخدام الاشتراك
+              </h1>
+              <p className="text-muted-foreground">
+                الباقة الحالية:{" "}
+                <strong>
+                  {currentSubscription.offer?.name_ar || "غير معروفة"}
+                </strong>
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                لقد قمت بإنشاء وصية بهذا الاشتراك. اشترك مجدداً لإنشاء وصية
+                جديدة.
+              </p>
+              <div className="mt-8">
+                <button
+                  onClick={() => setShowPricing(true)}
+                  className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary/90 transition"
+                >
+                  الاشتراك مجدداً
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
 
-      const expiration =
-        new Date(startedAt).getTime() + 30 * 24 * 60 * 60 * 1000;
-      const diffTime = expiration - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
+      // subscription active — no will yet
       return (
         <div className="space-y-6 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
           <div className="bg-green-50 rounded-3xl border border-green-200 p-8 shadow-sm text-center">
@@ -152,9 +176,8 @@ export default function PaymentsClient({
                 {currentSubscription.offer?.name_ar || "غير معروفة"}
               </strong>
             </p>
-            <p className="text-green-700 mt-2">
-              الأيام المتبقية:{" "}
-              <strong>{diffDays > 0 ? diffDays : 0} يوماً</strong>
+            <p className="text-green-600 text-sm mt-2">
+              يمكنك الآن إنشاء وصيتك القانونية.
             </p>
             <div className="mt-8">
               <button
@@ -278,7 +301,6 @@ export default function PaymentsClient({
                   <span className="text-3xl font-black text-foreground">
                     {dbPlan.price_dzd.toLocaleString("en-US")} د.ج
                   </span>
-                  <span className="text-xs text-muted-foreground">/ شهريا</span>
                 </div>
               </div>
               <div className="h-px bg-border w-full mb-6"></div>

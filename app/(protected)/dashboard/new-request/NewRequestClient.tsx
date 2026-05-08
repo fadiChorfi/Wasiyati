@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react"; // Added React import
 import { useRouter } from "next/navigation";
 import {
   RxFileText,
@@ -9,12 +9,31 @@ import {
   RxCross2,
   RxArrowLeft,
   RxInfoCircled,
+  RxClock,
+  RxCheckCircled,
 } from "react-icons/rx";
 
+type BlockReason =
+  | "no_subscription"
+  | "pending"
+  | "cancelled"
+  | "will_draft"
+  | "will_under_review"
+  | "will_approved"
+  | "will_rejected"
+  | null;
+
+
+
+  
 export default function NewRequestClient({
   hasActiveSubscription,
+  blockReason,
+  existingWillId,
 }: {
   hasActiveSubscription: boolean;
+  blockReason: BlockReason;
+  existingWillId: string | null;
 }) {
   const router = useRouter();
   const [selectedWill, setSelectedWill] = useState<string | null>(null);
@@ -47,13 +66,103 @@ export default function NewRequestClient({
     },
   ];
 
-  /* const subscription = {
-    isPaid: true,
-    status: "cancelled",
+  const blockConfig: Record<
+    Exclude<BlockReason, null>,
+    {
+      icon: React.ReactNode;
+      iconBg: string;
+      title: string;
+      message: string;
+      primaryBtn: { text: string; action: () => void };
+    }
+  > = {
+    no_subscription: {
+      icon: <RxCross2 className="text-3xl" />,
+      iconBg: "bg-red-50 text-red-500",
+      title: "تنبيه الاشتراك",
+      message:
+        "يجب أن يكون لديك اشتراك فعال لتتمكن من إنشاء وصية جديدة ومتابعة الإجراءات.",
+      primaryBtn: {
+        text: "الاشتراك الآن",
+        action: () => router.push("/dashboard/payments"),
+      },
+    },
+    pending: {
+      icon: <RxClock className="text-3xl animate-pulse" />,
+      iconBg: "bg-blue-50 text-blue-500",
+      title: "الاشتراك قيد المراجعة",
+      message:
+        "طلب اشتراكك لا يزال قيد المراجعة من الإدارة. يرجى الانتظار حتى يتم تفعيل حسابك.",
+      primaryBtn: {
+        text: "عرض حالة الاشتراك",
+        action: () => router.push("/dashboard/payments"),
+      },
+    },
+    cancelled: {
+      icon: <RxCross2 className="text-3xl" />,
+      iconBg: "bg-red-50 text-red-500",
+      title: "تم رفض الإيصال",
+      message:
+        "تعذر قبول إيصال الدفع الخاص بك. يرجى إعادة المحاولة برفع إيصال جديد.",
+      primaryBtn: {
+        text: "إعادة المحاولة",
+        action: () => router.push("/dashboard/payments"),
+      },
+    },
+    will_under_review: {
+      icon: <RxClock className="text-3xl animate-pulse" />,
+      iconBg: "bg-blue-50 text-blue-500",
+      title: "الوصية قيد المراجعة",
+      message:
+        "وصيتك الحالية لا تزال قيد المراجعة من الإدارة. لا يمكنك إنشاء وصية جديدة حتى يتم البت فيها.",
+      primaryBtn: {
+        text: "عرض وصيتي",
+        action: () =>
+          existingWillId
+            ? router.push(`/dashboard/wills/${existingWillId}`)
+            : router.push("/dashboard/wills"),
+      },
+    },
+    will_approved: {
+      icon: <RxCheckCircled className="text-3xl" />,
+      iconBg: "bg-green-50 text-green-500",
+      title: "تم استخدام الاشتراك",
+      message:
+        "لقد قمت بإنشاء وصية بهذا الاشتراك. اشترك مجدداً لإنشاء وصية جديدة.",
+      primaryBtn: {
+        text: "الاشتراك مجدداً",
+        action: () => router.push("/dashboard/payments"),
+      },
+    },
+    will_rejected: {
+      icon: <RxCross2 className="text-3xl" />,
+      iconBg: "bg-red-50 text-red-500",
+      title: "تم رفض الوصية",
+      message:
+        "تم رفض وصيتك من قبل الإدارة. يمكنك مراجعتها وتعديلها وإعادة تقديمها.",
+      primaryBtn: {
+        text: "تعديل وصيتي",
+        action: () =>
+          existingWillId
+            ? router.push(`/dashboard/wills/${existingWillId}`)
+            : router.push("/dashboard/wills"),
+      },
+    },
+    will_draft: {
+      icon: <RxFileText className="text-3xl" />,
+      iconBg: "bg-amber-50 text-amber-500",
+      title: "لديك وصية غير مكتملة",
+      message:
+        "لقد بدأت بإنشاء وصية بهذا الاشتراك. يمكنك متابعة تعبئتها أو تقديمها.",
+      primaryBtn: {
+        text: "متابعة الوصية",
+        action: () =>
+          existingWillId
+            ? router.push(`/dashboard/wills/${existingWillId}`)
+            : router.push("/dashboard/wills"),
+      },
+    },
   };
-
-  const hasActiveSubscription =
-    subscription.isPaid && subscription.status === "active"; */
 
   const openModal = (id: string) => {
     setSelectedWill(id);
@@ -71,6 +180,9 @@ export default function NewRequestClient({
       closeModal();
     }
   };
+
+  const activeBlock =
+    !hasActiveSubscription && blockReason ? blockConfig[blockReason] : null;
 
   return (
     <div className="space-y-6 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
@@ -105,7 +217,6 @@ export default function NewRequestClient({
               <p className="text-sm text-muted-foreground leading-6 mb-6 flex-1">
                 {will.description}
               </p>
-
               <button
                 onClick={() => openModal(will.id)}
                 className="w-full py-3 rounded-xl text-sm font-bold bg-primary/5 text-primary transition-all flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-primary-foreground mt-auto"
@@ -117,31 +228,38 @@ export default function NewRequestClient({
         })}
       </div>
 
-      {/* TERMS MODAL */}
-      {selectedWill &&
-        (!hasActiveSubscription ? (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4 animate-in fade-in duration-200">
-            <div className="bg-surface w-full max-w-sm rounded-3xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col p-8 text-center text-red-600 border border-red-100">
-              <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 shrink-0">
-                <RxCross2 className="text-3xl" />
+      {/* MODAL */}
+      {selectedWill && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4 animate-in fade-in duration-200">
+          {activeBlock ? (
+            <div className="bg-surface w-full max-w-sm rounded-3xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col p-8 text-center border border-red-100">
+              <div
+                className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shrink-0 ${activeBlock.iconBg}`}
+              >
+                {activeBlock.icon}
               </div>
               <h2 className="text-2xl font-black text-foreground mb-3">
-                تنبيه الاشتراك
+                {activeBlock.title}
               </h2>
               <p className="text-sm font-bold text-muted-foreground leading-7 mb-8">
-                عذراً، يجب أن يكون لديك اشتراك فعال لتتمكن من إنشاء وصية جديدة
-                ومتابعة الإجراءات.
+                {activeBlock.message}
               </p>
-              <button
-                onClick={closeModal}
-                className="w-full bg-red-50 hover:bg-red-100 text-red-600 py-3.5 rounded-xl text-sm font-bold transition-all"
-              >
-                إغلاق
-              </button>
+              <div className="flex flex-row gap-3">
+                <button
+                  onClick={activeBlock.primaryBtn.action}
+                  className="w-full bg-primary text-primary-foreground py-3.5 rounded-xl text-sm font-bold transition-all"
+                >
+                  {activeBlock.primaryBtn.text}
+                </button>
+                <button
+                  onClick={closeModal}
+                  className="w-full bg-red-50 hover:bg-red-100 text-red-600 py-3.5 rounded-xl text-sm font-bold transition-all"
+                >
+                  إغلاق
+                </button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4 animate-in fade-in duration-200">
+          ) : (
             <div className="bg-surface w-full max-w-lg md:max-w-2xl rounded-3xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
               <div className="flex justify-between items-center p-5 border-b border-border shrink-0">
                 <h2 className="text-xl font-bold text-foreground">
@@ -210,7 +328,7 @@ export default function NewRequestClient({
 
               <div className="p-5 bg-background border-t border-border flex gap-3 shrink-0">
                 <a
-                  href={`/docs/${selectedWill === "business" ? "bussiness-will.pdf" : selectedWill === "money" ? "money-will.pdf" : "general-will.pdf"}`}
+                  href={`/docs/${selectedWill === "business" ? "business-will.pdf" : selectedWill === "money" ? "money-will.pdf" : "general-will.pdf"}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 bg-surface border-2 border-primary text-primary py-3 rounded-xl text-sm font-bold shadow-sm hover:bg-primary/5 transition active:scale-95 flex items-center justify-center gap-2"
@@ -226,8 +344,9 @@ export default function NewRequestClient({
                 </button>
               </div>
             </div>
-          </div>
-        ))}
+          )}
+        </div>
+      )}
     </div>
   );
 }

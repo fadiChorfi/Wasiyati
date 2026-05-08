@@ -48,7 +48,7 @@ const getWillStatusLabel = (status: string): string => {
 export default function DashboardPage() {
   const currentSubscription = useSubscription();
   const hasActiveSubscription = currentSubscription?.status === "active";
-  const hasPendingSubscription = currentSubscription?.status === "pending";
+  /* const hasPendingSubscription = currentSubscription?.status === "pending"; */
 
   const [wills, setWills] = useState<Record<string, unknown>[]>([]);
   const [totalWills, setTotalWills] = useState(0);
@@ -78,14 +78,14 @@ export default function DashboardPage() {
     loadData();
   }, []);
 
-  const diffDays = currentSubscription?.started_at
+  /* const diffDays = currentSubscription?.started_at
     ? Math.ceil(
         (new Date(currentSubscription.started_at).getTime() +
           30 * 24 * 60 * 60 * 1000 -
           new Date().getTime()) /
           (1000 * 60 * 60 * 24),
       )
-    : 0;
+    : 0; */
 
   const stats = [
     {
@@ -186,7 +186,7 @@ export default function DashboardPage() {
       </div>
 
       {/* SUBSCRIPTION WIDGET */}
-      {hasActiveSubscription ? (
+      {/* {hasActiveSubscription ? (
         <div className="bg-linear-to-l from-primary to-[#0a3f2f] rounded-3xl p-6 shadow-[0px_10px_30px_rgba(15,92,63,0.15)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-accent/20 rounded-full blur-2xl -translate-y-10 translate-x-10"></div>
           <div className="flex items-center gap-4 relative z-10">
@@ -262,146 +262,7 @@ export default function DashboardPage() {
             اشترك الآن <RxArrowLeft />
           </Link>
         </div>
-      )}
-
-      {/* CURRENT WILL STATUS */}
-      {/* <div className="bg-surface rounded-3xl border border-border p-6 shadow-sm">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-base font-bold text-foreground">وصيتك الحالية</h3>
-          <span className="text-xs font-medium bg-primary/10 text-primary rounded-full px-3 py-1">
-            وصية عامة
-          </span>
-        </div>
-
-        <div className="relative w-full mb-8 z-10">
-          <div className="absolute top-5 left-0 right-0 h-0.5 bg-border -z-10 mx-5"></div>
-          <div className="absolute top-5 right-0 w-[50%] h-0.5 bg-primary -z-10 mx-5"></div>
-
-          <div className="flex justify-between items-start">
-            <div className="flex flex-col items-center">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-primary bg-primary text-primary-foreground font-bold shadow-sm">
-                <RxCheck className="text-lg" />
-              </div>
-              <span className="text-xs text-center mt-2 max-w-15 text-primary font-medium leading-tight">
-                التسجيل
-              </span>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 font-bold shadow-sm transition-all ${
-                  hasActiveSubscription || hasPendingSubscription
-                    ? hasActiveSubscription
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-blue-500 bg-blue-500 text-white ring-4 ring-blue-500/20 animate-pulse"
-                    : "border-primary bg-surface text-primary ring-4 ring-primary/20 animate-pulse"
-                }`}
-              >
-                {hasActiveSubscription ? (
-                  <RxCheck className="text-lg" />
-                ) : hasPendingSubscription ? (
-                  <RxClock className="text-lg animate-pulse" />
-                ) : (
-                  "2"
-                )}
-              </div>
-              <span
-                className={`text-xs text-center mt-2 max-w-15 leading-tight ${
-                  hasActiveSubscription || hasPendingSubscription
-                    ? hasActiveSubscription
-                      ? "text-primary font-medium"
-                      : "text-blue-600 font-bold"
-                    : "text-foreground font-bold"
-                }`}
-              >
-                الاشتراك
-              </span>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center border-2 font-bold shadow-sm transition-all ${
-                  hasActiveSubscription
-                    ? "border-primary bg-surface text-primary ring-4 ring-primary/20 animate-pulse"
-                    : "border-border bg-surface text-muted-foreground"
-                }`}
-              >
-                3
-              </div>
-              <span
-                className={`text-xs text-center mt-2 max-w-15 leading-tight ${
-                  hasActiveSubscription
-                    ? "text-foreground font-bold"
-                    : "text-muted-foreground"
-                }`}
-              >
-                تعبئة النموذج
-              </span>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center border-2 border-border bg-surface text-muted-foreground font-bold shadow-sm">
-                4
-              </div>
-              <span className="text-xs text-center mt-2 max-w-15 text-muted-foreground leading-tight">
-                الاعتماد
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-background rounded-2xl p-4 border border-border">
-          {hasActiveSubscription ? (
-            <>
-              <h4 className="text-sm font-bold text-foreground">
-                تعبئة النموذج
-              </h4>
-              <p className="text-xs text-muted-foreground leading-6 mt-1">
-                يرجى استكمال البيانات المطلوبة لتقديم الطلب لمراجعته من قبل
-                خبرائنا.
-              </p>
-              <Link
-                href="/dashboard/new-request"
-                className="bg-primary text-primary-foreground rounded-xl px-5 py-2.5 text-sm font-medium mt-4 hover:bg-primary/90 transition active:scale-95 shadow-sm inline-flex items-center gap-2"
-              >
-                متابعة النموذج <RxArrowLeft />
-              </Link>
-            </>
-          ) : hasPendingSubscription ? (
-            <>
-              <h4 className="text-sm font-bold text-blue-800">
-                الاشتراك قيد المراجعة
-              </h4>
-              <p className="text-xs text-blue-700 leading-6 mt-1">
-                لا يمكنك الشروع في تعبئة النموذج حتى تتم الموافقة على اشتراكك.
-                يرجى الانتظار.
-              </p>
-              <Link
-                href="/dashboard/payments"
-                className="bg-blue-600 text-white rounded-xl px-5 py-2.5 text-sm font-medium mt-4 hover:bg-blue-700 transition active:scale-95 shadow-sm inline-flex items-center gap-2"
-              >
-                تتبع الطلب <RxArrowLeft />
-              </Link>
-            </>
-          ) : (
-            <>
-              <h4 className="text-sm font-bold text-foreground">
-                اختر الباقة المناسبة
-              </h4>
-              <p className="text-xs text-muted-foreground leading-6 mt-1">
-                الخطوة التالية هي اختيار باقة الاشتراك للتمكن من الشروع في تجهيز
-                وتسجيل طلب وصيتك الخاصة.
-              </p>
-              <Link
-                href="/dashboard/payments"
-                className="bg-primary text-primary-foreground rounded-xl px-5 py-2.5 text-sm font-medium mt-4 hover:bg-primary/90 transition active:scale-95 shadow-sm inline-flex items-center gap-2"
-              >
-                الانتقال للدفع <RxArrowLeft />
-              </Link>
-            </>
-          )}
-        </div>
-      </div> */}
+      )} */}
 
       {/* QUICK ACTIONS ROW */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 my-5 mt-5">
@@ -476,9 +337,6 @@ export default function DashboardPage() {
             <h4 className="text-base font-bold text-foreground md:mt-4">
               تواصل مع خبير
             </h4>
-            <p className="text-xs text-muted-foreground mt-1">
-              رد خلال 24 ساعة
-            </p>
           </div>
         </Link>
       </div>

@@ -310,13 +310,15 @@ export default function WillReviewPage() {
   }
 
   const b = getBadgeStyle(willData.status);
-  const testator = willData.testators?.[0];
+  const testatorArray = willData.testators;
+  const testator = Array.isArray(testatorArray) ? testatorArray[0] : testatorArray;
   const beneficiaries = willData.will_beneficiaries || [];
   const witnesses = willData.witnesses || [];
-  const financialStatus = testator?.financial_status?.[0];
+  const financialStatusArray = testator?.financial_status || null;
+  const financialStatus = Array.isArray(financialStatusArray) ? financialStatusArray[0] : financialStatusArray;
 
   return (
-    <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+    <div className="space-y-6 max-w-5xl mx-auto px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
       {/* Toast Notification */}
       {showToast && (
         <div className="fixed top-4 left-4 z-50 bg-primary text-primary-foreground px-6 py-3 rounded-xl shadow-lg animate-pulse">
@@ -325,27 +327,27 @@ export default function WillReviewPage() {
       )}
 
       {/* Header */}
-      <div className="flex items-center gap-4 mb-5">
+      <div className="flex items-center gap-4 bg-surface p-4 rounded-3xl shadow-sm border border-border">
         <button
-          onClick={() => router.back()}
-          className="p-2 bg-surface border border-border rounded-xl hover:bg-gray-50 transition-colors"
           title="العودة"
+          onClick={() => router.push("/admin/dashboard/wills")}
+          className="p-3 bg-background hover:bg-primary/5 rounded-2xl transition-colors border border-border group"
         >
-          <RxArrowLeft className="text-xl text-foreground" />
+          <RxArrowLeft className="text-xl text-muted-foreground group-hover:text-primary" />
         </button>
-        <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-            مراجعة الوصية {willData.id}
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            مراجعة الوصية
           </h1>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 mt-2">
             <span
-              className={`rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1.5 w-fit ${b.bg} ${b.text}`}
+              className={`rounded-full px-3 py-1 text-xs font-bold flex items-center gap-1.5 w-fit ${b.bg} ${b.text}`}
             >
               <div className={`w-1.5 h-1.5 rounded-full ${b.dot}`}></div>
               {getWillStatusLabel(willData.status)}
             </span>
             {willData.will_category && (
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm font-medium px-2 py-0.5 bg-gray-100 rounded-md text-gray-700">
                 {getWillTypeLabel(willData.will_category)}
               </span>
             )}
@@ -375,7 +377,7 @@ export default function WillReviewPage() {
                   <label className="text-sm font-medium text-muted-foreground">
                     الاسم الكامل
                   </label>
-                  <p className="font-medium text-foreground">
+                  <p className="font-bold text-foreground">
                     {testator.first_name || ""} {testator.last_name || ""}
                   </p>
                 </div>
@@ -383,7 +385,7 @@ export default function WillReviewPage() {
                   <label className="text-sm font-medium text-muted-foreground">
                     تاريخ الميلاد
                   </label>
-                  <p className="font-medium text-foreground">
+                  <p className="font-bold text-foreground">
                     {formatDate(testator.birth_date)}
                   </p>
                 </div>
@@ -391,7 +393,7 @@ export default function WillReviewPage() {
                   <label className="text-sm font-medium text-muted-foreground">
                     مكان الميلاد
                   </label>
-                  <p className="font-medium text-foreground">
+                  <p className="font-bold text-foreground">
                     {testator.birth_place || "غير محدد"}
                   </p>
                 </div>
@@ -399,7 +401,7 @@ export default function WillReviewPage() {
                   <label className="text-sm font-medium text-muted-foreground">
                     المهنة
                   </label>
-                  <p className="font-medium text-foreground">
+                  <p className="font-bold text-foreground">
                     {testator.profession || "غير محدد"}
                   </p>
                 </div>
@@ -407,7 +409,7 @@ export default function WillReviewPage() {
                   <label className="text-sm font-medium text-muted-foreground">
                     مكان الإقامة
                   </label>
-                  <p className="font-medium text-foreground">
+                  <p className="font-bold text-foreground">
                     {testator.residence_place || "غير محدد"}
                   </p>
                 </div>
@@ -415,7 +417,7 @@ export default function WillReviewPage() {
                   <label className="text-sm font-medium text-muted-foreground">
                     رقم بطاقة التعريف
                   </label>
-                  <p className="font-medium text-foreground" dir="ltr">
+                  <p className="font-bold text-foreground" dir="ltr">
                     {testator.national_id || "غير محدد"}
                   </p>
                 </div>
@@ -423,7 +425,7 @@ export default function WillReviewPage() {
                   <label className="text-sm font-medium text-muted-foreground">
                     تاريخ إصدار البطاقة
                   </label>
-                  <p className="font-medium text-foreground">
+                  <p className="font-bold text-foreground">
                     {formatDate(testator.id_issue_date)}
                   </p>
                 </div>
@@ -431,7 +433,7 @@ export default function WillReviewPage() {
                   <label className="text-sm font-medium text-muted-foreground">
                     مكان إصدار البطاقة
                   </label>
-                  <p className="font-medium text-foreground">
+                  <p className="font-bold text-foreground">
                     {testator.id_issue_place || "غير محدد"}
                   </p>
                 </div>
