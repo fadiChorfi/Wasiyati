@@ -68,7 +68,7 @@ export default function SubscriptionsList() {
     switch (status) {
       case "active":
         return "bg-green-100 text-green-800";
-      case "rejected":
+      case "cancelled":
         return "bg-red-100 text-red-800";
       case "pending":
         return "bg-yellow-100 text-yellow-800";
@@ -81,7 +81,7 @@ export default function SubscriptionsList() {
     switch (status) {
       case "active":
         return "مفعل (مقبول)";
-      case "rejected":
+      case "cancelled":
         return "مرفوض";
       case "pending":
         return "قيد المراجعة";
@@ -136,7 +136,7 @@ export default function SubscriptionsList() {
           <option value="all">جميع الحالات</option>
           <option value="pending">قيد المراجعة</option>
           <option value="active">مقبول ومفعل</option>
-          <option value="rejected">مرفوض</option>
+          <option value="cancelled">مرفوض</option>
         </select>
         <button
           onClick={() => refreshSubscriptions()}

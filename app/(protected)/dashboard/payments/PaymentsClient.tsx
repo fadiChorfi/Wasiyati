@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { submitPayment } from "@/actions/payement";
+import {
+  deleteUserSubscriptionWithWills,
+  submitPayment,
+} from "@/actions/payement";
 import {
   RxCheck,
   RxCross2,
@@ -15,6 +18,7 @@ import {
 import { OfferKey, OFFERS } from "@/config/offers";
 import { Offer } from "@/types/database";
 import { useSubscription } from "@/context/SubscriptionContext";
+import { useRouter } from "next/navigation";
 
 interface PaymentsClientProps {
   initialOfferKey: OfferKey;
@@ -27,6 +31,7 @@ export default function PaymentsClient({
   dbOffers,
   hasWill,
 }: PaymentsClientProps) {
+  const router = useRouter();
   const currentSubscription = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(
     initialOfferKey,
@@ -36,6 +41,7 @@ export default function PaymentsClient({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isDeletingSubscription, startDeleteTransition] = useTransition();
 
   const selectedDbOfferId = dbOffers.find(
     (o) => o.offer_key === selectedPlan,
@@ -59,6 +65,24 @@ export default function PaymentsClient({
       setPreviewUrl(null);
       setSelectedFile(null);
     }, 200);
+  };
+
+  const handleDeleteSubscription = () => {
+    if (!currentSubscription?.id) return;
+    const confirmed = window.confirm(
+      "سيتم حذف الاشتراك وكل الوصايا المرتبطة به نهائياً. هل تريد المتابعة؟",
+    );
+    if (!confirmed) return;
+
+    startDeleteTransition(async () => {
+      const res = await deleteUserSubscriptionWithWills(currentSubscription.id);
+      if (res.success) {
+        alert("تم حذف الاشتراك والوصايا المرتبطة به بنجاح.");
+        router.refresh();
+      } else {
+        alert("تعذر الحذف: " + (res.error || "حدث خطأ غير متوقع"));
+      }
+    });
   };
 
   const uiPlansOptions = [
@@ -126,6 +150,13 @@ export default function PaymentsClient({
               الآن قيد المراجعة من قبل الإدارة وسيتم تفعيل حسابك فور الانتهاء من
               التحقق.
             </p>
+            <button
+              onClick={handleDeleteSubscription}
+              disabled={isDeletingSubscription}
+              className="mt-6 bg-red-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-red-700 transition disabled:opacity-50"
+            >
+              {isDeletingSubscription ? "جاري الحذف..." : "حذف الاشتراك"}
+            </button>
           </div>
         </div>
       );
@@ -156,6 +187,13 @@ export default function PaymentsClient({
                   className="bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-primary/90 transition"
                 >
                   الاشتراك مجدداً
+                </button>
+                <button
+                  onClick={handleDeleteSubscription}
+                  disabled={isDeletingSubscription}
+                  className="mr-3 bg-red-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition disabled:opacity-50"
+                >
+                  {isDeletingSubscription ? "جاري الحذف..." : "حذف الاشتراك والوصية"}
                 </button>
               </div>
             </div>
@@ -215,6 +253,13 @@ export default function PaymentsClient({
                 className="bg-red-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition"
               >
                 حاول مرة أخرى
+              </button>
+              <button
+                onClick={handleDeleteSubscription}
+                disabled={isDeletingSubscription}
+                className="mr-3 bg-foreground text-background px-6 py-3 rounded-xl font-bold hover:opacity-90 transition disabled:opacity-50"
+              >
+                {isDeletingSubscription ? "جاري الحذف..." : "حذف الاشتراك"}
               </button>
             </div>
           </div>
@@ -430,10 +475,17 @@ export default function PaymentsClient({
 
                     const res = await submitPayment(formData);
                     if (res.success) {
+                      const blockReason =
+                        "blockReason" in res ? res.blockReason : undefined;
+                      const blockingMessage =
+                        blockReason === "pending_existing"
+                          ? "لديك طلب اشتراك قيد المراجعة بالفعل."
+                          : "لديك اشتراك نشط مسبقاً.";
+
                       alert(
                         res.isNew
                           ? "تم إرسال إيصالك للمراجعة بنجاح! سيتم إشعارك قريباً."
-                          : "لديك اشتراك نشط مسبقاً.",
+                          : blockingMessage,
                       );
                       closeModal();
                     } else {

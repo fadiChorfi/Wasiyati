@@ -12,7 +12,7 @@ import Image from "next/image";
 // Extended interface matching the joined data
 interface SubscriptionData {
   id: string;
-  status: "active" | "rejected" | "pending";
+  status: "active" | "cancelled" | "pending";
   created_at: string;
   receipt_url: string;
   profiles: {
@@ -42,15 +42,15 @@ export default function SubscriptionDetails() {
     fetchData();
   }, [params.subId]);
 
-  const handleAction = async (status: "active" | "rejected") => {
+  const handleAction = async (status: "active" | "cancelled") => {
     if (!sub) return;
 
-    if (status === "rejected" && !showRejectComment) {
+    if (status === "cancelled" && !showRejectComment) {
       setShowRejectComment(true);
       return;
     }
 
-    if (status === "rejected" && showRejectComment && !adminComment.trim()) {
+    if (status === "cancelled" && showRejectComment && !adminComment.trim()) {
       alert("الرجاء إدخال سبب الرفض");
       return;
     }
@@ -184,7 +184,7 @@ export default function SubscriptionDetails() {
                   <RxCheck className="text-xl" /> قبول وتفعيل
                 </button>
                 <button
-                  onClick={() => handleAction("rejected")}
+                  onClick={() => handleAction("cancelled")}
                   disabled={processing}
                   className="flex-1 flex items-center justify-center gap-2 bg-white hover:bg-red-50 border border-red-200 text-red-600 py-3 rounded-2xl font-bold transition-all disabled:opacity-50 shadow-sm active:scale-95"
                 >

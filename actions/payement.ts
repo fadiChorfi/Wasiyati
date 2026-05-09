@@ -2,6 +2,60 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
+async function deleteWillCascadeForOwner(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  willId: string,
+  ownerUserId: string,
+) {
+  const { data: will, error: willError } = await supabase
+    .from("wills")
+    .select("id, user_id")
+    .eq("id", willId)
+    .maybeSingle();
+
+  if (willError) throw willError;
+  if (!will || will.user_id !== ownerUserId) return;
+
+  const { data: testators, error: testatorsError } = await supabase
+    .from("testators")
+    .select("id")
+    .eq("will_id", willId);
+
+  if (testatorsError) throw testatorsError;
+
+  const testatorIds = (testators ?? []).map((t) => t.id);
+  if (testatorIds.length > 0) {
+    const { error: financialDeleteError } = await supabase
+      .from("financial_status")
+      .delete()
+      .in("testator_id", testatorIds);
+    if (financialDeleteError) throw financialDeleteError;
+  }
+
+  const deleteByWillId = async (table: string) => {
+    const { error } = await supabase.from(table).delete().eq("will_id", willId);
+    if (error) throw error;
+  };
+
+  await deleteByWillId("notifications");
+  await deleteByWillId("will_submissions");
+  await deleteByWillId("will_deliveries");
+  await deleteByWillId("will_beneficiaries");
+  await deleteByWillId("witnesses");
+  await deleteByWillId("will_basic_details");
+  await deleteByWillId("will_medium_details");
+  await deleteByWillId("will_pro_details");
+  await deleteByWillId("testators");
+
+  const { error: willDeleteError } = await supabase
+    .from("wills")
+    .delete()
+    .eq("id", willId)
+    .eq("user_id", ownerUserId);
+
+  if (willDeleteError) throw willDeleteError;
+}
+
 export async function submitPayment(formData: FormData) {
   const supabase = await createClient();
 
@@ -19,16 +73,59 @@ export async function submitPayment(formData: FormData) {
   }
 
   try {
-    // 1. check for existing active subscription
-    const { data: existing } = await supabase
+    // 1. Check current open subscriptions (active/pending) and auto-clean consumed actives
+    const { data: openSubscriptions, error: openSubsError } = await supabase
       .from("subscriptions")
       .select("*")
       .eq("user_id", user.id)
-      .in("status", ["active", "pending"]) // ← also block pending
-      .maybeSingle();
+      .in("status", ["active", "pending"])
+      .order("created_at", { ascending: false });
 
-    if (existing) {
-      return { success: true, data: existing, isNew: false };
+    if (openSubsError) throw openSubsError;
+
+    if (openSubscriptions && openSubscriptions.length > 0) {
+      for (const existing of openSubscriptions) {
+        if (existing.status === "pending") {
+          return {
+            success: true,
+            data: existing,
+            isNew: false,
+            blockReason: "pending_existing",
+          };
+        }
+
+        if (existing.status === "active") {
+          const { data: existingWillRows, error: existingWillError } =
+            await supabase
+              .from("wills")
+              .select("id")
+              .eq("subscription_id", existing.id)
+              .limit(1);
+
+          if (existingWillError) throw existingWillError;
+
+          // Legacy cleanup: active sub already consumed by a will -> expire it and continue.
+          if (existingWillRows && existingWillRows.length > 0) {
+            const { error: expireError } = await supabase
+              .from("subscriptions")
+              .update({
+                status: "expired",
+                expires_at: new Date().toISOString(),
+              })
+              .eq("id", existing.id);
+
+            if (expireError) throw expireError;
+            continue;
+          }
+
+          return {
+            success: true,
+            data: existing,
+            isNew: false,
+            blockReason: "active_existing",
+          };
+        }
+      }
     }
 
     // 2. upload receipt to storage
@@ -77,6 +174,35 @@ export async function submitPayment(formData: FormData) {
         newSubscription.offer = offerData;
       }
     }
+
+    // Notify admins about new subscription submission (same pattern as will submission)
+    const { data: adminProfiles } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("role", "admin");
+
+    if (adminProfiles && adminProfiles.length > 0) {
+      const { error: notificationError } = await supabase
+        .from("notifications")
+        .insert(
+          adminProfiles.map((admin) => ({
+            user_id: admin.id,
+            type: "submission_received" as const,
+            title_ar: "طلب اشتراك جديد",
+            message_ar: "تم إرسال طلب اشتراك جديد من أحد العملاء وبانتظار المراجعة.",
+            subscription_id: newSubscription.id,
+            is_read: false,
+          })),
+        );
+
+      if (notificationError) {
+        console.error(
+          "Subscription admin notification insert error:",
+          notificationError,
+        );
+      }
+    }
+
     revalidatePath("/dashboard");
     return { success: true, data: newSubscription, isNew: true };
   } catch (error: unknown) {
@@ -127,6 +253,83 @@ export async function getUserSubscription() {
     console.error("🚨 catch block in getUserSubscription:", error);
     const message =
       error instanceof Error ? error.message : "Failed to fetch subscription";
+    return { success: false, error: message };
+  }
+}
+
+export async function deleteUserSubscriptionWithWills(subscriptionId: string) {
+  const supabase = await createClient();
+
+  try {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const { data: subscription, error: subscriptionError } = await supabase
+      .from("subscriptions")
+      .select("id, user_id, receipt_path")
+      .eq("id", subscriptionId)
+      .maybeSingle();
+
+    if (subscriptionError) throw subscriptionError;
+
+    if (!subscription || subscription.user_id !== user.id) {
+      return { success: false, error: "Subscription not found" };
+    }
+
+    const { data: wills, error: willsError } = await supabase
+      .from("wills")
+      .select("id")
+      .eq("subscription_id", subscriptionId)
+      .eq("user_id", user.id);
+
+    if (willsError) throw willsError;
+
+    for (const will of wills ?? []) {
+      await deleteWillCascadeForOwner(supabase, will.id, user.id);
+    }
+
+    const { error: subNotificationsDeleteError } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("subscription_id", subscriptionId);
+
+    if (subNotificationsDeleteError) throw subNotificationsDeleteError;
+
+    const { error: subscriptionDeleteError } = await supabase
+      .from("subscriptions")
+      .delete()
+      .eq("id", subscriptionId)
+      .eq("user_id", user.id);
+
+    if (subscriptionDeleteError) throw subscriptionDeleteError;
+
+    if (subscription.receipt_path) {
+      const { error: storageDeleteError } = await supabase.storage
+        .from("payement_receipts")
+        .remove([subscription.receipt_path]);
+
+      if (storageDeleteError) {
+        console.error("Receipt storage delete warning:", storageDeleteError);
+      }
+    }
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/payments");
+    revalidatePath("/dashboard/wills");
+    revalidatePath("/admin/dashboard/subscriptions");
+    revalidatePath("/admin/dashboard/wills");
+    return { success: true };
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to delete subscription and wills";
     return { success: false, error: message };
   }
 }
@@ -253,23 +456,82 @@ export async function getAdminSubscriptionById(subId: string) {
 
 export async function updateSubscriptionStatusAdmin(
   subId: string,
-  status: "active" | "rejected" | "pending",
+  status: "active" | "cancelled" | "pending",
   adminComment?: string,
 ) {
   const supabase = await createClient();
 
   try {
-    const updateData: Record<string, string> = { status };
-    if (adminComment !== undefined) {
-      updateData.admin_comment = adminComment;
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { success: false, error: "يجب تسجيل الدخول" };
     }
 
-    const { error } = await supabase
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role !== "admin") {
+      return { success: false, error: "غير مصرح لك بالوصول" };
+    }
+
+    const updateData: {
+      status: "active" | "cancelled" | "pending";
+      started_at?: string | null;
+      expires_at?: string | null;
+    } = { status };
+
+    if (status === "active") {
+      updateData.started_at = new Date().toISOString();
+    }
+
+    if (status === "cancelled") {
+      updateData.expires_at = new Date().toISOString();
+    }
+
+    const { data: updatedSubscription, error } = await supabase
       .from("subscriptions")
       .update(updateData)
-      .eq("id", subId);
+      .eq("id", subId)
+      .select("id, user_id")
+      .single();
 
     if (error) throw error;
+
+    // Notify subscriber about admin decision
+    if (updatedSubscription?.user_id) {
+      const title =
+        status === "active" ? "تم قبول اشتراكك" : "تم رفض طلب الاشتراك";
+      const message =
+        status === "active"
+          ? "تمت مراجعة إيصال الدفع وتفعيل اشتراكك بنجاح."
+          : adminComment?.trim() ||
+            "تم رفض طلب الاشتراك. يرجى التواصل مع الدعم أو إعادة الإرسال.";
+
+      const { error: notificationError } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: updatedSubscription.user_id,
+          type: "submission_received",
+          title_ar: title,
+          message_ar: message,
+          subscription_id: subId,
+          is_read: false,
+        });
+
+      if (notificationError) {
+        console.error(
+          "Subscription status notification insert error:",
+          notificationError,
+        );
+      }
+    }
 
     revalidatePath("/admin/dashboard/subscriptions");
     revalidatePath(`/admin/dashboard/subscriptions/${subId}`);
