@@ -1,6 +1,19 @@
 -- WARNING: This schema is for context only and is not meant to be run.
 -- Table order and constraints may not be valid for execution.
 
+CREATE TABLE public.consultation_requests (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  full_name text NOT NULL,
+  phone text NOT NULL,
+  email text,
+  message text NOT NULL,
+  status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'closed'::text])),
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  CONSTRAINT consultation_requests_pkey PRIMARY KEY (id),
+  CONSTRAINT consultation_requests_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);
 CREATE TABLE public.financial_status (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   testator_id uuid NOT NULL UNIQUE,
@@ -176,6 +189,7 @@ CREATE TABLE public.will_submissions (
   admin_notes text,
   submitted_at timestamp with time zone NOT NULL DEFAULT now(),
   reviewed_at timestamp with time zone,
+  error_step integer,
   CONSTRAINT will_submissions_pkey PRIMARY KEY (id),
   CONSTRAINT will_submissions_will_id_fkey FOREIGN KEY (will_id) REFERENCES public.wills(id),
   CONSTRAINT will_submissions_submitted_by_fkey FOREIGN KEY (submitted_by) REFERENCES public.profiles(id),

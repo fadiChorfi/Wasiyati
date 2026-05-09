@@ -4,7 +4,7 @@ import { OfferKey, OfferPrivileges } from "../config/offers";
 export type WillTier = "basic" | "medium" | "pro";
 
 /** Document category — the kind of will being written */
-export type WillCategory = "general" | "financial" | "business";
+export type WillCategory = "general" | "money" | "business";
 
 export type SubscriptionStatus = "pending" | "active" | "expired" | "cancelled";
 
@@ -213,6 +213,7 @@ export interface WillSubmission {
   reviewed_by: string | null;
   review_status: ReviewStatus;
   admin_notes: string | null;
+  error_step: number | null;
   submitted_at: string;
   reviewed_at: string | null;
 }
