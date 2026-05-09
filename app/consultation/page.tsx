@@ -9,6 +9,7 @@ import AuthCard from "@/components/auth/auth-card";
 import { RxPaperPlane, RxCheck, RxArrowLeft } from "react-icons/rx";
 import Link from "next/link";
 import SectionBadge from "@/components/landing/SectionBadge";
+import { submitConsultationRequest } from "@/actions/consultation";
 
 export default function ConsultationPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -22,6 +23,7 @@ export default function ConsultationPage() {
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -48,11 +50,20 @@ export default function ConsultationPage() {
     e.preventDefault();
     if (!user || !name || !phone || !message) return;
     setIsSubmitting(true);
+    setSubmitError(null);
 
-    // Simulate API request
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    const result = await submitConsultationRequest({
+      full_name: name,
+      phone,
+      message,
+    });
 
     setIsSubmitting(false);
+    if (!result.success) {
+      setSubmitError(result.error || "فشل إرسال الطلب، حاول مرة أخرى");
+      return;
+    }
+
     setSuccess(true);
   };
 
@@ -200,6 +211,10 @@ export default function ConsultationPage() {
                   </>
                 )}
               </button>
+
+              {submitError && (
+                <p className="text-sm text-red-600 text-center">{submitError}</p>
+              )}
             </form>
           )}
         </div>
