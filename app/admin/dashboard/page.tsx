@@ -5,7 +5,7 @@ import {
   RxActivityLog,
   RxArrowLeft,
   RxLayers,
-  RxEnvelopeClosed,
+  RxChatBubble,
 } from "react-icons/rx";
 import Link from "next/link";
 import { getAdminDashboardData } from "@/actions/wills";
@@ -154,7 +154,7 @@ export default async function AdminDashboardPage() {
 
         {/* Card 3 */}
         <Link
-          href="/admin/messages"
+          href="/admin/dashboard/consultations"
           className="block bg-surface rounded-3xl p-6 border border-border text-right hover:shadow-md transition-shadow group"
         >
           <div className="flex md:flex-col items-center md:items-start gap-4 md:gap-0 relative">
@@ -162,14 +162,14 @@ export default async function AdminDashboardPage() {
               <RxArrowLeft />
             </div>
             <div className="bg-accent/10 rounded-2xl p-3 w-fit text-accent-foreground shrink-0">
-              <RxEnvelopeClosed className="text-xl" />
+              <RxChatBubble className="text-xl" />
             </div>
             <div>
               <h4 className="text-base font-bold text-foreground md:mt-4">
-                رسائل التواصل
+                طلبات الاستشارة
               </h4>
               <p className="text-xs text-muted-foreground mt-1">
-                الرد على استفسارات العملاء
+                متابعة تواصل العملاء عبر الهاتف
               </p>
             </div>
           </div>

@@ -2,16 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { RxDashboard, RxFileText, RxPerson, RxGear } from "react-icons/rx";
+import {
+  RxDashboard,
+  RxFileText,
+  RxPerson,
+  RxGear,
+  RxChatBubble,
+} from "react-icons/rx";
 
 export default function AdminMobileNav() {
   const pathname = usePathname();
 
   const navItems = [
-    { label: "لوحة القيادة", href: "/admin", icon: RxDashboard },
-    { label: "الوصايا", href: "/admin/wills", icon: RxFileText },
-    { label: "المستخدمين", href: "/admin/users", icon: RxPerson },
-    { label: "الإعدادات", href: "/admin/settings", icon: RxGear },
+    { label: "لوحة القيادة", href: "/admin/dashboard", icon: RxDashboard },
+    { label: "الوصايا", href: "/admin/dashboard/wills", icon: RxFileText },
+    { label: "المستخدمين", href: "/admin/dashboard/users", icon: RxPerson },
+    {
+      label: "الاستشارات",
+      href: "/admin/dashboard/consultations",
+      icon: RxChatBubble,
+    },
+    { label: "الإعدادات", href: "/admin/dashboard/settings", icon: RxGear },
   ];
 
   return (

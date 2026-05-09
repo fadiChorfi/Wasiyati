@@ -8,6 +8,7 @@ import {
   RxPerson,
   RxGear,
   RxIdCard,
+  RxChatBubble,
 } from "react-icons/rx";
 
 export default function AdminSidebar() {
@@ -29,6 +30,11 @@ export default function AdminSidebar() {
       label: "إدارة المستخدمين",
       href: "/admin/dashboard/users",
       icon: RxPerson,
+    },
+    {
+      label: "الاستشارات",
+      href: "/admin/dashboard/consultations",
+      icon: RxChatBubble,
     },
     { label: "الإعدادات", href: "/admin/dashboard/settings", icon: RxGear },
   ];
