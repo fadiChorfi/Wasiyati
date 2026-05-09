@@ -42,6 +42,8 @@ export default function NewRequestPage() {
       ? "pending"
       : currentSubscription.status === "cancelled"
         ? "cancelled"
+        : currentSubscription.status === "expired"
+          ? "expired"
         : willStatus === "draft"
           ? "will_draft"
           : willStatus === "submitted" || willStatus === "under_review"

@@ -12,7 +12,7 @@ import {
   RxTrash,
 } from "react-icons/rx";
 import { WillStatus } from "@/types/database";
-import { getUserWills } from "@/actions/wills";
+import { deleteUserWill, getUserWills } from "@/actions/wills";
 
 interface WillUI {
   id: string;
@@ -107,6 +107,7 @@ export default function MyWillsPage() {
   const [sort] = useState<"الأولوية" | "الأحدث" | "الأقدم" | "النوع">("الأحدث");
   const [selectedWill, setSelectedWill] = useState<WillUI | null>(null);
   const [deleteWillId, setDeleteWillId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -164,7 +165,7 @@ export default function MyWillsPage() {
     switch (type) {
       case "general":
         return "bg-primary";
-      case "financial":
+      case "money":
         return "bg-accent";
       case "business":
         return "bg-primary/60";
@@ -177,7 +178,7 @@ export default function MyWillsPage() {
     switch (type) {
       case "general":
         return "bg-primary/10 text-primary";
-      case "financial":
+      case "money":
         return "bg-accent/10 text-accent-foreground";
       case "business":
         return "bg-primary/10 text-primary";
@@ -231,11 +232,18 @@ export default function MyWillsPage() {
     }
   };
 
-  const handleDelete = () => {
-    if (deleteWillId) {
-      setWills(wills.filter((w) => w.id !== deleteWillId));
+  const handleDelete = async () => {
+    if (!deleteWillId) return;
+
+    setIsDeleting(true);
+    const res = await deleteUserWill(deleteWillId);
+    if (res.success) {
+      setWills((prev) => prev.filter((w) => w.id !== deleteWillId));
       setDeleteWillId(null);
+    } else {
+      alert(res.error || "تعذر حذف الوصية");
     }
+    setIsDeleting(false);
   };
 
   const getTemplateHref = (willCategory: string | null) => {
@@ -765,9 +773,10 @@ export default function MyWillsPage() {
             <div className="flex gap-3">
               <button
                 onClick={handleDelete}
+                disabled={isDeleting}
                 className="flex-1 bg-red-600 text-white rounded-xl py-2.5 font-bold text-sm hover:bg-red-700 transition shadow-sm"
               >
-                تأكيد الحذف
+                {isDeleting ? "جاري الحذف..." : "تأكيد الحذف"}
               </button>
               <button
                 onClick={() => setDeleteWillId(null)}

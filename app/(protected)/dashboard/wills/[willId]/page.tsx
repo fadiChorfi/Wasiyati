@@ -70,6 +70,8 @@ type WillWithJoins = {
     first_name: string;
     last_name: string;
   }> | null;
+  latest_admin_note?: string | null;
+  latest_error_step?: number | null;
 };
 
 const getWillTypeLabel = (category: string | null): string => {
@@ -173,6 +175,12 @@ export default function WillDetailsPage() {
   );
 
   const canModify = will?.status === "rejected" || will?.status === "draft";
+  const editWillHref = useMemo(() => {
+    if (!will) return "/dashboard/wills";
+    const params = new URLSearchParams();
+    params.set("willId", will.id);
+    return `/dashboard/new-request/${will.will_category || "general"}?${params.toString()}`;
+  }, [will]);
 
   const testatorName = useMemo(() => {
     const t = will?.testator ?? will?.testators?.[0];
@@ -285,10 +293,10 @@ export default function WillDetailsPage() {
   if (loading) {
     return (
       <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
-        <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-surface rounded-3xl border border-border shadow-sm p-10 min-h-[50vh] flex items-center justify-center">
           <div className="text-center">
             <RxClock className="text-4xl text-muted-foreground animate-pulse mx-auto mb-4" />
-            <p className="text-muted-foreground">جاري تحميل الوصية...</p>
+            <p className="text-muted-foreground font-medium">جاري تحميل الوصية...</p>
           </div>
         </div>
       </div>
@@ -298,7 +306,7 @@ export default function WillDetailsPage() {
   if (error || !will) {
     return (
       <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
-        <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-surface rounded-3xl border border-border shadow-sm p-10 min-h-[50vh] flex items-center justify-center">
           <div className="text-center">
             <RxCross2 className="text-4xl text-red-500 mx-auto mb-4" />
             <p className="text-red-500 mb-4">
@@ -319,63 +327,66 @@ export default function WillDetailsPage() {
   const b = getStatusBadge(will.status);
 
   return (
-    <div
-      className="space-y-6 max-w-6xl mx-auto px-4 md:px-6 py-4 pb-24 md:pb-6"
-      dir="rtl"
-    >
-      {/* Header */}
-      <div className="flex items-center gap-4 bg-surface p-4 rounded-3xl shadow-sm border border-border">
-        <button
-          title="العودة"
-          onClick={() => router.push("/dashboard/wills")}
-          className="p-3 bg-background hover:bg-primary/5 rounded-2xl transition-colors border border-border group"
-        >
-          <RxArrowLeft className="text-xl text-muted-foreground group-hover:text-primary" />
-        </button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <RxFileText className="text-primary" />
-            {getWillTypeLabel(will.will_category)}
-          </h1>
-          <div className="flex flex-wrap items-center gap-3 mt-2">
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-bold flex items-center gap-1.5 w-fit ${b.bg} ${b.text}`}
+    <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+      <div className="bg-primary rounded-3xl p-6 md:p-8 overflow-hidden relative">
+        <div className="absolute w-64 h-64 rounded-full bg-primary-foreground/5 -bottom-12 -right-12"></div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-primary-foreground flex items-center gap-2">
+              <RxFileText />
+              {getWillTypeLabel(will.will_category)}
+            </h1>
+            <p className="text-sm text-primary-foreground/75 mt-1">
+              تفاصيل الوصية وحالة المراجعة الحالية
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              title="العودة"
+              onClick={() => router.push("/dashboard/wills")}
+              className="h-10 px-4 rounded-xl bg-primary-foreground/15 text-primary-foreground border border-primary-foreground/20 hover:bg-primary-foreground/20 transition inline-flex items-center gap-2 text-sm font-bold"
             >
-              <div className={`w-1.5 h-1.5 rounded-full ${b.dot}`}></div>
-              {getWillStatusLabel(will.status)}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {will.id.replace("WAS-", "# WAS-")}
-            </span>
-            {testatorName && (
-              <span className="text-xs text-muted-foreground">
-                الموصي:{" "}
-                <span className="text-foreground font-bold">
-                  {testatorName}
-                </span>
-              </span>
+              <RxArrowLeft />
+              العودة
+            </button>
+            {canModify && (
+              <button
+                onClick={() =>
+                  router.push(editWillHref)
+                }
+                className="h-10 px-4 rounded-xl bg-primary-foreground text-primary font-bold text-sm hover:opacity-90 transition active:scale-95 flex items-center gap-2"
+              >
+                تعديل الوصية <RxPencil2 />
+              </button>
             )}
           </div>
         </div>
+      </div>
 
-        {canModify && (
-          <button
-            onClick={() =>
-              router.push(
-                `/dashboard/new-request/${will.will_category || "general"}?willId=${encodeURIComponent(will.id)}`,
-              )
-            }
-            className="px-4 py-2 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition active:scale-95 flex items-center gap-2"
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+        <div className="bg-surface rounded-2xl p-4 border border-border shadow-sm">
+          <p className="text-xs text-muted-foreground mb-1">الحالة</p>
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-bold inline-flex items-center gap-1.5 ${b.bg} ${b.text}`}
           >
-            تعديل الوصية <RxPencil2 />
-          </button>
-        )}
+            <span className={`w-1.5 h-1.5 rounded-full ${b.dot}`}></span>
+            {getWillStatusLabel(will.status)}
+          </span>
+        </div>
+        <div className="bg-surface rounded-2xl p-4 border border-border shadow-sm">
+          <p className="text-xs text-muted-foreground mb-1">رقم الملف</p>
+          <p className="text-sm font-bold text-foreground">{will.id.replace("WAS-", "# WAS-")}</p>
+        </div>
+        <div className="bg-surface rounded-2xl p-4 border border-border shadow-sm">
+          <p className="text-xs text-muted-foreground mb-1">الموصي</p>
+          <p className="text-sm font-bold text-foreground">{testatorName || "غير محدد"}</p>
+        </div>
       </div>
 
       {/* Approved template preview */}
       {will.status === "approved" ? (
         <div className="space-y-4">
-          <div className="flex items-center justify-between bg-surface rounded-2xl border border-border p-4">
+          <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between bg-surface rounded-2xl border border-border p-4">
             <div>
               <p className="text-sm font-black text-foreground">
                 الوصية المعتمدة
@@ -388,7 +399,7 @@ export default function WillDetailsPage() {
               href={templateHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 rounded-xl bg-background border border-border hover:bg-border/50 text-primary font-bold text-sm transition active:scale-95 flex items-center gap-2"
+              className="h-10 px-4 rounded-xl bg-background border border-border hover:bg-border/50 text-primary font-bold text-sm transition active:scale-95 inline-flex items-center gap-2"
               title="عرض القالب الأصلي (PDF)"
             >
               عرض القالب PDF <RxDownload />
@@ -403,14 +414,14 @@ export default function WillDetailsPage() {
               <button
                 onClick={() => void generatePdf("preview")}
                 disabled={isGeneratingPdf}
-                className="px-4 py-2 rounded-xl bg-background border border-border text-foreground font-bold text-sm hover:bg-border/50 transition disabled:opacity-50"
+                className="h-10 px-4 rounded-xl bg-background border border-border text-foreground font-bold text-sm hover:bg-border/50 transition disabled:opacity-50"
               >
                 معاينة PDF
               </button>
               <button
                 onClick={() => void generatePdf("download")}
                 disabled={isGeneratingPdf}
-                className="px-4 py-2 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition disabled:opacity-50"
+                className="h-10 px-4 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition disabled:opacity-50"
               >
                 {isGeneratingPdf ? "جاري الإنشاء..." : "تحميل PDF المُعبأ"}
               </button>
@@ -470,16 +481,19 @@ export default function WillDetailsPage() {
           </p>
           <div className="mt-5 flex flex-col md:flex-row gap-3">
             {canModify && (
-              <button
-                onClick={() =>
-                  router.push(
-                    `/dashboard/new-request/${will.will_category || "general"}?willId=${encodeURIComponent(will.id)}`,
-                  )
-                }
-                className="px-5 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition active:scale-95"
-              >
-                فتح النموذج للتعديل
-              </button>
+              <>
+                <button
+                  onClick={() => router.push(editWillHref)}
+                  className="px-5 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition active:scale-95"
+                >
+                  فتح النموذج للتعديل
+                </button>
+                {will.status === "rejected" && will.latest_admin_note && (
+                  <div className="w-full md:w-auto px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+                    ملاحظة الإدارة: {will.latest_admin_note}
+                  </div>
+                )}
+              </>
             )}
             <button
               onClick={() => router.push("/dashboard/wills")}

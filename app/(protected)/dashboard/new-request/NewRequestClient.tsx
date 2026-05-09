@@ -17,6 +17,7 @@ type BlockReason =
   | "no_subscription"
   | "pending"
   | "cancelled"
+  | "expired"
   | "will_draft"
   | "will_under_review"
   | "will_approved"
@@ -106,6 +107,17 @@ export default function NewRequestClient({
         "تعذر قبول إيصال الدفع الخاص بك. يرجى إعادة المحاولة برفع إيصال جديد.",
       primaryBtn: {
         text: "إعادة المحاولة",
+        action: () => router.push("/dashboard/payments"),
+      },
+    },
+    expired: {
+      icon: <RxClock className="text-3xl" />,
+      iconBg: "bg-amber-50 text-amber-600",
+      title: "انتهت صلاحية الاشتراك",
+      message:
+        "تم استهلاك هذا الاشتراك بعد إرسال وصيتك. لإنشاء وصية جديدة، يرجى الاشتراك مرة أخرى.",
+      primaryBtn: {
+        text: "الاشتراك مجدداً",
         action: () => router.push("/dashboard/payments"),
       },
     },

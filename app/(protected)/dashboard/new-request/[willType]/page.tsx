@@ -69,9 +69,22 @@ export default function WillFormByType() {
   const searchParams = useSearchParams();
   const willTypeParam = params.willType;
   const willId = searchParams.get("willId");
+  const stepParam = searchParams.get("step");
+  const requestedStep = stepParam !== null ? Number(stepParam) : Number.NaN;
+  const maxInitialStep =
+    willTypeParam === "money" || willTypeParam === "general" ? 4 : 3;
+  const initialStep = Number.isFinite(requestedStep)
+    ? Math.min(Math.max(0, Math.trunc(requestedStep)), maxInitialStep)
+    : 0;
 
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStep, setCurrentStep] = useState(initialStep);
   const [prefillLoading, setPrefillLoading] = useState(false);
+  const [accessChecked, setAccessChecked] = useState(false);
+  const [canAccess, setCanAccess] = useState(false);
+  const [reviewIssue, setReviewIssue] = useState<{
+    errorStep: number | null;
+    adminNote: string | null;
+  } | null>(null);
 
   const {
     register,
@@ -104,56 +117,125 @@ export default function WillFormByType() {
   });
 
   useEffect(() => {
+    const guardRouteAccess = async () => {
+      try {
+        // Editing an existing will is allowed from the will details flow.
+        if (willId) {
+          setCanAccess(true);
+          return;
+        }
+
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (!user) {
+          router.replace("/");
+          return;
+        }
+
+        const { data: latestSubscription } = await supabase
+          .from("subscriptions")
+          .select("id, status")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        // No latest active sub => go back to the guarded selector page.
+        if (!latestSubscription || latestSubscription.status !== "active") {
+          router.replace("/dashboard/new-request");
+          return;
+        }
+
+        // Active sub already consumed by a will => block direct route access.
+        const { data: existingWillRows } = await supabase
+          .from("wills")
+          .select("id")
+          .eq("subscription_id", latestSubscription.id)
+          .limit(1);
+
+        if (existingWillRows && existingWillRows.length > 0) {
+          router.replace("/dashboard/new-request");
+          return;
+        }
+
+        setCanAccess(true);
+      } finally {
+        setAccessChecked(true);
+      }
+    };
+
+    void guardRouteAccess();
+  }, [router, willId]);
+
+  useEffect(() => {
     const load = async () => {
       if (!willId) return;
       setPrefillLoading(true);
       try {
-        const supabase = createClient();
-        const { data: willRow, error } = await supabase
-          .from("wills")
-          .select(
-            `
-            id,
-            subject_of_will,
-            testators (
-              first_name,
-              last_name,
-              birth_date,
-              birth_place,
-              profession,
-              residence_place,
-              national_id,
-              id_issue_date,
-              id_issue_place,
-              financial_status (
-                number_of_children,
-                boys,
-                girls,
-                total_money
-              )
-            ),
-            will_beneficiaries (
-              full_name,
-              last_name,
-              birth_date,
-              birth_place,
-              residence_place
-            ),
-            witnesses (
-              witness_number,
-              first_name,
-              last_name
-            )
-          `,
-          )
-          .eq("id", willId)
-          .single();
+        const { getUserWillById } = await import("@/actions/wills");
+        const result = await getUserWillById(willId);
+        if (!result.success || !result.data) return;
+        const willRow = result.data as {
+          status: string;
+          subject_of_will: string | null;
+          testator?: {
+            id: string;
+            first_name?: string | null;
+            last_name?: string | null;
+            birth_date?: string | null;
+            birth_place?: string | null;
+            profession?: string | null;
+            residence_place?: string | null;
+            national_id?: string | null;
+            id_issue_date?: string | null;
+            id_issue_place?: string | null;
+            financial_status?: Array<{
+              number_of_children?: number | null;
+              boys?: number | null;
+              girls?: number | null;
+              total_money?: number | null;
+            }> | null;
+          } | null;
+          testators?: Array<{
+            id: string;
+            first_name?: string | null;
+            last_name?: string | null;
+            birth_date?: string | null;
+            birth_place?: string | null;
+            profession?: string | null;
+            residence_place?: string | null;
+            national_id?: string | null;
+            id_issue_date?: string | null;
+            id_issue_place?: string | null;
+            financial_status?: Array<{
+              number_of_children?: number | null;
+              boys?: number | null;
+              girls?: number | null;
+              total_money?: number | null;
+            }> | null;
+          }> | null;
+          will_beneficiaries?: Array<{
+            full_name?: string | null;
+            last_name?: string | null;
+            birth_date?: string | null;
+            birth_place?: string | null;
+            residence_place?: string | null;
+          }> | null;
+          witnesses?: Array<{
+            witness_number: number;
+            first_name?: string | null;
+            last_name?: string | null;
+          }> | null;
+          latest_admin_note?: string | null;
+          latest_error_step?: number | null;
+        };
 
-        if (error || !willRow) return;
-
-        const testator = Array.isArray(willRow.testators)
-          ? willRow.testators[0]
-          : null;
+        const testator =
+          willRow.testator ??
+          (Array.isArray(willRow.testators) ? willRow.testators[0] : null);
         const beneficiary = Array.isArray(willRow.will_beneficiaries)
           ? willRow.will_beneficiaries[0]
           : null;
@@ -222,6 +304,22 @@ export default function WillFormByType() {
               ? fin?.total_money ?? 0
               : undefined,
         });
+
+        const isRejectedReview =
+          willRow.status === "rejected" &&
+          (willRow.latest_admin_note !== null ||
+            typeof willRow.latest_error_step === "number");
+        if (isRejectedReview) {
+          setReviewIssue({
+            errorStep:
+              typeof willRow.latest_error_step === "number"
+                ? willRow.latest_error_step
+                : null,
+            adminNote: willRow.latest_admin_note ?? null,
+          });
+        } else {
+          setReviewIssue(null);
+        }
       } finally {
         setPrefillLoading(false);
       }
@@ -274,6 +372,12 @@ export default function WillFormByType() {
   steps.push({ title: "المراجعة والتأكيد", fields: [] });
 
   const isReviewStep = currentStep === steps.length - 1;
+
+  useEffect(() => {
+    if (reviewIssue) {
+      setCurrentStep(steps.length - 1);
+    }
+  }, [reviewIssue, steps.length]);
 
   const validateAndNext = async () => {
     if (isSubmitting) return;
@@ -333,6 +437,18 @@ export default function WillFormByType() {
       setIsSubmitting(false);
     }
   };
+
+  if (!accessChecked || !canAccess) {
+    return (
+      <div className="max-w-5xl mx-auto py-3" dir="rtl">
+        <div className="bg-surface rounded-3xl p-6 md:p-10 shadow-sm border border-border min-h-[40vh] flex items-center justify-center">
+          <p className="text-sm font-bold text-muted-foreground">
+            جاري التحقق من حالة الاشتراك...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto py-3 " dir="rtl">
@@ -773,10 +889,16 @@ export default function WillFormByType() {
                       });
                     }
 
-                    return reviewSections.map((section, idx) => (
+                    return reviewSections.map((section, idx) => {
+                      const isIssueSection = reviewIssue?.errorStep === section.target;
+                      return (
                       <div
                         key={idx}
-                        className="bg-background border border-border rounded-2xl p-5 relative group transition-colors hover:border-primary/40"
+                        className={`bg-background border rounded-2xl p-5 relative group transition-colors ${
+                          isIssueSection
+                            ? "border-red-300 bg-red-50/40"
+                            : "border-border hover:border-primary/40"
+                        }`}
                       >
                         <button
                           type="button"
@@ -803,8 +925,19 @@ export default function WillFormByType() {
                             </div>
                           ))}
                         </div>
+                        {isIssueSection && reviewIssue?.adminNote && (
+                          <div className="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+                            <p className="text-xs font-bold text-red-700 mb-1">
+                              ملاحظة الإدارة
+                            </p>
+                            <p className="text-sm text-red-700 leading-6">
+                              {reviewIssue.adminNote}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    ));
+                      );
+                    });
                   })()}
                 </div>
               )}

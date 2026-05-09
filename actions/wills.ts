@@ -16,6 +16,29 @@ export async function submitWill(payload: Record<string, unknown>) {
       return { success: false, error: "يجب تسجيل الدخول لتقديم الوصية" };
     }
 
+    const cleanupWill = async (willId: string) => {
+      const { data: testators } = await supabase
+        .from("testators")
+        .select("id")
+        .eq("will_id", willId);
+
+      const testatorIds = (testators ?? [])
+        .map((t) => (t as { id?: string | null }).id)
+        .filter((id): id is string => typeof id === "string" && id.length > 0);
+
+      if (testatorIds.length > 0) {
+        await supabase.from("financial_status").delete().in("testator_id", testatorIds);
+      }
+
+      await supabase.from("witnesses").delete().eq("will_id", willId);
+      await supabase.from("will_beneficiaries").delete().eq("will_id", willId);
+      await supabase.from("will_basic_details").delete().eq("will_id", willId);
+      await supabase.from("will_medium_details").delete().eq("will_id", willId);
+      await supabase.from("will_pro_details").delete().eq("will_id", willId);
+      await supabase.from("testators").delete().eq("will_id", willId);
+      await supabase.from("wills").delete().eq("id", willId).eq("user_id", user.id);
+    };
+
     // 1. Check existing active subscription and valid offer BEFORE proceeding
     const subResult = await getUserSubscription();
     if (!subResult.success || !subResult.data) {
@@ -27,6 +50,25 @@ export async function submitWill(payload: Record<string, unknown>) {
       return {
         success: false,
         error: "اشتراكك ليس فعالاً حالياً أو انتهت صلاحيته.",
+      };
+    }
+
+    // Enforce 1 subscription -> 1 will only
+    const { data: existingWillRows, error: existingWillError } = await supabase
+      .from("wills")
+      .select("id")
+      .eq("subscription_id", sub.id)
+      .limit(1);
+
+    if (existingWillError) {
+      console.error("Check existing will by subscription error:", existingWillError);
+      return { success: false, error: "تعذر التحقق من حالة الاشتراك" };
+    }
+
+    if (existingWillRows && existingWillRows.length > 0) {
+      return {
+        success: false,
+        error: "تم استخدام هذا الاشتراك مسبقاً لإنشاء وصية. يرجى الاشتراك مجدداً.",
       };
     }
 
@@ -82,7 +124,8 @@ export async function submitWill(payload: Record<string, unknown>) {
 
     if (testatorError) {
       console.error("Testator insert error:", testatorError);
-      throw testatorError;
+      await cleanupWill(newWill.id);
+      return { success: false, error: "فشل حفظ بيانات الموصي، يرجى المحاولة لاحقاً." };
     }
 
     // Insert Beneficiary
@@ -100,7 +143,8 @@ export async function submitWill(payload: Record<string, unknown>) {
 
     if (benError) {
       console.error("Beneficiary insert error:", benError);
-      throw benError;
+      await cleanupWill(newWill.id);
+      return { success: false, error: "فشل حفظ بيانات الموصى له، يرجى المحاولة لاحقاً." };
     }
 
     // Insert Witnesses
@@ -129,7 +173,8 @@ export async function submitWill(payload: Record<string, unknown>) {
 
     if (witError) {
       console.error("Witnesses insert error:", witError);
-      throw witError;
+      await cleanupWill(newWill.id);
+      return { success: false, error: "فشل حفظ بيانات الشهود، يرجى المحاولة لاحقاً." };
     }
 
     // Financial Status
@@ -145,7 +190,8 @@ export async function submitWill(payload: Record<string, unknown>) {
         });
       if (finError) {
         console.error("Financial status insert error:", finError);
-        throw finError;
+        await cleanupWill(newWill.id);
+        return { success: false, error: "فشل حفظ الذمة المالية، يرجى المحاولة لاحقاً." };
       }
     }
 
@@ -175,10 +221,73 @@ export async function submitWill(payload: Record<string, unknown>) {
 
     if (detError) {
       console.error("Details insert error:", detError);
-      throw detError;
+      await cleanupWill(newWill.id);
+      return { success: false, error: "فشل حفظ تفاصيل الوصية، يرجى المحاولة لاحقاً." };
+    }
+
+    // Consume subscription immediately after successful submission flow
+    const { error: expireSubscriptionError } = await supabase
+      .from("subscriptions")
+      .update({
+        status: "expired",
+        expires_at: new Date().toISOString(),
+      })
+      .eq("id", sub.id)
+      .eq("status", "active");
+
+    if (expireSubscriptionError) {
+      console.error("Expire subscription error:", expireSubscriptionError);
+    }
+
+    // Create notifications for submitter and all admins
+    const notificationRows: Array<{
+      user_id: string;
+      type: "submission_received";
+      title_ar: string;
+      message_ar: string;
+      will_id: string;
+      is_read: boolean;
+    }> = [
+      {
+        user_id: user.id,
+        type: "submission_received",
+        title_ar: "تم استلام طلب الوصية",
+        message_ar: "تم إرسال وصيتك بنجاح، وسيتم مراجعتها من الإدارة قريباً.",
+        will_id: newWill.id,
+        is_read: false,
+      },
+    ];
+
+    const { data: adminProfiles } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("role", "admin");
+
+    if (adminProfiles && adminProfiles.length > 0) {
+      notificationRows.push(
+        ...adminProfiles.map((admin) => ({
+          user_id: admin.id,
+          type: "submission_received" as const,
+          title_ar: "طلب وصية جديد",
+          message_ar: "تم إرسال وصية جديدة من أحد العملاء وبانتظار المراجعة.",
+          will_id: newWill.id,
+          is_read: false,
+        })),
+      );
+    }
+
+    const { error: notificationError } = await supabase
+      .from("notifications")
+      .insert(notificationRows);
+
+    if (notificationError) {
+      console.error("Notification insert error:", notificationError);
     }
 
     revalidatePath("/dashboard/wills");
+    revalidatePath("/dashboard");
+    revalidatePath("/admin/dashboard");
+    revalidatePath("/admin/dashboard/wills");
     return { success: true };
   } catch (error) {
     console.error(error);
@@ -219,6 +328,81 @@ export async function getUserWills() {
   } catch (error) {
     console.error(error);
     return { success: false, error: "Unexpected error" };
+  }
+}
+
+export async function deleteUserWill(willId: string) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const { data: will, error: willError } = await supabase
+      .from("wills")
+      .select("id, user_id")
+      .eq("id", willId)
+      .maybeSingle();
+
+    if (willError) throw willError;
+
+    if (!will || will.user_id !== user.id) {
+      return { success: false, error: "Will not found" };
+    }
+
+    const { data: testators, error: testatorsError } = await supabase
+      .from("testators")
+      .select("id")
+      .eq("will_id", willId);
+
+    if (testatorsError) throw testatorsError;
+
+    const testatorIds = (testators ?? []).map((t) => t.id);
+    if (testatorIds.length > 0) {
+      const { error: financialDeleteError } = await supabase
+        .from("financial_status")
+        .delete()
+        .in("testator_id", testatorIds);
+      if (financialDeleteError) throw financialDeleteError;
+    }
+
+    const deleteByWillId = async (table: string) => {
+      const { error } = await supabase.from(table).delete().eq("will_id", willId);
+      if (error) throw error;
+    };
+
+    await deleteByWillId("notifications");
+    await deleteByWillId("will_submissions");
+    await deleteByWillId("will_deliveries");
+    await deleteByWillId("will_beneficiaries");
+    await deleteByWillId("witnesses");
+    await deleteByWillId("will_basic_details");
+    await deleteByWillId("will_medium_details");
+    await deleteByWillId("will_pro_details");
+    await deleteByWillId("testators");
+
+    const { error: deleteWillError } = await supabase
+      .from("wills")
+      .delete()
+      .eq("id", willId)
+      .eq("user_id", user.id);
+
+    if (deleteWillError) throw deleteWillError;
+
+    revalidatePath("/dashboard/wills");
+    revalidatePath("/dashboard");
+    revalidatePath("/admin/dashboard/wills");
+    return { success: true };
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "Failed to delete will";
+    return { success: false, error: message };
   }
 }
 
@@ -380,7 +564,27 @@ export async function getUserWillById(willId: string) {
       }
     }
 
-    return { success: true, data: will };
+    const { data: latestSubmission, error: latestSubmissionError } =
+      await supabase
+        .from("will_submissions")
+        .select("admin_notes, error_step")
+        .eq("will_id", willId)
+        .order("submitted_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+    if (latestSubmissionError) {
+      console.error("Error fetching latest submission note:", latestSubmissionError);
+    }
+
+    const willWithMeta = will as typeof will & {
+      latest_admin_note?: string | null;
+      latest_error_step?: number | null;
+    };
+    willWithMeta.latest_admin_note = latestSubmission?.admin_notes ?? null;
+    willWithMeta.latest_error_step = latestSubmission?.error_step ?? null;
+
+    return { success: true, data: willWithMeta };
   } catch (error) {
     console.error("Get user will error:", error);
     return { success: false, error: "Unexpected error" };
@@ -814,6 +1018,7 @@ export async function updateWillStatus(
   willId: string,
   status: string,
   adminNotes?: string,
+  errorStep?: number | null,
 ) {
   try {
     const supabase = await createClient();
@@ -853,18 +1058,74 @@ export async function updateWillStatus(
       return { success: false, error: "فشل تحديث حالة الوصية" };
     }
 
-    if (adminNotes) {
-      const { error: notesError } = await supabase
-        .from("will_admin_notes")
+    const normalizedAdminNotes = adminNotes?.trim() || null;
+
+    const reviewStatus =
+      status === "approved"
+        ? "approved"
+        : status === "rejected"
+          ? "rejected"
+          : status === "under_review"
+            ? "pending"
+            : null;
+
+    if (reviewStatus && updatedWill?.user_id) {
+      const { error: submissionError } = await supabase
+        .from("will_submissions")
         .insert({
           will_id: willId,
-          admin_id: user.id,
-          notes: adminNotes,
+          submitted_by: updatedWill.user_id,
+          reviewed_by: user.id,
+          review_status: reviewStatus,
+          admin_notes: normalizedAdminNotes,
+          error_step:
+            status === "rejected" && typeof errorStep === "number"
+              ? errorStep
+              : null,
+          reviewed_at: new Date().toISOString(),
         });
 
-      if (notesError) {
-        console.error("Error adding admin notes:", notesError);
-        // Don't fail the whole operation if notes fail
+      if (submissionError) {
+        console.error("Error inserting will submission review:", submissionError);
+        return {
+          success: false,
+          error:
+            "تم تحديث حالة الوصية، لكن فشل حفظ سجل المراجعة. تحقق من سياسات قاعدة البيانات (RLS).",
+        };
+      }
+    }
+
+    if (updatedWill?.user_id) {
+      const notificationType =
+        status === "approved"
+          ? "will_approved"
+          : status === "rejected"
+            ? "will_rejected"
+            : null;
+
+      if (notificationType) {
+        const { error: userNotificationError } = await supabase
+          .from("notifications")
+          .insert({
+            user_id: updatedWill.user_id,
+            type: notificationType,
+            title_ar:
+              notificationType === "will_approved"
+                ? "تمت الموافقة على الوصية"
+                : "تم رفض الوصية",
+            message_ar:
+              notificationType === "will_approved"
+                ? "تمت مراجعة وصيتك والموافقة عليها."
+                : normalizedAdminNotes
+                  ? `تم رفض وصيتك. ملاحظة الإدارة: ${normalizedAdminNotes}`
+                  : "تم رفض وصيتك. يرجى مراجعة الملاحظات وإعادة الإرسال.",
+            will_id: willId,
+            is_read: false,
+          });
+
+        if (userNotificationError) {
+          console.error("User notification insert error:", userNotificationError);
+        }
       }
     }
 

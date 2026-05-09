@@ -20,6 +20,8 @@ import {
   RxCross2,
   RxChatBubble,
   RxClock,
+  RxCheckCircled,
+  RxExclamationTriangle,
 } from "react-icons/rx";
 import { getAdminWillById, updateWillStatus } from "@/actions/wills";
 
@@ -46,11 +48,19 @@ export default function WillReviewPage() {
   const router = useRouter();
   const [willData, setWillData] = useState<WillWithDetails | null>(null);
   const [adminComment, setAdminComment] = useState("");
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
+  const [errorStep, setErrorStep] = useState<string>("");
+  const [feedback, setFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const showFeedback = (type: "success" | "error", message: string) => {
+    setFeedback({ type, message });
+    setTimeout(() => setFeedback(null), 4500);
+  };
 
   const fetchWillData = useCallback(async (willId: string) => {
     try {
@@ -171,28 +181,21 @@ export default function WillReviewPage() {
     try {
       const result = await updateWillStatus(willData.id, "approved");
       if (result.success) {
-        setToastMessage("تمت الموافقة على الوصية بنجاح");
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
+        showFeedback("success", "تم اعتماد الوصية وحفظ سجل المراجعة بنجاح.");
         // Refresh data
         fetchWillData(willData.id);
       } else {
-        setToastMessage(result.error || "فشل الموافقة على الوصية");
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
+        showFeedback("error", result.error || "فشل اعتماد الوصية.");
       }
     } catch (err) {
       console.error("Error approving will:", err);
-      setToastMessage("حدث خطأ غير متوقع");
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 3000);
+      showFeedback("error", "حدث خطأ غير متوقع أثناء الاعتماد.");
     }
   };
 
   const handleReject = async () => {
     if (!willData || !adminComment.trim()) {
-      setToastMessage("يرجى إضافة سبب الرفض");
-      setShowToast(true);
+      showFeedback("error", "يرجى إضافة سبب الرفض قبل الإرسال.");
       return;
     }
 
@@ -201,28 +204,29 @@ export default function WillReviewPage() {
         willData.id,
         "rejected",
         adminComment,
+        errorStep === "" ? null : Number(errorStep),
       );
       if (result.success) {
-        setToastMessage("تم رفض الوصية");
-        setShowToast(true);
+        showFeedback(
+          "success",
+          "تم حفظ قرار الرفض وملاحظاتك، وسيتم توجيه العميل إلى الخطوة المحددة.",
+        );
         // Refresh data
         fetchWillData(willData.id);
         setAdminComment("");
+        setErrorStep("");
       } else {
-        setToastMessage(result.error || "فشل رفض الوصية");
-        setShowToast(true);
+        showFeedback("error", result.error || "فشل حفظ قرار الرفض.");
       }
     } catch (err) {
       console.error("Error rejecting will:", err);
-      setToastMessage("حدث خطأ غير متوقع");
-      setShowToast(true);
+      showFeedback("error", "حدث خطأ غير متوقع أثناء الرفض.");
     }
   };
 
   const handleSendComment = async () => {
     if (!willData || !adminComment.trim()) {
-      setToastMessage("يرجى إضافة تعليق");
-      setShowToast(true);
+      showFeedback("error", "يرجى إضافة تعليق قبل الإرسال.");
       return;
     }
 
@@ -233,19 +237,16 @@ export default function WillReviewPage() {
         adminComment,
       );
       if (result.success) {
-        setToastMessage("تم إرسال التعليق");
-        setShowToast(true);
+        showFeedback("success", "تم إرسال التعليق وحفظ سجل المراجعة.");
         // Refresh data
         fetchWillData(willData.id);
         setAdminComment("");
       } else {
-        setToastMessage(result.error || "فشل إرسال التعليق");
-        setShowToast(true);
+        showFeedback("error", result.error || "فشل إرسال التعليق.");
       }
     } catch (err) {
       console.error("Error sending comment:", err);
-      setToastMessage("حدث خطأ غير متوقع");
-      setShowToast(true);
+      showFeedback("error", "حدث خطأ غير متوقع أثناء إرسال التعليق.");
     }
   };
 
@@ -261,7 +262,7 @@ export default function WillReviewPage() {
   if (loading) {
     return (
       <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
-        <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-surface rounded-3xl border border-border shadow-sm p-10 min-h-[50vh] flex items-center justify-center">
           <div className="text-center">
             <RxClock className="text-4xl text-muted-foreground animate-pulse mx-auto mb-4" />
             <p className="text-muted-foreground">جاري تحميل بيانات الوصية...</p>
@@ -274,7 +275,7 @@ export default function WillReviewPage() {
   if (error) {
     return (
       <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
-        <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-surface rounded-3xl border border-border shadow-sm p-10 min-h-[50vh] flex items-center justify-center">
           <div className="text-center">
             <RxCross2 className="text-4xl text-red-500 mx-auto mb-4" />
             <p className="text-red-500 mb-4">{error}</p>
@@ -293,7 +294,7 @@ export default function WillReviewPage() {
   if (!willData) {
     return (
       <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
-        <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-surface rounded-3xl border border-border shadow-sm p-10 min-h-[50vh] flex items-center justify-center">
           <div className="text-center">
             <RxCross2 className="text-4xl text-red-500 mx-auto mb-4" />
             <p className="text-red-500">لم يتم العثور على الوصية</p>
@@ -311,52 +312,99 @@ export default function WillReviewPage() {
 
   const b = getBadgeStyle(willData.status);
   const testatorArray = willData.testators;
-  const testator = Array.isArray(testatorArray) ? testatorArray[0] : testatorArray;
+  const testator = Array.isArray(testatorArray)
+    ? testatorArray[0]
+    : testatorArray;
   const beneficiaries = willData.will_beneficiaries || [];
   const witnesses = willData.witnesses || [];
   const financialStatusArray = testator?.financial_status || null;
-  const financialStatus = Array.isArray(financialStatusArray) ? financialStatusArray[0] : financialStatusArray;
+  const financialStatus = Array.isArray(financialStatusArray)
+    ? financialStatusArray[0]
+    : financialStatusArray;
+  const requesterName = willData.profiles?.full_name || "مستخدم";
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
-      {/* Toast Notification */}
-      {showToast && (
-        <div className="fixed top-4 left-4 z-50 bg-primary text-primary-foreground px-6 py-3 rounded-xl shadow-lg animate-pulse">
-          {toastMessage}
+    <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+      {feedback && (
+        <div
+          className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-lg border max-w-lg w-[calc(100%-2rem)] md:w-auto ${
+            feedback.type === "success"
+              ? "bg-green-50 text-green-800 border-green-200"
+              : "bg-red-50 text-red-700 border-red-200"
+          }`}
+          dir="rtl"
+        >
+          <div className="flex items-start gap-3">
+            {feedback.type === "success" ? (
+              <RxCheckCircled className="text-xl mt-0.5 shrink-0" />
+            ) : (
+              <RxExclamationTriangle className="text-xl mt-0.5 shrink-0" />
+            )}
+            <div className="text-sm font-medium leading-6">
+              {feedback.message}
+            </div>
+            <button
+              onClick={() => setFeedback(null)}
+              className="mr-auto text-current/70 hover:text-current transition-colors"
+              aria-label="إغلاق التنبيه"
+              title="إغلاق"
+            >
+              <RxCross2 className="text-lg" />
+            </button>
+          </div>
         </div>
       )}
 
       {/* Header */}
-      <div className="flex items-center gap-4 bg-surface p-4 rounded-3xl shadow-sm border border-border">
-        <button
-          title="العودة"
-          onClick={() => router.push("/admin/dashboard/wills")}
-          className="p-3 bg-background hover:bg-primary/5 rounded-2xl transition-colors border border-border group"
-        >
-          <RxArrowLeft className="text-xl text-muted-foreground group-hover:text-primary" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            مراجعة الوصية
-          </h1>
-          <div className="flex items-center gap-4 mt-2">
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-bold flex items-center gap-1.5 w-fit ${b.bg} ${b.text}`}
-            >
-              <div className={`w-1.5 h-1.5 rounded-full ${b.dot}`}></div>
-              {getWillStatusLabel(willData.status)}
-            </span>
-            {willData.will_category && (
-              <span className="text-sm font-medium px-2 py-0.5 bg-gray-100 rounded-md text-gray-700">
-                {getWillTypeLabel(willData.will_category)}
-              </span>
-            )}
-            {willData.created_at && (
-              <span className="text-sm text-muted-foreground">
-                {formatDate(willData.created_at)}
-              </span>
-            )}
+      <div className="bg-primary rounded-3xl p-6 md:p-8 overflow-hidden relative">
+        <div className="absolute w-64 h-64 rounded-full bg-primary-foreground/5 -bottom-12 -right-12"></div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-primary-foreground">
+              مراجعة الوصية
+            </h1>
+            <p className="text-sm text-primary-foreground/75 mt-1">
+              تحقق من البيانات وقرر اعتماد الطلب أو رفضه
+            </p>
           </div>
+          <button
+            title="العودة"
+            onClick={() => router.push("/admin/dashboard/wills")}
+            className="h-10 px-4 rounded-xl bg-primary-foreground/15 text-primary-foreground border border-primary-foreground/20 hover:bg-primary-foreground/20 transition inline-flex items-center gap-2 text-sm font-bold w-fit"
+          >
+            <RxArrowLeft />
+            العودة
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 md:gap-4">
+        <div className="bg-surface rounded-2xl p-4 border border-border shadow-sm">
+          <p className="text-xs text-muted-foreground mb-1">الحالة</p>
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-bold inline-flex items-center gap-1.5 ${b.bg} ${b.text}`}
+          >
+            <div className={`w-1.5 h-1.5 rounded-full ${b.dot}`}></div>
+            {getWillStatusLabel(willData.status)}
+          </span>
+        </div>
+        <div className="bg-surface rounded-2xl p-4 border border-border shadow-sm">
+          <p className="text-xs text-muted-foreground mb-1">نوع الوصية</p>
+          <p className="text-sm font-bold text-foreground">
+            {willData.will_category
+              ? getWillTypeLabel(willData.will_category)
+              : "غير محدد"}
+          </p>
+        </div>
+        <div className="bg-surface rounded-2xl p-4 border border-border shadow-sm">
+          <p className="text-xs text-muted-foreground mb-1">صاحب الطلب</p>
+          <p className="text-sm font-bold text-foreground">{requesterName}</p>
+        </div>
+        <div className="bg-surface rounded-2xl p-4 border border-border shadow-sm">
+          <p className="text-xs text-muted-foreground mb-1">تاريخ الإنشاء</p>
+          <p className="text-sm font-bold text-foreground">
+            {formatDate(willData.created_at)}
+          </p>
         </div>
       </div>
 
@@ -364,7 +412,7 @@ export default function WillReviewPage() {
       <div className="space-y-6">
         {/* Testator Information */}
         <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-border bg-gray-50">
+          <div className="px-6 py-4 border-b border-border bg-background">
             <h3 className="text-base font-bold text-foreground flex items-center gap-2">
               <RxPerson className="text-primary" />
               معلومات الموصي
@@ -417,7 +465,7 @@ export default function WillReviewPage() {
                   <label className="text-sm font-medium text-muted-foreground">
                     رقم بطاقة التعريف
                   </label>
-                  <p className="font-bold text-foreground" dir="ltr">
+                  <p className="font-bold text-foreground" dir="">
                     {testator.national_id || "غير محدد"}
                   </p>
                 </div>
@@ -448,7 +496,7 @@ export default function WillReviewPage() {
 
         {/* Beneficiary Information */}
         <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-border bg-gray-50">
+          <div className="px-6 py-4 border-b border-border bg-background">
             <h3 className="text-base font-bold text-foreground flex items-center gap-2">
               <RxPerson className="text-primary" />
               معلومات الموصى لهم
@@ -460,7 +508,7 @@ export default function WillReviewPage() {
                 {beneficiaries.map((beneficiary, index) => (
                   <div
                     key={beneficiary.id}
-                    className="bg-gray-50 rounded-xl p-4"
+                    className="bg-background border border-border rounded-xl p-4"
                   >
                     <h4 className="font-medium text-foreground mb-3">
                       الموصى له #{index + 1}
@@ -530,14 +578,14 @@ export default function WillReviewPage() {
 
         {/* Will Body */}
         <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-border bg-gray-50">
+          <div className="px-6 py-4 border-b border-border bg-background">
             <h3 className="text-base font-bold text-foreground flex items-center gap-2">
               <RxFileText className="text-primary" />
               موضوع الوصية
             </h3>
           </div>
           <div className="p-6">
-            <div className="bg-gray-50 rounded-xl p-6">
+            <div className="bg-background border border-border rounded-xl p-6">
               <p className="font-medium text-foreground leading-8 whitespace-pre-wrap">
                 {willData.subject_of_will || "لا يوجد نص متاح للوصية"}
               </p>
@@ -548,7 +596,7 @@ export default function WillReviewPage() {
         {/* Financial Information (if available) */}
         {financialStatus && (
           <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-border bg-gray-50">
+            <div className="px-6 py-4 border-b border-border bg-background">
               <h3 className="text-base font-bold text-foreground flex items-center gap-2">
                 <RxArchive className="text-primary" />
                 الذمة المالية
@@ -598,7 +646,7 @@ export default function WillReviewPage() {
 
         {/* Witnesses Information */}
         <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-border bg-gray-50">
+          <div className="px-6 py-4 border-b border-border bg-background">
             <h3 className="text-base font-bold text-foreground flex items-center gap-2">
               <RxIdCard className="text-primary" />
               معلومات الشهود
@@ -628,7 +676,7 @@ export default function WillReviewPage() {
 
         {/* Audit History */}
         <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-border bg-gray-50">
+          <div className="px-6 py-4 border-b border-border bg-background">
             <h3 className="text-base font-bold text-foreground flex items-center gap-2">
               <RxClock className="text-primary" />
               سجل المراجعة
@@ -637,7 +685,10 @@ export default function WillReviewPage() {
           <div className="p-6">
             <div className="space-y-4">
               {auditLogs.map((log) => (
-                <div key={log.id} className="bg-gray-50 rounded-xl p-4">
+                <div
+                  key={log.id}
+                  className="bg-background border border-border rounded-xl p-4"
+                >
                   <div className="flex items-center justify-between mb-2">
                     <div>
                       <p className="font-medium text-foreground">
@@ -664,7 +715,7 @@ export default function WillReviewPage() {
 
         {/* Admin Actions */}
         <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-border bg-gray-50">
+          <div className="px-6 py-4 border-b border-border bg-background">
             <h3 className="text-base font-bold text-foreground flex items-center gap-2">
               <RxChatBubble className="text-primary" />
               إجراءات الإدارة
@@ -679,28 +730,52 @@ export default function WillReviewPage() {
                 value={adminComment}
                 onChange={(e) => setAdminComment(e.target.value)}
                 placeholder="أضف ملاحظاتك أو سبب الرفض..."
-                className="w-full p-4 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                className="w-full p-4 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
                 rows={4}
               />
             </div>
-            <div className="flex gap-3">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground">
+                مكان الخطأ في النموذج (اختياري)
+              </label>
+              <select
+                value={errorStep}
+                onChange={(e) => setErrorStep(e.target.value)}
+                className="w-full p-3 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                title="مكان الخطأ في النموذج"
+              >
+                <option value="">بدون تحديد خطوة</option>
+                <option value="0">الخطوة 1: معلومات الموصي</option>
+                <option value="1">الخطوة 2: معلومات الموصى له</option>
+                <option value="2">الخطوة 3: موضوع الوصية</option>
+                <option value="3">الخطوة 4: معلومات الشهود</option>
+                {(willData.will_category === "money" ||
+                  willData.will_category === "general") && (
+                  <option value="4">الخطوة 5: الذمة المالية</option>
+                )}
+              </select>
+              <p className="text-xs text-muted-foreground">
+                عند الرفض، سيتم فتح نموذج العميل مباشرة على هذه الخطوة.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <button
                 onClick={handleApprove}
-                className="flex-1 px-6 py-3 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition-colors"
+                className="h-11 px-6 bg-primary text-primary-foreground rounded-xl font-bold text-sm hover:bg-primary/90 transition-colors"
               >
                 <RxCheck className="inline ml-2" />
                 اعتماد
               </button>
               <button
                 onClick={handleReject}
-                className="flex-1 px-6 py-3 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors"
+                className="h-11 px-6 bg-red-500 text-white rounded-xl font-bold text-sm hover:bg-red-600 transition-colors"
               >
                 <RxCross2 className="inline ml-2" />
                 رفض
               </button>
               <button
                 onClick={handleSendComment}
-                className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors"
+                className="h-11 px-6 bg-accent text-accent-foreground rounded-xl font-bold text-sm hover:opacity-90 transition-colors"
               >
                 <RxChatBubble className="inline ml-2" />
                 إرسال تعليق

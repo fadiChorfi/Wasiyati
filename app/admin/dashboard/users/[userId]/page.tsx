@@ -582,7 +582,7 @@ export default function UserDetailsPage() {
                           <span className="text-xs font-bold text-muted-foreground bg-background px-2 py-1 rounded-lg border border-border/50">
                             {will.will_category === "general"
                               ? "عامة"
-                              : will.will_category === "financial"
+                              : will.will_category === "money"
                                 ? "مالية"
                                 : will.will_category === "business"
                                   ? "أعمال"
