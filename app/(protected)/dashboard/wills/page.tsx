@@ -215,7 +215,7 @@ export default function MyWillsPage() {
         return "متابعة الإدخال →";
       case "submitted":
       case "under_review":
-        return "عرض التفاصيل →";
+        return "تعديل الوصية →";
       case "rejected":
         return "تصحيح الآن →";
       case "approved":

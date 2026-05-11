@@ -2,6 +2,370 @@
 import { createClient } from "@/lib/supabase/server";
 import { getUserSubscription } from "./payement";
 import { revalidatePath } from "next/cache";
+import { OFFERS, OfferKey } from "@/config/offers";
+
+type WillOfferKey = OfferKey;
+
+function resolveOfferKey(
+  offer: { offer_key?: string | null } | null | undefined,
+): WillOfferKey {
+  const key = offer?.offer_key;
+  if (key === "basic" || key === "medium" || key === "pro") {
+    return key;
+  }
+  return "basic";
+}
+
+function getOfferPrivileges(offerKey: WillOfferKey) {
+  return OFFERS[offerKey].privileges;
+}
+
+export async function saveWillDraft(payload: Record<string, unknown>) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { success: false, error: "يجب تسجيل الدخول لحفظ المسودة" };
+    }
+
+    const subResult = await getUserSubscription();
+    if (!subResult.success || !subResult.data || subResult.data.status !== "active") {
+      return { success: false, error: "لا يوجد اشتراك فعال لحفظ المسودة." };
+    }
+
+    const subscription = subResult.data as typeof subResult.data & {
+      offer?: { offer_key?: string | null } | null;
+    };
+    const offerKey = resolveOfferKey(subscription.offer);
+    const privileges = getOfferPrivileges(offerKey);
+
+    if (!privileges.can_save_draft) {
+      return {
+        success: false,
+        error: "حفظ المسودة متاح فقط في باقتي المتوسطة وPro.",
+      };
+    }
+
+    const willCategory =
+      typeof payload.willType === "string" &&
+      ["general", "money", "business"].includes(payload.willType)
+        ? payload.willType
+        : "general";
+
+    const willBody =
+      typeof payload.willBody === "string" && payload.willBody.trim() !== ""
+        ? payload.willBody.trim()
+        : null;
+
+    const providedWillId =
+      typeof payload.willId === "string" && payload.willId.trim() !== ""
+        ? payload.willId
+        : null;
+
+    const parseDate = (val: unknown) =>
+      typeof val === "string" && val.trim() !== "" ? val : null;
+
+    const toText = (val: unknown) =>
+      typeof val === "string" ? val.trim() : "";
+
+    const toNumberOrNull = (val: unknown) => {
+      if (typeof val === "number" && Number.isFinite(val)) return val;
+      if (typeof val === "string" && val.trim() !== "") {
+        const parsed = Number(val);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+      return null;
+    };
+
+    let draftWillId: string | null = null;
+    let mode: "created" | "updated" = "updated";
+
+    if (providedWillId) {
+      const { data: existingById, error: existingByIdError } = await supabase
+        .from("wills")
+        .select("id, user_id, status")
+        .eq("id", providedWillId)
+        .maybeSingle();
+
+      if (existingByIdError) {
+        console.error("Draft fetch by id error:", existingByIdError);
+        return { success: false, error: "تعذر تحميل المسودة الحالية." };
+      }
+
+      if (!existingById || existingById.user_id !== user.id) {
+        return { success: false, error: "هذه المسودة غير متاحة لك." };
+      }
+
+      if (existingById.status === "approved") {
+        return { success: false, error: "لا يمكن حفظ مسودة لوصية معتمدة." };
+      }
+
+      const { error: updateDraftError } = await supabase
+        .from("wills")
+        .update({
+          status: "draft",
+          will_category: willCategory,
+          subject_of_will: willBody,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", providedWillId)
+        .eq("user_id", user.id);
+
+      if (updateDraftError) {
+        console.error("Draft update error:", updateDraftError);
+        return { success: false, error: "فشل تحديث المسودة." };
+      }
+      draftWillId = providedWillId;
+      mode = "updated";
+    } else {
+      const { data: existingBySubscription, error: existingBySubError } =
+        await supabase
+          .from("wills")
+          .select("id, status")
+          .eq("subscription_id", subscription.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+      if (existingBySubError) {
+        console.error("Draft fetch by subscription error:", existingBySubError);
+        return { success: false, error: "تعذر التحقق من وجود مسودة سابقة." };
+      }
+
+      if (existingBySubscription) {
+        if (existingBySubscription.status === "approved") {
+          return {
+            success: false,
+            error: "لديك وصية معتمدة بهذا الاشتراك. اشترك مجدداً لإنشاء وصية جديدة.",
+          };
+        }
+
+        const { error: updateExistingDraftError } = await supabase
+          .from("wills")
+          .update({
+            status: "draft",
+            will_category: willCategory,
+            subject_of_will: willBody,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existingBySubscription.id)
+          .eq("user_id", user.id);
+
+        if (updateExistingDraftError) {
+          console.error("Existing draft update error:", updateExistingDraftError);
+          return { success: false, error: "تعذر تحديث المسودة الحالية." };
+        }
+
+        draftWillId = existingBySubscription.id;
+        mode = "updated";
+      } else {
+        const { data: newDraft, error: insertDraftError } = await supabase
+          .from("wills")
+          .insert({
+            user_id: user.id,
+            subscription_id: subscription.id,
+            will_type: offerKey,
+            will_category: willCategory,
+            status: "draft",
+            subject_of_will: willBody,
+          })
+          .select("id")
+          .single();
+
+        if (insertDraftError || !newDraft) {
+          console.error("Draft insert error:", insertDraftError);
+          return { success: false, error: "فشل حفظ المسودة." };
+        }
+
+        draftWillId = newDraft.id;
+        mode = "created";
+      }
+    }
+
+    if (!draftWillId) {
+      return { success: false, error: "تعذر تحديد المسودة للحفظ." };
+    }
+
+    // Persist step data into related tables so reopening draft restores filled fields.
+    const testatorFirstName = toText(payload.testatorName);
+    const testatorLastName = toText(payload.testatorSurnam);
+    const shouldPersistTestator = testatorFirstName !== "" && testatorLastName !== "";
+
+    let testatorId: string | null = null;
+    if (shouldPersistTestator) {
+      const { data: existingTestator } = await supabase
+        .from("testators")
+        .select("id")
+        .eq("will_id", draftWillId)
+        .maybeSingle();
+
+      const testatorPayload = {
+        will_id: draftWillId,
+        first_name: testatorFirstName,
+        last_name: testatorLastName,
+        birth_date: parseDate(payload.testatorDob),
+        birth_place: toText(payload.testatorPob) || null,
+        profession: toText(payload.testatorJob) || null,
+        residence_place: toText(payload.testatorRes) || null,
+        national_id: toText(payload.testatorNin) || null,
+        id_issue_date: parseDate(payload.testatorIDDate),
+        id_issue_place: toText(payload.testatorIDPlace) || null,
+      };
+
+      if (existingTestator?.id) {
+        testatorId = existingTestator.id;
+        const { error: testatorUpdateError } = await supabase
+          .from("testators")
+          .update(testatorPayload)
+          .eq("id", existingTestator.id);
+
+        if (testatorUpdateError) {
+          console.error("Draft testator update error:", testatorUpdateError);
+          return { success: false, error: "فشل حفظ بيانات الموصي في المسودة." };
+        }
+      } else {
+        const { data: insertedTestator, error: testatorInsertError } = await supabase
+          .from("testators")
+          .insert(testatorPayload)
+          .select("id")
+          .single();
+
+        if (testatorInsertError || !insertedTestator) {
+          console.error("Draft testator insert error:", testatorInsertError);
+          return { success: false, error: "فشل حفظ بيانات الموصي في المسودة." };
+        }
+        testatorId = insertedTestator.id;
+      }
+    }
+
+    const beneficiaryFirstName = toText(payload.beneficiaryName);
+    const beneficiaryLastName = toText(payload.beneficiarySurname);
+    const beneficiaryFullName = `${beneficiaryFirstName} ${beneficiaryLastName}`.trim();
+    if (beneficiaryFullName !== "") {
+      const { data: existingBeneficiary } = await supabase
+        .from("will_beneficiaries")
+        .select("id")
+        .eq("will_id", draftWillId)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      const beneficiaryPayload = {
+        will_id: draftWillId,
+        full_name: beneficiaryFullName,
+        last_name: beneficiaryLastName || null,
+        relationship: "غير محدد",
+        birth_date: parseDate(payload.beneficiaryDob),
+        birth_place: toText(payload.beneficiaryPob) || null,
+        residence_place: toText(payload.beneficiaryRes) || null,
+      };
+
+      if (existingBeneficiary?.id) {
+        const { error: beneficiaryUpdateError } = await supabase
+          .from("will_beneficiaries")
+          .update(beneficiaryPayload)
+          .eq("id", existingBeneficiary.id);
+
+        if (beneficiaryUpdateError) {
+          console.error("Draft beneficiary update error:", beneficiaryUpdateError);
+          return { success: false, error: "فشل حفظ بيانات المستفيد في المسودة." };
+        }
+      } else {
+        const { error: beneficiaryInsertError } = await supabase
+          .from("will_beneficiaries")
+          .insert(beneficiaryPayload);
+
+        if (beneficiaryInsertError) {
+          console.error("Draft beneficiary insert error:", beneficiaryInsertError);
+          return { success: false, error: "فشل حفظ بيانات المستفيد في المسودة." };
+        }
+      }
+    }
+
+    const witness1 = toText(payload.witness1);
+    const witness2 = toText(payload.witness2);
+    const witnessRows: Array<{
+      will_id: string;
+      witness_number: 1 | 2;
+      first_name: string;
+      last_name: string;
+    }> = [];
+
+    if (witness1) {
+      const parts = witness1.split(" ");
+      witnessRows.push({
+        will_id: draftWillId,
+        witness_number: 1,
+        first_name: parts[0] || "غير محدد",
+        last_name: parts.slice(1).join(" ") || "غير محدد",
+      });
+    }
+    if (witness2) {
+      const parts = witness2.split(" ");
+      witnessRows.push({
+        will_id: draftWillId,
+        witness_number: 2,
+        first_name: parts[0] || "غير محدد",
+        last_name: parts.slice(1).join(" ") || "غير محدد",
+      });
+    }
+
+    if (witnessRows.length > 0) {
+      const { error: witnessUpsertError } = await supabase
+        .from("witnesses")
+        .upsert(witnessRows, { onConflict: "will_id,witness_number" });
+
+      if (witnessUpsertError) {
+        console.error("Draft witness upsert error:", witnessUpsertError);
+        return { success: false, error: "فشل حفظ بيانات الشهود في المسودة." };
+      }
+    }
+
+    if ((willCategory === "money" || willCategory === "general") && testatorId) {
+      const totalChildren = toNumberOrNull(payload.totalChildren);
+      const maleChildren = toNumberOrNull(payload.maleChildren);
+      const femaleChildren = toNumberOrNull(payload.femaleChildren);
+      const totalMoney = toNumberOrNull(payload.totalMoney);
+      const shouldPersistFinancial =
+        totalChildren !== null ||
+        maleChildren !== null ||
+        femaleChildren !== null ||
+        totalMoney !== null;
+
+      if (shouldPersistFinancial) {
+        const { error: financialUpsertError } = await supabase
+          .from("financial_status")
+          .upsert(
+            {
+              testator_id: testatorId,
+              number_of_children: totalChildren ?? 0,
+              boys: maleChildren ?? 0,
+              girls: femaleChildren ?? 0,
+              total_money: totalMoney,
+            },
+            { onConflict: "testator_id" },
+          );
+
+        if (financialUpsertError) {
+          console.error("Draft financial upsert error:", financialUpsertError);
+          return { success: false, error: "فشل حفظ بيانات الذمة المالية في المسودة." };
+        }
+      }
+    }
+
+    revalidatePath("/dashboard/wills");
+    revalidatePath(`/dashboard/wills/${draftWillId}`);
+    return { success: true, data: { willId: draftWillId }, mode };
+  } catch (error) {
+    console.error("Save draft error:", error);
+    return { success: false, error: "حدث خطأ غير متوقع أثناء حفظ المسودة." };
+  }
+}
 
 export async function submitWill(payload: Record<string, unknown>) {
   try {
@@ -81,10 +445,11 @@ export async function submitWill(payload: Record<string, unknown>) {
 
     // Save to the DB
     // Determine tier from offer, fallback to 'basic'
-    const willTier =
-      typeof sub.offer === "object" && sub.offer?.offer_key
-        ? sub.offer.offer_key
-        : "basic";
+    const willTier = resolveOfferKey(
+      typeof sub.offer === "object"
+        ? (sub.offer as { offer_key?: string | null })
+        : null,
+    );
 
     const { data: newWill, error: insertError } = await supabase
       .from("wills")
@@ -458,6 +823,16 @@ export async function getUserWillById(willId: string) {
           witness_number,
           first_name,
           last_name
+        ),
+        will_deliveries (
+          id,
+          trustee_name,
+          trustee_email,
+          trustee_phone,
+          delivery_status,
+          delivery_method,
+          scheduled_at,
+          delivered_at
         )
       `,
       )
@@ -623,6 +998,13 @@ export async function updateUserWill(
 
     if (will.user_id !== user.id) {
       return { success: false, error: "غير مصرح لك بتعديل هذه الوصية" };
+    }
+
+    if (will.status === "approved") {
+      return {
+        success: false,
+        error: "لا يمكن تعديل الوصية بعد اعتمادها نهائياً.",
+      };
     }
 
     // Update main will row (resubmission)
@@ -917,6 +1299,102 @@ export async function getAdminWills() {
   } catch (error) {
     console.error("Admin wills error:", error);
     return { success: false, error: "حدث خطأ غير متوقع" };
+  }
+}
+
+export async function requestWillDelivery(
+  willId: string,
+  payload: {
+    trusteeName: string;
+    trusteeEmail?: string;
+    trusteePhone?: string;
+    deliveryMethod?: "email" | "sms" | "physical";
+  },
+) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return { success: false, error: "يجب تسجيل الدخول أولاً." };
+    }
+
+    const { data: will, error: willError } = await supabase
+      .from("wills")
+      .select("id, user_id, will_type, status")
+      .eq("id", willId)
+      .maybeSingle();
+
+    if (willError) {
+      console.error("Delivery will fetch error:", willError);
+      return { success: false, error: "تعذر تحميل بيانات الوصية." };
+    }
+
+    if (!will || will.user_id !== user.id) {
+      return { success: false, error: "الوصية غير متاحة." };
+    }
+
+    if (will.will_type !== "pro") {
+      return { success: false, error: "خدمة توصيل الوصية متاحة فقط في باقة Pro." };
+    }
+
+    if (will.status !== "approved") {
+      return {
+        success: false,
+        error: "يمكن طلب التوصيل بعد اعتماد الوصية فقط.",
+      };
+    }
+
+    const trusteeName = payload.trusteeName?.trim();
+    if (!trusteeName) {
+      return { success: false, error: "اسم الجهة المستلمة مطلوب." };
+    }
+
+    const deliveryMethod = payload.deliveryMethod || "email";
+
+    const { error: deliveryError } = await supabase.from("will_deliveries").upsert(
+      {
+        will_id: willId,
+        trustee_name: trusteeName,
+        trustee_email: payload.trusteeEmail?.trim() || null,
+        trustee_phone: payload.trusteePhone?.trim() || null,
+        delivery_method: deliveryMethod,
+        delivery_status: "scheduled",
+        scheduled_at: new Date().toISOString(),
+      },
+      { onConflict: "will_id" },
+    );
+
+    if (deliveryError) {
+      console.error("Delivery upsert error:", deliveryError);
+      return { success: false, error: "تعذر تسجيل طلب التوصيل." };
+    }
+
+    const { error: notificationError } = await supabase
+      .from("notifications")
+      .insert({
+        user_id: user.id,
+        type: "delivery_confirmed",
+        title_ar: "تم تسجيل طلب توصيل الوصية",
+        message_ar: "تم حفظ طلب التوصيل بنجاح وسيتم متابعته من الإدارة.",
+        will_id: willId,
+        is_read: false,
+      });
+
+    if (notificationError) {
+      console.error("Delivery notification error:", notificationError);
+    }
+
+    revalidatePath(`/dashboard/wills/${willId}`);
+    revalidatePath("/dashboard/wills");
+    return { success: true };
+  } catch (error) {
+    console.error("Request delivery error:", error);
+    return { success: false, error: "حدث خطأ غير متوقع أثناء طلب التوصيل." };
   }
 }
 

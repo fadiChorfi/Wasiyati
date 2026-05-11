@@ -7,6 +7,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/utils/supabase/client";
+import { useSubscription } from "@/context/SubscriptionContext";
 
 // Define the full schema
 const willSchema = z
@@ -64,6 +65,7 @@ const willSchema = z
 type WillFormData = z.infer<typeof willSchema>;
 
 export default function WillFormByType() {
+  const currentSubscription = useSubscription();
   const params = useParams<{ willType: string }>();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -372,6 +374,9 @@ export default function WillFormByType() {
   steps.push({ title: "المراجعة والتأكيد", fields: [] });
 
   const isReviewStep = currentStep === steps.length - 1;
+  const canSaveDraft =
+    currentSubscription?.offer?.offer_key === "medium" ||
+    currentSubscription?.offer?.offer_key === "pro";
 
   useEffect(() => {
     if (reviewIssue) {
@@ -405,6 +410,7 @@ export default function WillFormByType() {
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
 
   const submitForm = async () => {
     setIsSubmitting(true);
@@ -435,6 +441,33 @@ export default function WillFormByType() {
       alert("حدث خطأ غير متوقع.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const saveDraft = async () => {
+    if (isSavingDraft || isSubmitting) return;
+    setIsSavingDraft(true);
+    try {
+      const data = getValues();
+      const payload = {
+        willType: willTypeParam,
+        willId: willId ?? undefined,
+        ...data,
+      };
+      const { saveWillDraft } = await import("@/actions/wills");
+      const result = await saveWillDraft(payload);
+
+      if (result?.success) {
+        alert("تم حفظ المسودة بنجاح.");
+        router.push("/dashboard/wills");
+      } else {
+        alert(result?.error || "تعذر حفظ المسودة.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("حدث خطأ غير متوقع أثناء حفظ المسودة.");
+    } finally {
+      setIsSavingDraft(false);
     }
   };
 
@@ -955,8 +988,18 @@ export default function WillFormByType() {
             السابق
           </button>
         )}
+        {canSaveDraft && (
+          <button
+            onClick={saveDraft}
+            disabled={isSavingDraft || isSubmitting}
+            className="px-6 py-3.5 rounded-xl font-bold bg-background text-foreground border border-border hover:bg-surface transition-colors disabled:opacity-50"
+          >
+            {isSavingDraft ? "جاري حفظ المسودة..." : "حفظ كمسودة"}
+          </button>
+        )}
         <button
           onClick={validateAndNext}
+          disabled={isSavingDraft || isSubmitting}
           className="flex-1 bg-primary text-white rounded-xl py-3.5 font-bold shadow-sm hover:opacity-90 transition active:scale-95 text-center flex items-center justify-center gap-2"
         >
           {isReviewStep ? "إرسال واعتماد الوصية" : "التالي ومتابعة الإدخال"}
