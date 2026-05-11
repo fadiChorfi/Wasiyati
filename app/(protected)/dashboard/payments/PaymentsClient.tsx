@@ -123,7 +123,7 @@ export default function PaymentsClient({
   if (currentSubscription && !showPricing) {
     if (currentSubscription.status === "pending") {
       return (
-        <div className="space-y-6 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+        <div className="space-y-6 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
           <div className="max-w-2xl mx-auto mt-8 bg-surface rounded-3xl border border-blue-200 p-8 md:p-12 shadow-sm text-center flex flex-col items-center">
             <div className="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-6">
               <RxClock className="text-4xl animate-pulse" />
@@ -166,7 +166,7 @@ export default function PaymentsClient({
       // subscription consumed — will already exists
       if (hasWill) {
         return (
-          <div className="space-y-6 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+          <div className="space-y-6 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
             <div className="bg-surface rounded-3xl border border-border p-8 shadow-sm text-center">
               <h1 className="text-2xl font-black text-foreground mb-4">
                 تم استخدام الاشتراك
@@ -203,7 +203,7 @@ export default function PaymentsClient({
 
       // subscription active — no will yet
       return (
-        <div className="space-y-6 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+        <div className="space-y-6 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
           <div className="bg-green-50 rounded-3xl border border-green-200 p-8 shadow-sm text-center">
             <h1 className="text-2xl font-black text-green-800 mb-4">
               اشتراكك فعّال
@@ -232,7 +232,7 @@ export default function PaymentsClient({
 
     if (currentSubscription.status === "cancelled") {
       return (
-        <div className="space-y-6 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+        <div className="space-y-6 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
           <div className="bg-red-50 rounded-3xl border border-red-200 p-8 shadow-sm text-center">
             <h1 className="text-2xl font-black text-red-800 mb-4">
               فشل الإيصال
@@ -269,7 +269,7 @@ export default function PaymentsClient({
   }
 
   return (
-    <div className="space-y-6 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+    <div className="space-y-6 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
       <div className="bg-surface rounded-3xl border border-border p-6 shadow-sm mb-6 text-center md:text-right">
         <h1 className="text-2xl font-black text-foreground">
           الباقات والاشتراكات

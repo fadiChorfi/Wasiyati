@@ -4,19 +4,21 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   RxArrowLeft,
+  RxCheckCircled,
   RxClock,
   RxCross2,
   RxDownload,
   RxFileText,
   RxPencil2,
 } from "react-icons/rx";
-import { getUserWillById } from "@/actions/wills";
+import { getUserWillById, requestWillDelivery } from "@/actions/wills";
 import { WillStatus } from "@/types/database";
 import FilledWillTemplate from "@/components/wills/FilledWillTemplate";
 import FilledWillHtmlView from "@/components/wills/FilledMoneyWillHtmlView";
 
 type WillWithJoins = {
   id: string;
+  will_type: "basic" | "medium" | "pro";
   status: WillStatus;
   will_category: string | null;
   created_at: string;
@@ -72,6 +74,16 @@ type WillWithJoins = {
   }> | null;
   latest_admin_note?: string | null;
   latest_error_step?: number | null;
+  will_deliveries?: Array<{
+    id: string;
+    trustee_name: string;
+    trustee_email: string | null;
+    trustee_phone: string | null;
+    delivery_status: "not_sent" | "scheduled" | "sent" | "confirmed";
+    delivery_method: "email" | "sms" | "physical";
+    scheduled_at: string | null;
+    delivered_at: string | null;
+  }> | null;
 };
 
 const getWillTypeLabel = (category: string | null): string => {
@@ -145,6 +157,10 @@ export default function WillDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [will, setWill] = useState<WillWithJoins | null>(null);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isRequestingDelivery, setIsRequestingDelivery] = useState(false);
+  const [trusteeName, setTrusteeName] = useState("");
+  const [trusteeEmail, setTrusteeEmail] = useState("");
+  const [trusteePhone, setTrusteePhone] = useState("");
 
   const fetchWill = useCallback(async () => {
     try {
@@ -174,7 +190,8 @@ export default function WillDetailsPage() {
     [will?.will_category],
   );
 
-  const canModify = will?.status === "rejected" || will?.status === "draft";
+  const canModify = !!will && will.status !== "approved";
+  const canRequestDelivery = will?.status === "approved" && will?.will_type === "pro";
   const editWillHref = useMemo(() => {
     if (!will) return "/dashboard/wills";
     const params = new URLSearchParams();
@@ -188,6 +205,46 @@ export default function WillDetailsPage() {
     const full = `${t.first_name || ""} ${t.last_name || ""}`.trim();
     return full || null;
   }, [will?.testator, will?.testators]);
+
+  const latestDelivery = will?.will_deliveries?.[0] ?? null;
+
+  const onRequestDelivery = useCallback(async () => {
+    if (!will || !canRequestDelivery) return;
+    if (!trusteeName.trim()) {
+      alert("يرجى إدخال اسم الجهة المستلمة.");
+      return;
+    }
+
+    try {
+      setIsRequestingDelivery(true);
+      const result = await requestWillDelivery(will.id, {
+        trusteeName: trusteeName.trim(),
+        trusteeEmail: trusteeEmail.trim() || undefined,
+        trusteePhone: trusteePhone.trim() || undefined,
+        deliveryMethod: trusteePhone.trim() ? "sms" : "email",
+      });
+
+      if (!result.success) {
+        alert(result.error || "تعذر تسجيل طلب التوصيل.");
+        return;
+      }
+
+      alert("تم إرسال طلب توصيل الوصية بنجاح.");
+      await fetchWill();
+    } catch (error) {
+      console.error(error);
+      alert("حدث خطأ غير متوقع أثناء طلب التوصيل.");
+    } finally {
+      setIsRequestingDelivery(false);
+    }
+  }, [
+    canRequestDelivery,
+    fetchWill,
+    trusteeEmail,
+    trusteeName,
+    trusteePhone,
+    will,
+  ]);
 
   const generatePdf = useCallback(
     async (mode: "download" | "preview") => {
@@ -292,7 +349,7 @@ export default function WillDetailsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+      <div className="space-y-5 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
         <div className="bg-surface rounded-3xl border border-border shadow-sm p-10 min-h-[50vh] flex items-center justify-center">
           <div className="text-center">
             <RxClock className="text-4xl text-muted-foreground animate-pulse mx-auto mb-4" />
@@ -305,7 +362,7 @@ export default function WillDetailsPage() {
 
   if (error || !will) {
     return (
-      <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+      <div className="space-y-5 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
         <div className="bg-surface rounded-3xl border border-border shadow-sm p-10 min-h-[50vh] flex items-center justify-center">
           <div className="text-center">
             <RxCross2 className="text-4xl text-red-500 mx-auto mb-4" />
@@ -327,7 +384,7 @@ export default function WillDetailsPage() {
   const b = getStatusBadge(will.status);
 
   return (
-    <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+    <div className="space-y-5 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
       <div className="bg-primary rounded-3xl p-6 md:p-8 overflow-hidden relative">
         <div className="absolute w-64 h-64 rounded-full bg-primary-foreground/5 -bottom-12 -right-12"></div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -427,6 +484,60 @@ export default function WillDetailsPage() {
               </button>
             </div>
           </div>
+
+          {canRequestDelivery && (
+            <div className="bg-surface rounded-2xl border border-border p-4 space-y-4">
+              <div>
+                <p className="text-sm font-black text-foreground">
+                  توصيل الوصية (باقة Pro)
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  أرسل بيانات الجهة المستلمة ليتم جدولة التوصيل والمتابعة من الإدارة.
+                </p>
+              </div>
+
+              {latestDelivery && (
+                <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+                  <p className="font-bold flex items-center gap-2">
+                    <RxCheckCircled />
+                    حالة الطلب الحالية: {latestDelivery.delivery_status}
+                  </p>
+                  <p className="mt-1">
+                    الجهة المستلمة: {latestDelivery.trustee_name}
+                  </p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input
+                  value={trusteeName}
+                  onChange={(e) => setTrusteeName(e.target.value)}
+                  placeholder="اسم الجهة المستلمة"
+                  className="px-4 py-3 rounded-xl border border-border bg-background outline-none focus:border-primary"
+                />
+                <input
+                  value={trusteeEmail}
+                  onChange={(e) => setTrusteeEmail(e.target.value)}
+                  placeholder="البريد الإلكتروني (اختياري)"
+                  className="px-4 py-3 rounded-xl border border-border bg-background outline-none focus:border-primary"
+                />
+                <input
+                  value={trusteePhone}
+                  onChange={(e) => setTrusteePhone(e.target.value)}
+                  placeholder="رقم الهاتف (اختياري)"
+                  className="px-4 py-3 rounded-xl border border-border bg-background outline-none focus:border-primary"
+                />
+              </div>
+
+              <button
+                onClick={() => void onRequestDelivery()}
+                disabled={isRequestingDelivery}
+                className="h-10 px-4 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition disabled:opacity-50"
+              >
+                {isRequestingDelivery ? "جاري الإرسال..." : "تأكيد طلب التوصيل"}
+              </button>
+            </div>
+          )}
 
           <div className="bg-surface rounded-3xl border border-border p-6 shadow-sm">
             <FilledWillHtmlView

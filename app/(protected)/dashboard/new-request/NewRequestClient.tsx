@@ -197,7 +197,7 @@ export default function NewRequestClient({
     !hasActiveSubscription && blockReason ? blockConfig[blockReason] : null;
 
   return (
-    <div className="space-y-6 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+    <div className="space-y-6 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
       {/* HEADER */}
       <div className="bg-surface rounded-3xl border border-border p-6 shadow-sm mb-6 text-center md:text-right">
         <h1 className="text-2xl font-black text-foreground">

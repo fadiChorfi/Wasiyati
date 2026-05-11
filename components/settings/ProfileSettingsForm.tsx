@@ -50,7 +50,7 @@ export default function ProfileSettingsForm({
   };
 
   return (
-    <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+    <div className="space-y-5 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
       <div className="bg-primary rounded-3xl p-6 md:p-8 overflow-hidden relative">
         <div className="absolute w-64 h-64 rounded-full bg-primary-foreground/5 -bottom-12 -right-12"></div>
         <div className="relative z-10 text-right">

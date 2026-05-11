@@ -158,7 +158,7 @@ export default function DashboardPage() {
   /* const profile = useUser(); */
 
   return (
-    <div className="space-y-5 px-4 md:px-6 py-4  pb-24 md:pb-6" dir="rtl">
+    <div className="space-y-5 md:px-6 py-4  pb-24 md:pb-6" dir="rtl">
       {/* WELCOME BANNER */}
       {/* <WelcomeBanner profile={profile} /> */}
 
