@@ -152,96 +152,142 @@ export default function AdminConsultationsPage() {
           </h3>
         </div>
 
-        <div className="p-4 md:p-5">
-          <div className="overflow-x-auto rounded-xl border border-border bg-background">
-            <table className="w-full text-right text-sm">
-              <thead className="bg-muted/40">
-              <tr>
-                <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
-                  العميل
-                </th>
-                <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
-                  الهاتف
-                </th>
-                <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
-                  الرسالة
-                </th>
-                <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
-                  التاريخ
-                </th>
-                <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
-                  الحالة
-                </th>
-                <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
-                  إجراء
-                </th>
-              </tr>
-            </thead>
-              <tbody>
+        {filteredRequests.length === 0 ? (
+          <div className="p-10 text-center text-sm text-muted-foreground">
+            لا توجد طلبات مطابقة للتصفية الحالية
+          </div>
+        ) : (
+          <div className="p-4 md:p-5">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto rounded-xl border border-border bg-background">
+              <table className="w-full text-right text-sm">
+                <thead className="bg-muted/40">
+                <tr>
+                  <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
+                    العميل
+                  </th>
+                  <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
+                    الهاتف
+                  </th>
+                  <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
+                    الرسالة
+                  </th>
+                  <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
+                    التاريخ
+                  </th>
+                  <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
+                    الحالة
+                  </th>
+                  <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
+                    إجراء
+                  </th>
+                </tr>
+              </thead>
+                <tbody>
+                {filteredRequests.map((request) => {
+                  const style = badgeStyle(request.status);
+
+                  return (
+                    <tr
+                      key={request.id}
+                      className="border-t border-border transition-colors hover:bg-muted/30"
+                    >
+                      <td className="p-4 align-top">
+                        <p className="font-bold text-foreground">{request.full_name}</p>
+                        {request.email && (
+                          <p className="text-xs text-muted-foreground">{request.email}</p>
+                        )}
+                      </td>
+                      <td className="p-4 align-top text-foreground whitespace-nowrap" dir="ltr">
+                        {request.phone}
+                      </td>
+                      <td className="p-4 align-top">
+                        <p className="text-sm text-foreground max-w-lg">
+                          {getMessagePreview(request.message)}
+                        </p>
+                      </td>
+                      <td className="p-4 align-top text-sm text-muted-foreground whitespace-nowrap">
+                        {new Date(request.created_at).toLocaleDateString("ar-DZ", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </td>
+                      <td className="p-4 align-top">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${style.bg} ${style.text}`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`}></span>
+                          {style.label}
+                        </span>
+                      </td>
+                      <td className="p-4 align-top">
+                        <button
+                          onClick={() => setSelectedRequest(request)}
+                          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold bg-primary text-primary-foreground hover:opacity-90"
+                        >
+                          <RxEyeOpen />
+                          فتح
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden flex flex-col gap-3">
               {filteredRequests.map((request) => {
                 const style = badgeStyle(request.status);
 
                 return (
-                  <tr
+                  <div
                     key={request.id}
-                    className="border-t border-border transition-colors hover:bg-muted/30"
+                    className="rounded-xl border border-border bg-background p-4 flex flex-col gap-3"
                   >
-                    <td className="p-4 align-top">
-                      <p className="font-bold text-foreground">{request.full_name}</p>
-                      {request.email && (
-                        <p className="text-xs text-muted-foreground">{request.email}</p>
-                      )}
-                    </td>
-                    <td className="p-4 align-top text-foreground whitespace-nowrap" dir="ltr">
-                      {request.phone}
-                    </td>
-                    <td className="p-4 align-top">
-                      <p className="text-sm text-foreground max-w-lg">
-                        {getMessagePreview(request.message)}
-                      </p>
-                    </td>
-                    <td className="p-4 align-top text-sm text-muted-foreground whitespace-nowrap">
-                      {new Date(request.created_at).toLocaleDateString("ar-DZ", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </td>
-                    <td className="p-4 align-top">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-foreground text-sm">{request.full_name}</p>
+                        {request.email && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{request.email}</p>
+                        )}
+                      </div>
                       <span
-                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${style.bg} ${style.text}`}
+                        className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${style.bg} ${style.text}`}
                       >
-                        <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`}></span>
+                        <span className={`w-1 h-1 rounded-full ${style.dot}`}></span>
                         {style.label}
                       </span>
-                    </td>
-                    <td className="p-4 align-top">
-                      <button
-                        onClick={() => setSelectedRequest(request)}
-                        className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold bg-primary text-primary-foreground hover:opacity-90"
-                      >
-                        <RxEyeOpen />
-                        فتح
-                      </button>
-                    </td>
-                  </tr>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-muted-foreground" dir="ltr">{request.phone}</span>
+                      <span className="text-muted-foreground/30">|</span>
+                      <span className="text-muted-foreground">
+                        {new Date(request.created_at).toLocaleDateString("ar-DZ", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </span>
+                    </div>
+                    <p className="text-xs text-foreground leading-5 line-clamp-2">
+                      {getMessagePreview(request.message)}
+                    </p>
+                    <button
+                      onClick={() => setSelectedRequest(request)}
+                      className="self-start inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold bg-primary text-primary-foreground hover:opacity-90"
+                    >
+                      <RxEyeOpen />
+                      فتح
+                    </button>
+                  </div>
                 );
               })}
-
-              {filteredRequests.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="h-24 text-center text-sm text-muted-foreground"
-                  >
-                    لا توجد طلبات مطابقة للتصفية الحالية
-                  </td>
-                </tr>
-              )}
-              </tbody>
-            </table>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {selectedRequest && (

@@ -320,120 +320,211 @@ export default function Users() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-sm">
-              <thead className="bg-black/5 text-muted-foreground border-b border-border">
-                <tr>
-                  <th className="px-6 py-5 font-bold whitespace-nowrap">
-                    المستخدم
-                  </th>
-                  <th className="px-6 py-5 font-bold whitespace-nowrap">
-                    الهاتف
-                  </th>
-                  <th className="px-6 py-5 font-bold whitespace-nowrap">
-                    المدينة
-                  </th>
-                  <th className="px-6 py-5 font-bold whitespace-nowrap">
-                    تاريخ الانضمام
-                  </th>
-                  <th className="px-6 py-5 font-bold whitespace-nowrap">
-                    الاشتراك
-                  </th>
-                  <th className="px-6 py-5 font-bold whitespace-nowrap">
-                    الدور
-                  </th>
-                  <th className="px-6 py-5 font-bold whitespace-nowrap text-left">
-                    الإجراءات
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/50">
-                {filteredUsers.map((user) => {
-                  const roleBadge = getRoleBadgeStyle(user.role);
-                  const subscriptionStatus = getUserSubscriptionStatus();
+          <>
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-right text-sm">
+                <thead className="bg-black/5 text-muted-foreground border-b border-border">
+                  <tr>
+                    <th className="px-6 py-5 font-bold whitespace-nowrap">
+                      المستخدم
+                    </th>
+                    <th className="px-6 py-5 font-bold whitespace-nowrap">
+                      الهاتف
+                    </th>
+                    <th className="px-6 py-5 font-bold whitespace-nowrap">
+                      المدينة
+                    </th>
+                    <th className="px-6 py-5 font-bold whitespace-nowrap">
+                      تاريخ الانضمام
+                    </th>
+                    <th className="px-6 py-5 font-bold whitespace-nowrap">
+                      الاشتراك
+                    </th>
+                    <th className="px-6 py-5 font-bold whitespace-nowrap">
+                      الدور
+                    </th>
+                    <th className="px-6 py-5 font-bold whitespace-nowrap text-left">
+                      الإجراءات
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/50">
+                  {filteredUsers.map((user) => {
+                    const roleBadge = getRoleBadgeStyle(user.role);
+                    const subscriptionStatus = getUserSubscriptionStatus();
 
-                  return (
-                    <tr
-                      key={user.id}
-                      onClick={() =>
-                        router.push(`/admin/dashboard/users/${user.id}`)
-                      }
-                      className="hover:bg-primary/5 transition-all group cursor-pointer"
-                    >
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-4">
-                          <div
-                            className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-border/40 ${
-                              user.role === "admin"
-                                ? "bg-purple-500/10 text-purple-600"
-                                : "bg-primary/10 text-primary"
-                            }`}
-                          >
-                            {user.avatar_url ? (
-                              <Image
-                                src={user.avatar_url}
-                                alt={user.full_name || "مستخدم"}
-                                width={44}
-                                height={44}
-                                className="w-full h-full rounded-2xl object-cover"
-                              />
-                            ) : (
-                              <RxPerson className="text-xl" />
-                            )}
+                    return (
+                      <tr
+                        key={user.id}
+                        onClick={() =>
+                          router.push(`/admin/dashboard/users/${user.id}`)
+                        }
+                        className="hover:bg-primary/5 transition-all group cursor-pointer"
+                      >
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-4">
+                            <div
+                              className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-border/40 ${
+                                user.role === "admin"
+                                  ? "bg-purple-500/10 text-purple-600"
+                                  : "bg-primary/10 text-primary"
+                              }`}
+                            >
+                              {user.avatar_url ? (
+                                <Image
+                                  src={user.avatar_url}
+                                  alt={user.full_name || "مستخدم"}
+                                  width={44}
+                                  height={44}
+                                  className="w-full h-full rounded-2xl object-cover"
+                                />
+                              ) : (
+                                <RxPerson className="text-xl" />
+                              )}
+                            </div>
+                            <span className="font-bold text-foreground group-hover:text-primary transition-colors text-base">
+                              {user.full_name || "مستخدم غير معروف"}
+                            </span>
                           </div>
-                          <span className="font-bold text-foreground group-hover:text-primary transition-colors text-base">
+                        </td>
+                        <td
+                          className="px-6 py-5 text-muted-foreground font-medium"
+                          dir="ltr"
+                          style={{ textAlign: "right" }}
+                        >
+                          {user.phone || "غير متوفر"}
+                        </td>
+                        <td className="px-6 py-5 text-muted-foreground font-medium">
+                          {user.city || "غير محدد"}
+                        </td>
+                        <td className="px-6 py-5 text-muted-foreground font-medium">
+                          {formatDate(user.updated_at)}
+                        </td>
+                        <td className="px-6 py-5">
+                          <span className="text-muted-foreground font-medium">
+                            {subscriptionStatus.label}
+                          </span>
+                        </td>
+                        <td className="px-6 py-5">
+                          <span
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 w-fit ${roleBadge.bg} ${roleBadge.text}`}
+                          >
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${roleBadge.dot}`}
+                            ></span>
+                            {getRoleLabel(user.role)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-5 text-left">
+                          <div className="flex items-center justify-end">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/admin/dashboard/users/${user.id}`);
+                              }}
+                              className="bg-surface border border-border group-hover:border-primary/30 text-muted-foreground group-hover:text-primary px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all hover:shadow-sm"
+                            >
+                              <RxEyeOpen className="text-lg" />
+                              التفاصيل
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden divide-y divide-border/50">
+              {filteredUsers.map((user) => {
+                const roleBadge = getRoleBadgeStyle(user.role);
+                const subscriptionStatus = getUserSubscriptionStatus();
+
+                return (
+                  <div
+                    key={user.id}
+                    onClick={() =>
+                      router.push(`/admin/dashboard/users/${user.id}`)
+                    }
+                    className="px-4 py-4 flex flex-col gap-3 cursor-pointer active:bg-primary/5 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-border/40 ${
+                            user.role === "admin"
+                              ? "bg-purple-500/10 text-purple-600"
+                              : "bg-primary/10 text-primary"
+                          }`}
+                        >
+                          {user.avatar_url ? (
+                            <Image
+                              src={user.avatar_url}
+                              alt={user.full_name || "مستخدم"}
+                              width={40}
+                              height={40}
+                              className="w-full h-full rounded-2xl object-cover"
+                            />
+                          ) : (
+                            <RxPerson className="text-lg" />
+                          )}
+                        </div>
+                        <div>
+                          <p className="font-bold text-foreground text-sm">
                             {user.full_name || "مستخدم غير معروف"}
+                          </p>
+                          <span
+                            className={`mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${roleBadge.bg} ${roleBadge.text}`}
+                          >
+                            <span className={`w-1 h-1 rounded-full ${roleBadge.dot}`}></span>
+                            {getRoleLabel(user.role)}
                           </span>
                         </div>
-                      </td>
-                      <td
-                        className="px-6 py-5 text-muted-foreground font-medium"
-                        dir="ltr"
-                        style={{ textAlign: "right" }}
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/admin/dashboard/users/${user.id}`);
+                        }}
+                        className="shrink-0 w-9 h-9 rounded-xl bg-surface border border-border text-muted-foreground flex items-center justify-center"
                       >
-                        {user.phone || "غير متوفر"}
-                      </td>
-                      <td className="px-6 py-5 text-muted-foreground font-medium">
-                        {user.city || "غير محدد"}
-                      </td>
-                      <td className="px-6 py-5 text-muted-foreground font-medium">
-                        {formatDate(user.updated_at)}
-                      </td>
-                      <td className="px-6 py-5">
-                        <span className="text-muted-foreground font-medium">
+                        <RxEyeOpen className="text-base" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="bg-background rounded-xl px-3 py-2">
+                        <span className="text-muted-foreground">الهاتف</span>
+                        <p className="font-medium text-foreground mt-0.5" dir="ltr">
+                          {user.phone || "غير متوفر"}
+                        </p>
+                      </div>
+                      <div className="bg-background rounded-xl px-3 py-2">
+                        <span className="text-muted-foreground">المدينة</span>
+                        <p className="font-medium text-foreground mt-0.5">
+                          {user.city || "غير محدد"}
+                        </p>
+                      </div>
+                      <div className="bg-background rounded-xl px-3 py-2">
+                        <span className="text-muted-foreground">تاريخ الانضمام</span>
+                        <p className="font-medium text-foreground mt-0.5">
+                          {formatDate(user.updated_at)}
+                        </p>
+                      </div>
+                      <div className="bg-background rounded-xl px-3 py-2">
+                        <span className="text-muted-foreground">الاشتراك</span>
+                        <p className="font-medium text-foreground mt-0.5">
                           {subscriptionStatus.label}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5">
-                        <span
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 w-fit ${roleBadge.bg} ${roleBadge.text}`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${roleBadge.dot}`}
-                          ></span>
-                          {getRoleLabel(user.role)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5 text-left">
-                        <div className="flex items-center justify-end">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              router.push(`/admin/dashboard/users/${user.id}`);
-                            }}
-                            className="bg-surface border border-border group-hover:border-primary/30 text-muted-foreground group-hover:text-primary px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 transition-all hover:shadow-sm"
-                          >
-                            <RxEyeOpen className="text-lg" />
-                            التفاصيل
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>

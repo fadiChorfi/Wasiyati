@@ -153,61 +153,121 @@ export default function SubscriptionsList() {
             لا توجد اشتراكات مطابقة.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-right">
-              <thead className="bg-gray-50/80 text-gray-500 border-b border-gray-100">
-                <tr>
-                  <th className="px-6 py-5 font-bold">المستخدم</th>
-                  <th className="px-6 py-5 font-bold">الباقة</th>
-                  <th className="px-6 py-5 font-bold">تاريخ الطلب</th>
-                  <th className="px-6 py-5 font-bold">الحالة</th>
-                  <th className="px-6 py-5 font-bold text-left">الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filteredSubs.map((sub) => (
-                  <tr
-                    key={sub.id}
-                    onClick={() =>
-                      router.push(`/admin/dashboard/subscriptions/${sub.id}`)
-                    }
-                    className="hover:bg-gray-50/80 transition-colors group cursor-pointer"
-                  >
-                    <td className="px-6 py-5">
-                      <div className="font-bold text-gray-900">
+          <>
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm text-right">
+                <thead className="bg-gray-50/80 text-gray-500 border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-5 font-bold">المستخدم</th>
+                    <th className="px-6 py-5 font-bold">الباقة</th>
+                    <th className="px-6 py-5 font-bold">تاريخ الطلب</th>
+                    <th className="px-6 py-5 font-bold">الحالة</th>
+                    <th className="px-6 py-5 font-bold text-left">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredSubs.map((sub) => (
+                    <tr
+                      key={sub.id}
+                      onClick={() =>
+                        router.push(`/admin/dashboard/subscriptions/${sub.id}`)
+                      }
+                      className="hover:bg-gray-50/80 transition-colors group cursor-pointer"
+                    >
+                      <td className="px-6 py-5">
+                        <div className="font-bold text-gray-900">
+                          {sub.profiles?.full_name_ar ||
+                            sub.profiles?.full_name_en ||
+                            sub.profiles?.phone ||
+                            "بدون اسم"}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {sub.profiles?.phone || "بدون رقم هاتف"}
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 text-gray-700 font-medium">
+                        {sub.offers?.title || "باقة غير معروفة"}
+                      </td>
+                      <td className="px-6 py-5 text-gray-500">
+                        {new Date(sub.created_at).toLocaleDateString("ar-DZ")}
+                      </td>
+                      <td className="px-6 py-5">
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(sub.status)}`}
+                        >
+                          {getStatusLabel(sub.status)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-left">
+                        <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-primary font-medium hover:bg-primary/5 transition-colors">
+                          <RxEyeOpen className="text-lg" />
+                          <span>التفاصيل</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden divide-y divide-gray-50">
+              {filteredSubs.map((sub) => (
+                <div
+                  key={sub.id}
+                  onClick={() =>
+                    router.push(`/admin/dashboard/subscriptions/${sub.id}`)
+                  }
+                  className="px-4 py-4 flex flex-col gap-3 cursor-pointer active:bg-gray-50/80 transition-colors"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-gray-900 text-sm">
                         {sub.profiles?.full_name_ar ||
                           sub.profiles?.full_name_en ||
                           sub.profiles?.phone ||
                           "بدون اسم"}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
+                      </p>
+                      <p className="text-xs text-gray-500 mt-0.5" dir="ltr">
                         {sub.profiles?.phone || "بدون رقم هاتف"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 text-gray-700 font-medium">
-                      {sub.offers?.title || "باقة غير معروفة"}
-                    </td>
-                    <td className="px-6 py-5 text-gray-500">
-                      {new Date(sub.created_at).toLocaleDateString("ar-DZ")}
-                    </td>
-                    <td className="px-6 py-5">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(sub.status)}`}
-                      >
-                        {getStatusLabel(sub.status)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 text-left">
-                      <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-primary font-medium hover:bg-primary/5 transition-colors">
-                        <RxEyeOpen className="text-lg" />
-                        <span>التفاصيل</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/admin/dashboard/subscriptions/${sub.id}`);
+                      }}
+                      className="shrink-0 w-9 h-9 rounded-xl bg-gray-50 border border-gray-100 text-primary flex items-center justify-center"
+                    >
+                      <RxEyeOpen className="text-base" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-gray-50 rounded-xl px-3 py-2">
+                      <span className="text-gray-500">الباقة</span>
+                      <p className="font-medium text-gray-900 mt-0.5">
+                        {sub.offers?.title || "باقة غير معروفة"}
+                      </p>
+                    </div>
+                    <div className="bg-gray-50 rounded-xl px-3 py-2">
+                      <span className="text-gray-500">تاريخ الطلب</span>
+                      <p className="font-medium text-gray-900 mt-0.5">
+                        {new Date(sub.created_at).toLocaleDateString("ar-DZ")}
+                      </p>
+                    </div>
+                  </div>
+                  <div>
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-medium ${getStatusBadge(sub.status)}`}
+                    >
+                      {getStatusLabel(sub.status)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>
