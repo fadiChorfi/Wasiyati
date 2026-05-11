@@ -28,7 +28,7 @@ export default function HeroSection() {
             </span>
             منصة مخصصة وموثوقة قانونياً
           </span>
-          <h1 className="text-5xl leading-tight font-bold md:text-5xl text-white">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl leading-tight font-bold text-white">
             أنشئ وصيتك بسهولة
             <br />
             وبخطوات قانونية واضحة
@@ -42,7 +42,7 @@ export default function HeroSection() {
               onClick={() => router.push("/guide")}
               label="كيف تعمل المنصة؟"
               variant="secondary"
-              className="  text-base font-bold hidden md:flex md:flex-row "
+              className="text-base font-bold flex flex-row"
               icon={<RxArrowTopLeft />}
             />
           </div>

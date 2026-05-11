@@ -92,7 +92,7 @@ export default function AuthCard() {
   return (
     <>
       <SignupModal />
-      <div className="w-full max-w-[320px] min-h-95 flex flex-col justify-center bg-white border border-gray-200/60 rounded-3xl p-6 relative z-10 shadow-sm mr-auto mt-8 md:mt-0 text-black">
+      <div className="w-full max-w-sm min-h-95 flex flex-col justify-center bg-white border border-gray-200/60 rounded-3xl p-6 relative z-10 shadow-sm mr-auto mt-8 md:mt-0 text-black">
         {loading ? (
           <div className="animate-pulse flex flex-col items-center space-y-4">
             <div className="w-20 h-20 bg-gray-100 rounded-full"></div>
