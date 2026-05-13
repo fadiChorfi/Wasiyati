@@ -67,10 +67,12 @@ export default function FilledWillHtmlView({
   data,
   variant = "money",
   onOpenPdf,
+  onDownloadPdf,
 }: {
   data: WillData;
   variant?: WillVariant;
   onOpenPdf?: () => void;
+  onDownloadPdf?: () => void;
 }) {
   if (variant === "general") {
     return <FilledGeneralWillHtmlView data={data} />;
@@ -98,11 +100,11 @@ export default function FilledWillHtmlView({
         print:shadow-none
       "
     >
-      {/* PDF BUTTON */}
-      <div className="mb-6 flex justify-end print:hidden">
+      {/* PDF BUTTONS */}
+      <div className="mb-6 flex justify-end gap-3 print:hidden">
         <button
           type="button"
-          onClick={onOpenPdf}
+          onClick={onDownloadPdf}
           className="
             rounded-lg
             bg-primary
@@ -115,7 +117,25 @@ export default function FilledWillHtmlView({
             hover:bg-primary/90
           "
         >
-          فتح PDF في تبويب جديد
+          تحميل PDF
+        </button>
+        <button
+          type="button"
+          onClick={onOpenPdf}
+          className="
+            rounded-lg
+            border
+            border-primary
+            px-4
+            py-2
+            text-sm
+            font-bold
+            text-primary
+            transition
+            hover:bg-primary/10
+          "
+        >
+          عرض في تبويب جديد
         </button>
       </div>
 
