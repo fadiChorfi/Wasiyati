@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import {
   RxFileText,
@@ -209,6 +210,19 @@ export default function MyWillsPage() {
     }
   };
 
+  const getOfferLabel = (willType: string) => {
+    switch (willType) {
+      case "pro":
+        return "الشاملة (Pro)";
+      case "medium":
+        return "المتوسطة";
+      case "basic":
+        return "الأساسية";
+      default:
+        return willType;
+    }
+  };
+
   const getPrimaryButtonText = (status: WillStatus) => {
     switch (status) {
       case "draft":
@@ -241,7 +255,7 @@ export default function MyWillsPage() {
       setWills((prev) => prev.filter((w) => w.id !== deleteWillId));
       setDeleteWillId(null);
     } else {
-      alert(res.error || "تعذر حذف الوصية");
+      toast.error(res.error || "تعذر حذف الوصية");
     }
     setIsDeleting(false);
   };
@@ -339,7 +353,7 @@ export default function MyWillsPage() {
                           {getWillTypeLabel(will.will_category)}
                         </h3>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {will.id.replace("WAS-", "# WAS-")}
+                          {getOfferLabel(will.will_type)}
                         </p>
                       </div>
                     </div>
@@ -511,7 +525,7 @@ export default function MyWillsPage() {
                   {getWillTypeLabel(selectedWill.will_category)}
                 </h2>
                 <p className="text-primary-foreground/60 text-xs mt-0.5">
-                  {selectedWill.id.replace("WAS-", "# WAS-")}
+                  {getOfferLabel(selectedWill.will_type)}
                 </p>
               </div>
               <div className="flex items-center gap-4">
@@ -587,10 +601,10 @@ export default function MyWillsPage() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">
-                      رقم الملف
+                      الباقة
                     </span>
                     <span className="text-sm text-foreground font-medium">
-                      {selectedWill.id.replace("# ", "").replace("WAS-", "")}
+                      {getOfferLabel(selectedWill.will_type)}
                     </span>
                   </div>
                 </div>

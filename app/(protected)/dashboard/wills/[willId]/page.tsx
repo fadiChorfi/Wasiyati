@@ -7,10 +7,10 @@ import {
   RxCheckCircled,
   RxClock,
   RxCross2,
-  RxDownload,
   RxFileText,
   RxPencil2,
 } from "react-icons/rx";
+import { toast } from "sonner";
 import { getUserWillById, requestWillDelivery } from "@/actions/wills";
 import { WillStatus } from "@/types/database";
 import FilledWillTemplate from "@/components/wills/FilledWillTemplate";
@@ -99,6 +99,19 @@ const getWillTypeLabel = (category: string | null): string => {
   }
 };
 
+const getOfferLabel = (willType: string) => {
+  switch (willType) {
+    case "pro":
+      return "الشاملة (Pro)";
+    case "medium":
+      return "المتوسطة";
+    case "basic":
+      return "الأساسية";
+    default:
+      return willType;
+  }
+};
+
 const getWillStatusLabel = (status: WillStatus): string => {
   switch (status) {
     case "approved":
@@ -138,7 +151,7 @@ const getStatusBadge = (status: WillStatus) => {
   }
 };
 
-const willTemplateHref = (category: string | null) => {
+/* const willTemplateHref = (category: string | null) => {
   const file =
     category === "business"
       ? "bussiness-will.pdf"
@@ -146,7 +159,7 @@ const willTemplateHref = (category: string | null) => {
         ? "money-will.pdf"
         : "general-will.pdf";
   return `/docs/${file}`;
-};
+}; */
 
 export default function WillDetailsPage() {
   const params = useParams<{ willId: string }>();
@@ -185,13 +198,14 @@ export default function WillDetailsPage() {
     if (willId) fetchWill();
   }, [willId, fetchWill]);
 
-  const templateHref = useMemo(
+  /* const templateHref = useMemo(
     () => willTemplateHref(will?.will_category ?? null),
     [will?.will_category],
-  );
+  ); */
 
   const canModify = !!will && will.status !== "approved";
-  const canRequestDelivery = will?.status === "approved" && will?.will_type === "pro";
+  const canRequestDelivery =
+    will?.status === "approved" && will?.will_type === "pro";
   const editWillHref = useMemo(() => {
     if (!will) return "/dashboard/wills";
     const params = new URLSearchParams();
@@ -211,7 +225,7 @@ export default function WillDetailsPage() {
   const onRequestDelivery = useCallback(async () => {
     if (!will || !canRequestDelivery) return;
     if (!trusteeName.trim()) {
-      alert("يرجى إدخال اسم الجهة المستلمة.");
+      toast.error("يرجى إدخال اسم الجهة المستلمة.");
       return;
     }
 
@@ -225,15 +239,15 @@ export default function WillDetailsPage() {
       });
 
       if (!result.success) {
-        alert(result.error || "تعذر تسجيل طلب التوصيل.");
+        toast.error(result.error || "تعذر تسجيل طلب التوصيل.");
         return;
       }
 
-      alert("تم إرسال طلب توصيل الوصية بنجاح.");
+      toast.success("تم إرسال طلب توصيل الوصية بنجاح.");
       await fetchWill();
     } catch (error) {
       console.error(error);
-      alert("حدث خطأ غير متوقع أثناء طلب التوصيل.");
+      toast.error("حدث خطأ غير متوقع أثناء طلب التوصيل.");
     } finally {
       setIsRequestingDelivery(false);
     }
@@ -339,7 +353,7 @@ export default function WillDetailsPage() {
         console.error(e);
         const message =
           e instanceof Error ? e.message : "تعذر إنشاء ملف PDF حالياً";
-        alert(message);
+        toast.error(message);
       } finally {
         setIsGeneratingPdf(false);
       }
@@ -353,7 +367,9 @@ export default function WillDetailsPage() {
         <div className="bg-surface rounded-3xl border border-border shadow-sm p-10 min-h-[50vh] flex items-center justify-center">
           <div className="text-center">
             <RxClock className="text-4xl text-muted-foreground animate-pulse mx-auto mb-4" />
-            <p className="text-muted-foreground font-medium">جاري تحميل الوصية...</p>
+            <p className="text-muted-foreground font-medium">
+              جاري تحميل الوصية...
+            </p>
           </div>
         </div>
       </div>
@@ -408,9 +424,7 @@ export default function WillDetailsPage() {
             </button>
             {canModify && (
               <button
-                onClick={() =>
-                  router.push(editWillHref)
-                }
+                onClick={() => router.push(editWillHref)}
                 className="h-10 px-4 rounded-xl bg-primary-foreground text-primary font-bold text-sm hover:opacity-90 transition active:scale-95 flex items-center gap-2"
               >
                 تعديل الوصية <RxPencil2 />
@@ -431,39 +445,23 @@ export default function WillDetailsPage() {
           </span>
         </div>
         <div className="bg-surface rounded-2xl p-4 border border-border shadow-sm">
-          <p className="text-xs text-muted-foreground mb-1">رقم الملف</p>
-          <p className="text-sm font-bold text-foreground">{will.id.replace("WAS-", "# WAS-")}</p>
+          <p className="text-xs text-muted-foreground mb-1">الباقة</p>
+          <p className="text-sm font-bold text-foreground">
+            {getOfferLabel(will.will_type)}
+          </p>
         </div>
         <div className="bg-surface rounded-2xl p-4 border border-border shadow-sm">
           <p className="text-xs text-muted-foreground mb-1">الموصي</p>
-          <p className="text-sm font-bold text-foreground">{testatorName || "غير محدد"}</p>
+          <p className="text-sm font-bold text-foreground">
+            {testatorName || "غير محدد"}
+          </p>
         </div>
       </div>
 
       {/* Approved template preview */}
       {will.status === "approved" ? (
         <div className="space-y-4">
-          <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between bg-surface rounded-2xl border border-border p-4">
-            <div>
-              <p className="text-sm font-black text-foreground">
-                الوصية المعتمدة
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                هذا عرض مُعبّأ تلقائياً من بياناتك المحفوظة.
-              </p>
-            </div>
-            <a
-              href={templateHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="h-10 px-4 rounded-xl bg-background border border-border hover:bg-border/50 text-primary font-bold text-sm transition active:scale-95 inline-flex items-center gap-2"
-              title="عرض القالب الأصلي (PDF)"
-            >
-              عرض القالب PDF <RxDownload />
-            </a>
-          </div>
-
-          <div className="bg-surface rounded-2xl border border-border p-4 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+          <div className="bg-surface hidden rounded-2xl border border-border p-4  flex-col md:flex-row gap-3 md:items-center md:justify-between">
             <p className="text-sm text-muted-foreground">
               إنشاء ملف PDF مطابق للقالب الأصلي مع تعبئة بيانات الوصية.
             </p>
@@ -492,7 +490,8 @@ export default function WillDetailsPage() {
                   توصيل الوصية (باقة Pro)
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  أرسل بيانات الجهة المستلمة ليتم جدولة التوصيل والمتابعة من الإدارة.
+                  أرسل بيانات الجهة المستلمة ليتم جدولة التوصيل والمتابعة من
+                  الإدارة.
                 </p>
               </div>
 
@@ -541,8 +540,12 @@ export default function WillDetailsPage() {
 
           <div className="bg-surface rounded-3xl border border-border p-6 shadow-sm">
             <FilledWillHtmlView
-              variant={(will.will_category as "general" | "money" | "business") ?? "general"}
+              variant={
+                (will.will_category as "general" | "money" | "business") ??
+                "general"
+              }
               onOpenPdf={() => void generatePdf("preview")}
+              onDownloadPdf={() => void generatePdf("download")}
               data={{
                 testator_full_name:
                   `${(will.testator ?? will.testators?.[0])?.first_name ?? ""} ${(will.testator ?? will.testators?.[0])?.last_name ?? ""}`.trim(),
