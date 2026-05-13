@@ -1,11 +1,9 @@
 "use client";
 
+import { toast } from "sonner";
 import { useState } from "react";
 import { RxCheck, RxPerson, RxReload } from "react-icons/rx";
-import {
-  BasicProfile,
-  updateCurrentUserBasicProfile,
-} from "@/actions/profile";
+import { BasicProfile, updateCurrentUserBasicProfile } from "@/actions/profile";
 
 type ProfileSettingsFormProps = {
   profile: BasicProfile;
@@ -21,11 +19,6 @@ export default function ProfileSettingsForm({
     avatar_url: profile.avatar_url ?? "",
   });
   const [saving, setSaving] = useState(false);
-  const [feedback, setFeedback] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
-
   const onFieldChange = (
     key: "full_name" | "phone" | "city" | "avatar_url",
     value: string,
@@ -36,16 +29,14 @@ export default function ProfileSettingsForm({
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
-    setFeedback(null);
-
     const result = await updateCurrentUserBasicProfile(form);
     if (!result.success) {
-      setFeedback({ type: "error", message: result.error ?? "تعذر حفظ التعديلات" });
+      toast.error(result.error ?? "تعذر حفظ التعديلات");
       setSaving(false);
       return;
     }
 
-    setFeedback({ type: "success", message: "تم حفظ التعديلات بنجاح" });
+    toast.success("تم حفظ التعديلات بنجاح");
     setSaving(false);
   };
 
@@ -74,7 +65,9 @@ export default function ProfileSettingsForm({
         <form onSubmit={onSubmit} className="p-6 space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className="flex flex-col gap-1.5 text-sm">
-              <span className="font-medium text-muted-foreground">الاسم الكامل</span>
+              <span className="font-medium text-muted-foreground">
+                الاسم الكامل
+              </span>
               <input
                 value={form.full_name}
                 onChange={(e) => onFieldChange("full_name", e.target.value)}
@@ -85,7 +78,9 @@ export default function ProfileSettingsForm({
             </label>
 
             <label className="flex flex-col gap-1.5 text-sm">
-              <span className="font-medium text-muted-foreground">رقم الهاتف</span>
+              <span className="font-medium text-muted-foreground">
+                رقم الهاتف
+              </span>
               <input
                 value={form.phone}
                 onChange={(e) => onFieldChange("phone", e.target.value)}
@@ -120,25 +115,10 @@ export default function ProfileSettingsForm({
 
           <div className="rounded-2xl bg-background border border-border p-4 text-sm space-y-1">
             <p className="text-muted-foreground">
-              <span className="font-medium">المعرّف:</span> {profile.id}
-            </p>
-            <p className="text-muted-foreground">
               <span className="font-medium">الدور:</span>{" "}
               {profile.role === "admin" ? "مدير" : "مستخدم"}
             </p>
           </div>
-
-          {feedback && (
-            <div
-              className={`rounded-xl px-4 py-3 text-sm font-medium ${
-                feedback.type === "success"
-                  ? "bg-primary/10 text-primary"
-                  : "bg-red-500/10 text-red-600"
-              }`}
-            >
-              {feedback.message}
-            </div>
-          )}
 
           <div className="flex justify-end">
             <button

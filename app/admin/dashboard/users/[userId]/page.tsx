@@ -15,6 +15,7 @@ import {
   Witness,
 } from "@/types/database";
 import Image from "next/image";
+import { toast } from "sonner";
 import {
   RxPerson,
   RxCheck,
@@ -52,20 +53,8 @@ export default function UserDetailsPage() {
   const [userData, setUserData] = useState<UserWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [updatingRole, setUpdatingRole] = useState(false);
-
-  const showToast = (
-    message: string,
-    type: "success" | "error" = "success",
-  ) => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
 
   const fetchUserData = useCallback(async (userId: string) => {
     try {
@@ -250,13 +239,13 @@ export default function UserDetailsPage() {
     try {
       const result = await updateUserRole(userData.id, newRole);
       if (result.success) {
-        showToast(`تم تحديث الدور بنجاح`, "success");
+        toast.success("تم تحديث الدور بنجاح");
         fetchUserData(userData.id);
       } else {
-        showToast(result.error || "فشل تحديث الدور", "error");
+        toast.error(result.error || "فشل تحديث الدور");
       }
     } catch {
-      showToast("حدث خطأ غير متوقع", "error");
+      toast.error("حدث خطأ غير متوقع");
     } finally {
       setUpdatingRole(false);
     }
@@ -303,24 +292,6 @@ export default function UserDetailsPage() {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      {/* Toast */}
-      {toast && (
-        <div
-          className={`fixed top-4 left-4 z-50 px-6 py-3 rounded-xl shadow-lg text-sm font-bold transition-all flex items-center gap-2 animate-pulse ${
-            toast.type === "success"
-              ? "bg-primary text-primary-foreground"
-              : "bg-red-500 text-white"
-          }`}
-        >
-          {toast.type === "success" ? (
-            <RxCheck className="text-xl" />
-          ) : (
-            <RxCross2 className="text-xl" />
-          )}
-          {toast.message}
-        </div>
-      )}
-
       <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 pb-24 space-y-6">
         {/* ── Header ── */}
         <div className="flex items-center gap-3">

@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { createClient } from "@/lib/supabase/server";
 import { OneTap } from "@/components/auth/OneTap";
+import { Toaster } from "sonner";
 
 const cairo = localFont({
   src: [
@@ -64,6 +65,15 @@ export default async function RootLayout({
       >
         {!user && <OneTap />}
         {children}
+        <Toaster
+          position="top-center"
+          richColors
+          closeButton
+          dir="rtl"
+          toastOptions={{
+            style: { fontFamily: "var(--font-cairo)" },
+          }}
+        />
       </body>
     </html>
   );

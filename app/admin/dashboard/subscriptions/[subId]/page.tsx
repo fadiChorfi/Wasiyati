@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { RxArrowRight, RxCheck, RxCross2 } from "react-icons/rx";
 import {
   getAdminSubscriptionById,
@@ -51,7 +52,7 @@ export default function SubscriptionDetails() {
     }
 
     if (status === "cancelled" && showRejectComment && !adminComment.trim()) {
-      alert("الرجاء إدخال سبب الرفض");
+      toast.error("الرجاء إدخال سبب الرفض");
       return;
     }
 
@@ -65,7 +66,7 @@ export default function SubscriptionDetails() {
       setSub({ ...sub, status });
       setShowRejectComment(false);
     } else {
-      alert("حدث خطأ أثناء التحديث");
+      toast.error("حدث خطأ أثناء التحديث");
     }
     setProcessing(false);
   };

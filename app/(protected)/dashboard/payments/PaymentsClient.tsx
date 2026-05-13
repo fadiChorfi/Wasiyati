@@ -5,6 +5,7 @@ import {
   deleteUserSubscriptionWithWills,
   submitPayment,
 } from "@/actions/payement";
+import { toast } from "sonner";
 import {
   RxCheck,
   RxCross2,
@@ -77,10 +78,10 @@ export default function PaymentsClient({
     startDeleteTransition(async () => {
       const res = await deleteUserSubscriptionWithWills(currentSubscription.id);
       if (res.success) {
-        alert("تم حذف الاشتراك والوصايا المرتبطة به بنجاح.");
+        toast.success("تم حذف الاشتراك والوصايا المرتبطة به بنجاح.");
         router.refresh();
       } else {
-        alert("تعذر الحذف: " + (res.error || "حدث خطأ غير متوقع"));
+        toast.error("تعذر الحذف: " + (res.error || "حدث خطأ غير متوقع"));
       }
     });
   };
@@ -463,7 +464,7 @@ export default function PaymentsClient({
               <button
                 onClick={async () => {
                   if (!previewUrl || !selectedDbOfferId || !selectedFile) {
-                    alert("يرجى اختيار ملف صحيح");
+                    toast.error("يرجى اختيار ملف صحيح");
                     return;
                   }
 
@@ -482,14 +483,14 @@ export default function PaymentsClient({
                           ? "لديك طلب اشتراك قيد المراجعة بالفعل."
                           : "لديك اشتراك نشط مسبقاً.";
 
-                      alert(
+                      toast.success(
                         res.isNew
                           ? "تم إرسال إيصالك للمراجعة بنجاح! سيتم إشعارك قريباً."
                           : blockingMessage,
                       );
                       closeModal();
                     } else {
-                      alert("حدث خطأ: " + res.error);
+                      toast.error("حدث خطأ: " + res.error);
                     }
                   });
                 }}

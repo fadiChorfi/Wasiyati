@@ -11,6 +11,7 @@ import {
   Witness,
   FinancialStatus,
 } from "@/types/database";
+import { toast } from "sonner";
 import {
   RxCheck,
   RxCross2,
@@ -41,8 +42,7 @@ export default function Wills() {
   const [error, setError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
+
 
   // Fetch wills data on component mount
   useEffect(() => {
@@ -154,18 +154,15 @@ export default function Wills() {
     try {
       const result = await updateWillStatus(willId, "approved");
       if (result.success) {
-        setToastMessage("تمت الموافقة على الوصية بنجاح");
-        setShowToast(true);
+        toast.success("تمت الموافقة على الوصية بنجاح");
       } else {
         setWills(previousWills); // Revert on failure
-        setToastMessage(result.error || "فشل الموافقة على الوصية");
-        setShowToast(true);
+        toast.error(result.error || "فشل الموافقة على الوصية");
       }
     } catch (err) {
       console.error("Error approving will:", err);
       setWills(previousWills); // Revert on failure
-      setToastMessage("حدث خطأ غير متوقع");
-      setShowToast(true);
+      toast.error("حدث خطأ غير متوقع");
     }
   };
 
@@ -183,18 +180,15 @@ export default function Wills() {
         "مرفوض من الإدارة",
       );
       if (result.success) {
-        setToastMessage("تم رفض الوصية");
-        setShowToast(true);
+        toast.success("تم رفض الوصية");
       } else {
         setWills(previousWills); // Revert on failure
-        setToastMessage(result.error || "فشل رفض الوصية");
-        setShowToast(true);
+        toast.error(result.error || "فشل رفض الوصية");
       }
     } catch (err) {
       console.error("Error rejecting will:", err);
       setWills(previousWills); // Revert on failure
-      setToastMessage("حدث خطأ غير متوقع");
-      setShowToast(true);
+      toast.error("حدث خطأ غير متوقع");
     }
   };
 
@@ -243,13 +237,6 @@ export default function Wills() {
 
   return (
     <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
-      {/* Toast Notification */}
-      {showToast && (
-        <div className="fixed top-4 left-4 z-50 bg-primary text-primary-foreground px-6 py-3 rounded-xl shadow-lg animate-pulse">
-          {toastMessage}
-        </div>
-      )}
-
       {/* Stats Bar */}
 
       {/* Filters and Search */}

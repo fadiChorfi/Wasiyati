@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "sonner";
 import { useState } from "react";
 
 export default function MyForm() {
@@ -39,7 +40,7 @@ export default function MyForm() {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error(error);
-      alert("Failed to generate PDF");
+      toast.error("Failed to generate PDF");
     } finally {
       setLoading(false);
     }
