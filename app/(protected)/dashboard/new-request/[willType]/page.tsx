@@ -6,6 +6,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import { createClient } from "@/utils/supabase/client";
 import { useSubscription } from "@/context/SubscriptionContext";
 
@@ -47,6 +48,11 @@ const willSchema = z
       .number()
       .min(0, "المبلغ الإجمالي يجب أن يكون موجباً")
       .optional(),
+
+    // Step: Delivery (Pro only)
+    trustee_name: z.string().optional(),
+    trustee_email: z.string().optional(),
+    trustee_phone: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     // Validate total children if not null
@@ -332,6 +338,9 @@ export default function WillFormByType() {
 
   const willBodyValue = useWatch({ control, name: "willBody" }) || "";
 
+  const canDeliver =
+    currentSubscription?.offer?.offer_key === "pro";
+
   // Base Steps
   const steps = [
     {
@@ -370,9 +379,20 @@ export default function WillFormByType() {
     });
   }
 
+  // Add delivery step for Pro users
+  if (canDeliver) {
+    steps.push({
+      title: "توصيل الوصية",
+      fields: ["trustee_name", "trustee_email", "trustee_phone"],
+    });
+  }
+
   // Final Review Step
   steps.push({ title: "المراجعة والتأكيد", fields: [] });
 
+  const deliveryStepIndex = steps.findIndex((s) =>
+    s.fields.includes("trustee_name"),
+  );
   const isReviewStep = currentStep === steps.length - 1;
   const canSaveDraft =
     currentSubscription?.offer?.offer_key === "medium" ||
@@ -426,19 +446,17 @@ export default function WillFormByType() {
         : await submitWill(payload);
 
       if (result?.success) {
-        alert(
-          willId ? "تم تعديل الوصية وإعادة إرسالها بنجاح!" : "تم تقديم الوصية بنجاح!",
-        );
+        toast.success(willId ? "تم تعديل الوصية وإعادة إرسالها بنجاح!" : "تم تقديم الوصية بنجاح!");
         router.push(willId ? `/dashboard/wills/${willId}` : "/dashboard/wills");
       } else {
-        alert(
+        toast.error(
           result?.error ||
             "حدث خطأ أثناء المحاولة، يرجى التحقق من اشتراكك أو المحاولة لاحقاً.",
         );
       }
     } catch (error) {
       console.error(error);
-      alert("حدث خطأ غير متوقع.");
+      toast.error("حدث خطأ غير متوقع.");
     } finally {
       setIsSubmitting(false);
     }
@@ -458,14 +476,14 @@ export default function WillFormByType() {
       const result = await saveWillDraft(payload);
 
       if (result?.success) {
-        alert("تم حفظ المسودة بنجاح.");
+        toast.success("تم حفظ المسودة بنجاح.");
         router.push("/dashboard/wills");
       } else {
-        alert(result?.error || "تعذر حفظ المسودة.");
+        toast.error(result?.error || "تعذر حفظ المسودة.");
       }
     } catch (error) {
       console.error(error);
-      alert("حدث خطأ غير متوقع أثناء حفظ المسودة.");
+      toast.error("حدث خطأ غير متوقع أثناء حفظ المسودة.");
     } finally {
       setIsSavingDraft(false);
     }
@@ -850,6 +868,57 @@ export default function WillFormByType() {
                   </div>
                 )}
 
+              {/* DELIVERY STEP (Pro only) */}
+              {deliveryStepIndex >= 0 && currentStep === deliveryStepIndex && (
+                <div className="space-y-6">
+                  <div className="bg-primary/5 border border-primary/20 rounded-2xl p-5">
+                    <p className="text-sm text-foreground leading-7">
+                      سيتم توصيل نسخة من الوصية إلى الجهة التي تحددها بعد اعتمادها من الإدارة.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="flex flex-col gap-3 md:col-span-2">
+                      <label className="text-sm font-bold text-foreground">
+                        اسم الجهة المستلمة <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        {...register("trustee_name")}
+                        placeholder="اسم المحكمة، الموثق، أو أي جهة مختصة"
+                        className="w-full px-4 py-3 bg-background border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                      />
+                      {errors.trustee_name && (
+                        <p className="text-xs font-bold text-red-500">
+                          {errors.trustee_name.message}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      <label className="text-sm font-bold text-foreground">
+                        البريد الإلكتروني (اختياري)
+                      </label>
+                      <input
+                        type="email"
+                        {...register("trustee_email")}
+                        placeholder="trustee@example.com"
+                        className="w-full px-4 py-3 bg-background border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      <label className="text-sm font-bold text-foreground">
+                        رقم الهاتف (اختياري)
+                      </label>
+                      <input
+                        type="tel"
+                        {...register("trustee_phone")}
+                        placeholder="05XX XX XX XX"
+                        className="w-full px-4 py-3 bg-background border border-border rounded-xl outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+                        dir="ltr"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* FINAL REVIEW STEP */}
               {isReviewStep && (
                 <div className="space-y-6">
@@ -920,6 +989,24 @@ export default function WillFormByType() {
                           },
                         ],
                       });
+                    }
+
+                    // Conditionally include delivery review for Pro users
+                    if (canDeliver) {
+                      const trusteeName = getValues("trustee_name");
+                      if (trusteeName) {
+                        const trusteeEmail = getValues("trustee_email");
+                        const trusteePhone = getValues("trustee_phone");
+                        reviewSections.push({
+                          title: "توصيل الوصية",
+                          target: deliveryStepIndex,
+                          fields: [
+                            { l: "الجهة المستلمة", v: trusteeName },
+                            ...(trusteeEmail ? [{ l: "البريد الإلكتروني", v: trusteeEmail }] : []),
+                            ...(trusteePhone ? [{ l: "رقم الهاتف", v: trusteePhone }] : []),
+                          ],
+                        });
+                      }
                     }
 
                     return reviewSections.map((section, idx) => {

@@ -9,7 +9,9 @@ import {
   Witness,
   FinancialStatus,
   WillBeneficiary,
+  WillDelivery,
 } from "@/types/database";
+import { toast } from "sonner";
 import {
   RxPerson,
   RxFileText,
@@ -20,8 +22,6 @@ import {
   RxCross2,
   RxChatBubble,
   RxClock,
-  RxCheckCircled,
-  RxExclamationTriangle,
 } from "react-icons/rx";
 import { getAdminWillById, updateWillStatus } from "@/actions/wills";
 
@@ -33,6 +33,7 @@ interface WillWithDetails extends Will {
     | null;
   witnesses: Witness[] | null;
   will_beneficiaries: WillBeneficiary[] | null;
+  will_deliveries: WillDelivery[] | null;
 }
 
 interface AuditLog {
@@ -49,18 +50,9 @@ export default function WillReviewPage() {
   const [willData, setWillData] = useState<WillWithDetails | null>(null);
   const [adminComment, setAdminComment] = useState("");
   const [errorStep, setErrorStep] = useState<string>("");
-  const [feedback, setFeedback] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const showFeedback = (type: "success" | "error", message: string) => {
-    setFeedback({ type, message });
-    setTimeout(() => setFeedback(null), 4500);
-  };
 
   const fetchWillData = useCallback(async (willId: string) => {
     try {
@@ -181,21 +173,20 @@ export default function WillReviewPage() {
     try {
       const result = await updateWillStatus(willData.id, "approved");
       if (result.success) {
-        showFeedback("success", "تم اعتماد الوصية وحفظ سجل المراجعة بنجاح.");
-        // Refresh data
+        toast.success("تم اعتماد الوصية وحفظ سجل المراجعة بنجاح.");
         fetchWillData(willData.id);
       } else {
-        showFeedback("error", result.error || "فشل اعتماد الوصية.");
+        toast.error(result.error || "فشل اعتماد الوصية.");
       }
     } catch (err) {
       console.error("Error approving will:", err);
-      showFeedback("error", "حدث خطأ غير متوقع أثناء الاعتماد.");
+      toast.error("حدث خطأ غير متوقع أثناء الاعتماد.");
     }
   };
 
   const handleReject = async () => {
     if (!willData || !adminComment.trim()) {
-      showFeedback("error", "يرجى إضافة سبب الرفض قبل الإرسال.");
+      toast.error("يرجى إضافة سبب الرفض قبل الإرسال.");
       return;
     }
 
@@ -207,26 +198,22 @@ export default function WillReviewPage() {
         errorStep === "" ? null : Number(errorStep),
       );
       if (result.success) {
-        showFeedback(
-          "success",
-          "تم حفظ قرار الرفض وملاحظاتك، وسيتم توجيه العميل إلى الخطوة المحددة.",
-        );
-        // Refresh data
+        toast.success("تم حفظ قرار الرفض وملاحظاتك، وسيتم توجيه العميل إلى الخطوة المحددة.");
         fetchWillData(willData.id);
         setAdminComment("");
         setErrorStep("");
       } else {
-        showFeedback("error", result.error || "فشل حفظ قرار الرفض.");
+        toast.error(result.error || "فشل حفظ قرار الرفض.");
       }
     } catch (err) {
       console.error("Error rejecting will:", err);
-      showFeedback("error", "حدث خطأ غير متوقع أثناء الرفض.");
+      toast.error("حدث خطأ غير متوقع أثناء الرفض.");
     }
   };
 
   const handleSendComment = async () => {
     if (!willData || !adminComment.trim()) {
-      showFeedback("error", "يرجى إضافة تعليق قبل الإرسال.");
+      toast.error("يرجى إضافة تعليق قبل الإرسال.");
       return;
     }
 
@@ -237,16 +224,15 @@ export default function WillReviewPage() {
         adminComment,
       );
       if (result.success) {
-        showFeedback("success", "تم إرسال التعليق وحفظ سجل المراجعة.");
-        // Refresh data
+        toast.success("تم إرسال التعليق وحفظ سجل المراجعة.");
         fetchWillData(willData.id);
         setAdminComment("");
       } else {
-        showFeedback("error", result.error || "فشل إرسال التعليق.");
+        toast.error(result.error || "فشل إرسال التعليق.");
       }
     } catch (err) {
       console.error("Error sending comment:", err);
-      showFeedback("error", "حدث خطأ غير متوقع أثناء إرسال التعليق.");
+      toast.error("حدث خطأ غير متوقع أثناء إرسال التعليق.");
     }
   };
 
@@ -325,36 +311,6 @@ export default function WillReviewPage() {
 
   return (
     <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
-      {feedback && (
-        <div
-          className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl shadow-lg border max-w-lg w-[calc(100%-2rem)] md:w-auto ${
-            feedback.type === "success"
-              ? "bg-green-50 text-green-800 border-green-200"
-              : "bg-red-50 text-red-700 border-red-200"
-          }`}
-          dir="rtl"
-        >
-          <div className="flex items-start gap-3">
-            {feedback.type === "success" ? (
-              <RxCheckCircled className="text-xl mt-0.5 shrink-0" />
-            ) : (
-              <RxExclamationTriangle className="text-xl mt-0.5 shrink-0" />
-            )}
-            <div className="text-sm font-medium leading-6">
-              {feedback.message}
-            </div>
-            <button
-              onClick={() => setFeedback(null)}
-              className="mr-auto text-current/70 hover:text-current transition-colors"
-              aria-label="إغلاق التنبيه"
-              title="إغلاق"
-            >
-              <RxCross2 className="text-lg" />
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <div className="bg-primary rounded-3xl p-6 md:p-8 overflow-hidden relative">
         <div className="absolute w-64 h-64 rounded-full bg-primary-foreground/5 -bottom-12 -right-12"></div>
@@ -673,6 +629,87 @@ export default function WillReviewPage() {
             )}
           </div>
         </div>
+
+        {/* Delivery Information */}
+        {willData.will_type === "pro" && willData.will_deliveries?.[0] && (
+          <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-border bg-background">
+              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                <RxArchive className="text-primary" />
+                معلومات التوصيل (باقة Pro)
+              </h3>
+            </div>
+            <div className="p-6">
+              {(() => {
+                const d = willData.will_deliveries[0];
+                const statusLabels: Record<string, string> = {
+                  not_sent: "لم يتم الإرسال",
+                  scheduled: "مجدول",
+                  sent: "تم الإرسال",
+                  confirmed: "تم التأكيد",
+                };
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">
+                        الجهة المستلمة
+                      </label>
+                      <p className="font-bold text-foreground">
+                        {d.trustee_name}
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">
+                        الحالة
+                      </label>
+                      <p className="font-bold text-foreground">
+                        {statusLabels[d.delivery_status] || d.delivery_status}
+                      </p>
+                    </div>
+                    {d.trustee_email && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground">
+                          البريد الإلكتروني
+                        </label>
+                        <p className="font-bold text-foreground" dir="ltr">
+                          {d.trustee_email}
+                        </p>
+                      </div>
+                    )}
+                    {d.trustee_phone && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground">
+                          رقم الهاتف
+                        </label>
+                        <p className="font-bold text-foreground" dir="ltr">
+                          {d.trustee_phone}
+                        </p>
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">
+                        طريقة التوصيل
+                      </label>
+                      <p className="font-bold text-foreground">
+                        {d.delivery_method === "sms" ? "رسالة نصية" : d.delivery_method === "email" ? "بريد إلكتروني" : d.delivery_method}
+                      </p>
+                    </div>
+                    {d.created_at && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground">
+                          تاريخ الطلب
+                        </label>
+                        <p className="font-bold text-foreground">
+                          {formatDate(d.created_at)}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+        )}
 
         {/* Audit History */}
         <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden">

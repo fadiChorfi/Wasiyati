@@ -590,6 +590,26 @@ export async function submitWill(payload: Record<string, unknown>) {
       return { success: false, error: "فشل حفظ تفاصيل الوصية، يرجى المحاولة لاحقاً." };
     }
 
+    // Create delivery record for pro users who provided delivery data
+    if (willTier === "pro") {
+      const trusteeName = formData.trustee_name as string | undefined;
+      if (trusteeName) {
+        const { error: delError } = await supabase
+          .from("will_deliveries")
+          .insert({
+            will_id: newWill.id,
+            trustee_name: trusteeName,
+            trustee_email: (formData.trustee_email as string) || null,
+            trustee_phone: (formData.trustee_phone as string) || null,
+            delivery_status: "not_sent",
+            delivery_method: (formData.trustee_phone as string) ? "sms" : "email",
+          });
+        if (delError) {
+          console.error("Delivery insert error:", delError);
+        }
+      }
+    }
+
     // Consume subscription immediately after successful submission flow
     const { error: expireSubscriptionError } = await supabase
       .from("subscriptions")
@@ -1470,6 +1490,17 @@ export async function getAdminWillById(willId: string) {
           witness_number,
           first_name,
           last_name
+        ),
+        will_deliveries (
+          id,
+          trustee_name,
+          trustee_email,
+          trustee_phone,
+          delivery_status,
+          delivery_method,
+          scheduled_at,
+          delivered_at,
+          created_at
         )
       `,
       )
