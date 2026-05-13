@@ -18,6 +18,7 @@ export default function ConsultationPage() {
 
   // form state
 
+  const [consultType, setConsultType] = useState<string>("general");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
@@ -56,6 +57,7 @@ export default function ConsultationPage() {
       full_name: name,
       phone,
       message,
+      type: consultType,
     });
 
     setIsSubmitting(false);
@@ -146,6 +148,32 @@ export default function ConsultationPage() {
               onSubmit={handleSubmit}
               className="bg-surface p-6 md:p-10 rounded-[40px] border border-border shadow-[0_10px_30px_rgba(0,0,0,0.03)] flex flex-col gap-6"
             >
+              {/* Consultation Type Tabs */}
+              <div className="flex bg-background rounded-2xl p-1 border border-border">
+                <button
+                  type="button"
+                  onClick={() => setConsultType("general")}
+                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+                    consultType === "general"
+                      ? "bg-surface text-foreground shadow-sm border border-border"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  استشارة عامة
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConsultType("real_estate")}
+                  className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all ${
+                    consultType === "real_estate"
+                      ? "bg-surface text-foreground shadow-sm border border-border"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  استشارة وصية على عقار
+                </button>
+              </div>
+
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="flex flex-col gap-2 relative">
                   <label className="text-sm font-bold text-foreground">

@@ -13,6 +13,7 @@ export type ConsultationRequestRow = {
   email: string | null;
   message: string;
   status: ConsultationStatus;
+  type: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -21,6 +22,7 @@ type SubmitConsultationPayload = {
   full_name: string;
   phone: string;
   message: string;
+  type?: string;
 };
 
 async function isCurrentUserAdmin() {
@@ -76,6 +78,7 @@ export async function submitConsultationRequest(
       email: user.email ?? null,
       message,
       status: "pending",
+      type: payload.type || null,
     });
 
     if (error) {
@@ -102,7 +105,7 @@ export async function getAdminConsultationRequests() {
     const { data, error } = await supabase
       .from("consultation_requests")
       .select(
-        "id, user_id, full_name, phone, email, message, status, created_at, updated_at",
+        "id, user_id, full_name, phone, email, message, status, type, created_at, updated_at",
       )
       .order("created_at", { ascending: false });
 

@@ -10,6 +10,7 @@ import {
 import { RxCheck, RxClock, RxCross2, RxEyeOpen, RxReload } from "react-icons/rx";
 
 type FilterStatus = "all" | ConsultationStatus;
+type FilterType = "all" | "general" | "real_estate";
 
 export default function AdminConsultationsPage() {
   const MESSAGE_PREVIEW_LIMIT = 90;
@@ -17,6 +18,7 @@ export default function AdminConsultationsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+  const [filterType, setFilterType] = useState<FilterType>("all");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] =
     useState<ConsultationRequestRow | null>(null);
@@ -41,12 +43,17 @@ export default function AdminConsultationsPage() {
   }, []);
 
   const filteredRequests = useMemo(() => {
-    if (filterStatus === "all") return requests;
-    return requests.filter((request) => request.status === filterStatus);
-  }, [requests, filterStatus]);
+    return requests.filter((request) => {
+      const matchesStatus = filterStatus === "all" || request.status === filterStatus;
+      const matchesType = filterType === "all" || request.type === filterType;
+      return matchesStatus && matchesType;
+    });
+  }, [requests, filterStatus, filterType]);
 
   const pendingCount = requests.filter((r) => r.status === "pending").length;
   const closedCount = requests.filter((r) => r.status === "closed").length;
+  const generalCount = requests.filter((r) => r.type === "general").length;
+  const realEstateCount = requests.filter((r) => r.type === "real_estate").length;
 
   const closeRequest = async (requestId: string) => {
     setUpdatingId(requestId);
@@ -71,6 +78,17 @@ export default function AdminConsultationsPage() {
   const getMessagePreview = (message: string) => {
     if (message.length <= MESSAGE_PREVIEW_LIMIT) return message;
     return `${message.slice(0, MESSAGE_PREVIEW_LIMIT)}...`;
+  };
+
+  const getTypeLabel = (type: string | null) => {
+    switch (type) {
+      case "real_estate":
+        return "وصية على عقار";
+      case "general":
+        return "استشارة عامة";
+      default:
+        return "-";
+    }
   };
 
   const badgeStyle = (status: ConsultationStatus) =>
@@ -112,7 +130,7 @@ export default function AdminConsultationsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
         <div className="bg-surface rounded-2xl p-4 border border-border shadow-sm">
           <p className="text-xs text-muted-foreground">إجمالي الطلبات</p>
           <p className="text-2xl font-bold text-foreground">{requests.length}</p>
@@ -126,17 +144,36 @@ export default function AdminConsultationsPage() {
           <p className="text-2xl font-bold text-foreground">{closedCount}</p>
         </div>
         <div className="bg-surface rounded-2xl p-4 border border-border shadow-sm">
-          <p className="text-xs text-muted-foreground">التصفية</p>
-          <select
-            value={filterStatus}
-            onChange={(event) => setFilterStatus(event.target.value as FilterStatus)}
-            className="mt-2 h-9 rounded-lg border border-border bg-background px-2 text-sm text-foreground w-full"
-          >
-            <option value="all">الكل</option>
-            <option value="pending">قيد المتابعة</option>
-            <option value="closed">مغلقة</option>
-          </select>
+          <p className="text-xs text-muted-foreground">استشارة عامة</p>
+          <p className="text-2xl font-bold text-foreground">{generalCount}</p>
         </div>
+        <div className="bg-surface rounded-2xl p-4 border border-border shadow-sm">
+          <p className="text-xs text-muted-foreground">وصية على عقار</p>
+          <p className="text-2xl font-bold text-foreground">{realEstateCount}</p>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row gap-3">
+        <select
+          value={filterStatus}
+          onChange={(event) => setFilterStatus(event.target.value as FilterStatus)}
+          className="h-10 rounded-xl border border-border bg-surface px-4 text-sm text-foreground w-full sm:w-44 outline-none"
+          title="تصفية حسب الحالة"
+        >
+          <option value="all">جميع الحالات</option>
+          <option value="pending">قيد المتابعة</option>
+          <option value="closed">مغلقة</option>
+        </select>
+        <select
+          value={filterType}
+          onChange={(event) => setFilterType(event.target.value as FilterType)}
+          className="h-10 rounded-xl border border-border bg-surface px-4 text-sm text-foreground w-full sm:w-44 outline-none"
+          title="تصفية حسب النوع"
+        >
+          <option value="all">جميع الأنواع</option>
+          <option value="general">استشارة عامة</option>
+          <option value="real_estate">وصية على عقار</option>
+        </select>
       </div>
 
       {error && (
@@ -163,12 +200,15 @@ export default function AdminConsultationsPage() {
               <table className="w-full text-right text-sm">
                 <thead className="bg-muted/40">
                 <tr>
-                  <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
-                    العميل
-                  </th>
-                  <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
-                    الهاتف
-                  </th>
+                <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
+                  العميل
+                </th>
+                <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
+                  نوع الاستشارة
+                </th>
+                <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
+                  الهاتف
+                </th>
                   <th className="h-11 px-4 text-xs font-medium text-muted-foreground whitespace-nowrap">
                     الرسالة
                   </th>
@@ -197,6 +237,11 @@ export default function AdminConsultationsPage() {
                         {request.email && (
                           <p className="text-xs text-muted-foreground">{request.email}</p>
                         )}
+                      </td>
+                      <td className="p-4 align-top">
+                        <span className="text-xs font-bold text-foreground bg-muted/40 rounded-full px-2.5 py-1">
+                          {getTypeLabel(request.type)}
+                        </span>
                       </td>
                       <td className="p-4 align-top text-foreground whitespace-nowrap" dir="ltr">
                         {request.phone}
@@ -253,6 +298,9 @@ export default function AdminConsultationsPage() {
                         {request.email && (
                           <p className="text-xs text-muted-foreground mt-0.5">{request.email}</p>
                         )}
+                        <span className="inline-block mt-1 text-[10px] font-bold text-muted-foreground bg-background border border-border rounded-full px-2 py-0.5">
+                          {getTypeLabel(request.type)}
+                        </span>
                       </div>
                       <span
                         className={`shrink-0 inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${style.bg} ${style.text}`}
@@ -319,6 +367,12 @@ export default function AdminConsultationsPage() {
                   <p className="text-muted-foreground text-xs mb-1">البريد الإلكتروني</p>
                   <p className="font-bold text-foreground">
                     {selectedRequest.email || "غير متوفر"}
+                  </p>
+                </div>
+                <div className="bg-background border border-border rounded-xl p-3">
+                  <p className="text-muted-foreground text-xs mb-1">نوع الاستشارة</p>
+                  <p className="font-bold text-foreground">
+                    {getTypeLabel(selectedRequest.type)}
                   </p>
                 </div>
                 <div className="bg-background border border-border rounded-xl p-3">
