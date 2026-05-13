@@ -77,7 +77,9 @@ function willTitle(category: WillCategory | null) {
 function safeDate(d: string | null | undefined) {
   if (!d) return "غير محدد";
   const dt = new Date(d);
-  return Number.isNaN(dt.getTime()) ? "غير محدد" : dt.toLocaleDateString("ar-DZ");
+  return Number.isNaN(dt.getTime())
+    ? "غير محدد"
+    : dt.toLocaleDateString("ar-DZ");
 }
 
 function joinName(first?: string | null, last?: string | null) {
@@ -103,13 +105,10 @@ export default function FilledWillTemplate({
     () => testator?.financial_status?.[0] ?? null,
     [testator?.financial_status],
   );
-  const primaryBeneficiary = useMemo(
-    () => {
-      if (will.beneficiary) return will.beneficiary;
-      return asArray(will.will_beneficiaries)[0] ?? null;
-    },
-    [will.beneficiary, will.will_beneficiaries],
-  );
+  const primaryBeneficiary = useMemo(() => {
+    if (will.beneficiary) return will.beneficiary;
+    return asArray(will.will_beneficiaries)[0] ?? null;
+  }, [will.beneficiary, will.will_beneficiaries]);
   const w1 = useMemo(
     () => asArray(will.witnesses).find((w) => w.witness_number === 1) ?? null,
     [will.witnesses],
@@ -119,10 +118,14 @@ export default function FilledWillTemplate({
     [will.witnesses],
   );
 
-  const showFinancial = will.will_category === "money" || will.will_category === "general";
+  const showFinancial =
+    will.will_category === "money" || will.will_category === "general";
 
   return (
-    <div className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden" dir="rtl">
+    <div
+      className="bg-surface rounded-3xl border border-border shadow-sm overflow-hidden"
+      dir="rtl"
+    >
       <div className="px-6 py-5 border-b border-border bg-gray-50">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div>
@@ -130,35 +133,26 @@ export default function FilledWillTemplate({
               {willTitle(will.will_category)}
             </h2>
             <p className="text-xs text-muted-foreground mt-1">
-              رقم الملف:{" "}
-              <span className="font-bold text-foreground">
-                {will.id.replace("WAS-", "WAS-")}
-              </span>{" "}
               • تاريخ الإنشاء:{" "}
               <span className="font-bold text-foreground">
                 {safeDate(will.created_at)}
               </span>
             </p>
           </div>
-
-          <button
-            onClick={() => window.print()}
-            className="px-4 py-2 rounded-xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition active:scale-95 w-fit"
-          >
-            طباعة / حفظ PDF
-          </button>
         </div>
       </div>
 
       <div className="p-6 md:p-8 space-y-6">
         <div className="bg-primary/5 p-5 rounded-2xl border border-primary/20 text-primary font-bold text-sm leading-7">
-          &quot;أصرح وأشهد وأنا في كامل قواي العقلية والجسدية، وبمحض إرادتي وبدون ضغط
-          أو إكراه أنني أوصي بما يلي...&quot;
+          &quot;أصرح وأشهد وأنا في كامل قواي العقلية والجسدية، وبمحض إرادتي
+          وبدون ضغط أو إكراه أنني أوصي بما يلي...&quot;
         </div>
 
         {/* Testator */}
         <section className="bg-background border border-border rounded-2xl p-5">
-          <h3 className="text-sm font-black text-foreground mb-4">بيانات الموصي</h3>
+          <h3 className="text-sm font-black text-foreground mb-4">
+            بيانات الموصي
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="flex justify-between gap-4">
               <span className="text-muted-foreground">الاسم الكامل</span>
@@ -242,7 +236,9 @@ export default function FilledWillTemplate({
 
         {/* Will body */}
         <section className="bg-background border border-border rounded-2xl p-5">
-          <h3 className="text-sm font-black text-foreground mb-4">موضوع الوصية</h3>
+          <h3 className="text-sm font-black text-foreground mb-4">
+            موضوع الوصية
+          </h3>
           <div className="bg-surface rounded-2xl border border-border p-5 leading-8 text-sm font-medium text-foreground whitespace-pre-wrap">
             {will.subject_of_will || "لا يوجد نص متاح للوصية"}
           </div>
@@ -251,28 +247,38 @@ export default function FilledWillTemplate({
         {/* Financial */}
         {showFinancial && (
           <section className="bg-background border border-border rounded-2xl p-5">
-            <h3 className="text-sm font-black text-foreground mb-4">الذمة المالية</h3>
+            <h3 className="text-sm font-black text-foreground mb-4">
+              الذمة المالية
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
               <div className="bg-surface border border-border rounded-2xl p-4">
-                <p className="text-xs font-bold text-muted-foreground">إجمالي الأبناء</p>
+                <p className="text-xs font-bold text-muted-foreground">
+                  إجمالي الأبناء
+                </p>
                 <p className="text-lg font-black text-foreground mt-1">
                   {financial?.number_of_children ?? 0}
                 </p>
               </div>
               <div className="bg-surface border border-border rounded-2xl p-4">
-                <p className="text-xs font-bold text-muted-foreground">عدد الذكور</p>
+                <p className="text-xs font-bold text-muted-foreground">
+                  عدد الذكور
+                </p>
                 <p className="text-lg font-black text-foreground mt-1">
                   {financial?.boys ?? 0}
                 </p>
               </div>
               <div className="bg-surface border border-border rounded-2xl p-4">
-                <p className="text-xs font-bold text-muted-foreground">عدد الإناث</p>
+                <p className="text-xs font-bold text-muted-foreground">
+                  عدد الإناث
+                </p>
                 <p className="text-lg font-black text-foreground mt-1">
                   {financial?.girls ?? 0}
                 </p>
               </div>
               <div className="bg-surface border border-border rounded-2xl p-4">
-                <p className="text-xs font-bold text-muted-foreground">إجمالي الأموال</p>
+                <p className="text-xs font-bold text-muted-foreground">
+                  إجمالي الأموال
+                </p>
                 <p className="text-lg font-black text-foreground mt-1">
                   {financial?.total_money != null
                     ? `${financial.total_money.toLocaleString("ar-DZ")} د.ج`
@@ -288,13 +294,17 @@ export default function FilledWillTemplate({
           <h3 className="text-sm font-black text-foreground mb-4">الشهود</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="bg-surface border border-border rounded-2xl p-4">
-              <p className="text-xs font-bold text-muted-foreground">الشاهد الأول</p>
+              <p className="text-xs font-bold text-muted-foreground">
+                الشاهد الأول
+              </p>
               <p className="text-base font-black text-foreground mt-1">
                 {joinName(w1?.first_name, w1?.last_name)}
               </p>
             </div>
             <div className="bg-surface border border-border rounded-2xl p-4">
-              <p className="text-xs font-bold text-muted-foreground">الشاهد الثاني</p>
+              <p className="text-xs font-bold text-muted-foreground">
+                الشاهد الثاني
+              </p>
               <p className="text-base font-black text-foreground mt-1">
                 {joinName(w2?.first_name, w2?.last_name)}
               </p>
@@ -305,4 +315,3 @@ export default function FilledWillTemplate({
     </div>
   );
 }
-
