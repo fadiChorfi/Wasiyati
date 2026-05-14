@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { RxArrowTopLeft, RxHamburgerMenu, RxCross2 } from "react-icons/rx";
+import { RxArrowTopLeft, RxHamburgerMenu, RxCross2, RxLink2 } from "react-icons/rx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ActionButton from "./ActionButton";
@@ -13,6 +13,8 @@ const links = [
   { name: "الخدمات", href: "#services" },
   { name: "تواصل معنا", href: "#contact" },
 ];
+
+const USEFUL_LINKS_HREF = "/useful-links";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -44,6 +46,8 @@ export default function Navbar() {
         ? links.length - 1 - activeIndex
         : null;
 
+  const isUsefulLinksActive = pathname === USEFUL_LINKS_HREF;
+
   return (
     <header
       className={`absolute top-0 left-0 right-0 w-full px-6 pt-6 z-10 transition-transform duration-300 ${
@@ -52,6 +56,8 @@ export default function Navbar() {
       dir="ltr"
     >
       <div className="flex items-center justify-between rounded-full bg-white px-2.5 py-2.5 shadow-sm mx-auto max-w-6xl relative z-50 transition-all duration-300">
+
+        {/* Left side: CTA + mobile hamburger */}
         <div className="flex items-center gap-2">
           <Link href="/consultation">
             <ActionButton
@@ -61,7 +67,7 @@ export default function Navbar() {
               icon={<RxArrowTopLeft />}
             />
           </Link>
-          
+
           <button
             className="md:hidden flex items-center justify-center p-2.5 rounded-full bg-black/5 text-foreground hover:bg-black/10 transition-colors"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -74,8 +80,10 @@ export default function Navbar() {
             )}
           </button>
         </div>
+
+        {/* Center: anchor pill nav */}
         <nav
-          className="flex items-center  text-sm font-bold text-primary relative"
+          className="flex items-center text-sm font-bold text-primary relative"
           dir="rtl"
         >
           {links.map((link, index) => {
@@ -84,7 +92,7 @@ export default function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className={`w-28 text-center py-2 transition hidden md:block relative z-10 ${
+                className={`w-32 text-center py-2 transition hidden md:block relative z-10 ${
                   isActive ? "text-foreground" : "hover:text-foreground"
                 }`}
                 onMouseEnter={() => setHoveredIndex(links.length - 1 - index)}
@@ -94,21 +102,40 @@ export default function Navbar() {
               </Link>
             );
           })}
-          {/* Hover highlight background */}
+
+          {/* Sliding hover highlight */}
           <div
             className="absolute h-9 rounded-full bg-black/5 transition-all duration-300 ease-out hidden md:block"
             style={{
               opacity: currentIndex !== null ? 1 : 0,
-              width: "112px",
-              transform: `translateX(${currentIndex !== null ? currentIndex * 112 : 0}px)`,
+              width: "128px",
+              transform: `translateX(${currentIndex !== null ? currentIndex * 128 : 0}px)`,
               left: 0,
               top: "50%",
               marginTop: "-18px",
             }}
           />
         </nav>
-        <div className=" px-3 py-1 mr-2.5 z-50 relative">
+
+        {/* Right side: logo + "روابط مفيدة" as a quiet secondary link */}
+        <div className="flex items-center gap-1 px-3 py-1 mr-1 z-50 relative" dir="rtl">
           <h2 className="text-2xl font-bold text-foreground">وصيتي</h2>
+
+          {/* Divider */}
+          <span className="hidden md:block w-px h-5 bg-black/10 mx-2" />
+
+          {/* Useful links — visually distinct: icon + muted label, signals "external-ish" */}
+          <Link
+            href={USEFUL_LINKS_HREF}
+            className={`hidden md:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors whitespace-nowrap ${
+              isUsefulLinksActive
+                ? "bg-primary/10 text-primary"
+                : "text-foreground/50 hover:text-foreground hover:bg-black/5"
+            }`}
+          >
+            <RxLink2 className="text-sm shrink-0" />
+            روابط مفيدة
+          </Link>
         </div>
       </div>
 
@@ -138,6 +165,23 @@ export default function Navbar() {
             </Link>
           );
         })}
+
+        {/* روابط مفيدة in mobile — separated by a divider to preserve its distinction */}
+        <div className="pt-3 border-t border-black/5">
+          <Link
+            href={USEFUL_LINKS_HREF}
+            onClick={() => setIsMobileMenuOpen(false)}
+            className={`flex items-center gap-2 px-4 py-3.5 rounded-2xl text-sm font-bold transition-colors ${
+              isUsefulLinksActive
+                ? "bg-primary/5 text-primary"
+                : "text-foreground/60 hover:bg-black/5 hover:text-foreground"
+            }`}
+          >
+            <RxLink2 className="text-base shrink-0" />
+            روابط مفيدة
+          </Link>
+        </div>
+
         <div className="mt-2 pt-4 border-t border-black/5">
           <Link
             href="/consultation"

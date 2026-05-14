@@ -86,6 +86,14 @@ export default function Footer() {
                   دليل المنصة
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/useful-links"
+                  className="hover:text-white transition-colors"
+                >
+                  روابط مفيدة
+                </Link>
+              </li>
             </ul>
           </div>
 
