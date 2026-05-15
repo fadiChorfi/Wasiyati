@@ -5,7 +5,6 @@ import {
   RxCheck,
   RxIdCard,
   RxArrowLeft,
-  RxDownload,
   RxChatBubble,
   RxPlus,
   RxLockClosed,
@@ -265,7 +264,7 @@ export default function DashboardPage() {
       )} */}
 
       {/* QUICK ACTIONS ROW */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 my-5 mt-5">
+      <div className="grid grid-cols-1 md:grid-cols-2  gap-3 md:gap-4 my-5 mt-5">
         {/* Card 1 */}
         {hasActiveSubscription ? (
           <Link
@@ -313,7 +312,7 @@ export default function DashboardPage() {
         )}
 
         {/* Card 2 */}
-        <button className="bg-surface rounded-3xl p-6 border border-border text-right hover:shadow-md transition-shadow flex md:flex-col items-center md:items-start gap-4 md:gap-0">
+        {/* <button className="bg-surface rounded-3xl p-6 border border-border text-right hover:shadow-md transition-shadow flex md:flex-col items-center md:items-start gap-4 md:gap-0">
           <div className="bg-primary/10 rounded-2xl p-3 w-fit text-primary shrink-0">
             <RxDownload className="text-xl" />
           </div>
@@ -323,7 +322,7 @@ export default function DashboardPage() {
             </h4>
             <p className="text-xs text-muted-foreground mt-1">PDF</p>
           </div>
-        </button>
+        </button> */}
 
         {/* Card 3 */}
         <Link
@@ -353,40 +352,76 @@ export default function DashboardPage() {
           </Link>
         </div>
 
-        {/* Desktop Table */}
-        <div className="hidden md:block w-full overflow-x-auto">
-          <table className="w-full text-right">
-            <thead className="bg-background">
-              <tr>
-                <th className="py-3 px-6 text-xs font-medium text-muted-foreground">
-                  النوع
-                </th>
-                <th className="py-3 px-6 text-xs font-medium text-muted-foreground">
-                  التاريخ
-                </th>
-                <th className="py-3 px-6 text-xs font-medium text-muted-foreground">
-                  الحالة
-                </th>
-                <th className="py-3 px-6 text-xs font-medium text-muted-foreground">
-                  الإجراء
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+        {recentActivity.length > 0 ? (
+          <>
+            {/* Desktop Table */}
+            <div className="hidden md:block w-full overflow-x-auto">
+              <table className="w-full text-right">
+                <thead className="bg-background">
+                  <tr>
+                    <th className="py-3 px-6 text-xs font-medium text-muted-foreground">
+                      النوع
+                    </th>
+                    <th className="py-3 px-6 text-xs font-medium text-muted-foreground">
+                      التاريخ
+                    </th>
+                    <th className="py-3 px-6 text-xs font-medium text-muted-foreground">
+                      الحالة
+                    </th>
+                    <th className="py-3 px-6 text-xs font-medium text-muted-foreground">
+                      الإجراء
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {recentActivity.map((activity, idx) => {
+                    const b = getBadgeStyle(activity.status);
+                    return (
+                      <tr
+                        key={idx}
+                        className="border-t border-border hover:bg-background/50 transition"
+                      >
+                        <td className="py-4 px-6 text-sm font-bold text-foreground">
+                          {activity.type}
+                        </td>
+                        <td className="py-4 px-6 text-sm text-muted-foreground">
+                          {activity.date}
+                        </td>
+                        <td className="py-4 px-6">
+                          <div
+                            className={`rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1.5 w-fit ${b.bg} ${b.text}`}
+                          >
+                            <div
+                              className={`w-1.5 h-1.5 rounded-full ${b.dot}`}
+                            ></div>
+                            {activity.status}
+                          </div>
+                        </td>
+                        <td className="py-4 px-6">
+                          <button className="text-sm text-primary hover:underline font-medium min-h-11 min-w-11">
+                            عرض
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden flex flex-col">
               {recentActivity.map((activity, idx) => {
                 const b = getBadgeStyle(activity.status);
                 return (
-                  <tr
+                  <div
                     key={idx}
-                    className="border-t border-border hover:bg-background/50 transition"
+                    className="px-4 py-4 border-t border-border flex flex-col gap-2"
                   >
-                    <td className="py-4 px-6 text-sm font-bold text-foreground">
-                      {activity.type}
-                    </td>
-                    <td className="py-4 px-6 text-sm text-muted-foreground">
-                      {activity.date}
-                    </td>
-                    <td className="py-4 px-6">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-bold text-foreground">
+                        {activity.type}
+                      </span>
                       <div
                         className={`rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1.5 w-fit ${b.bg} ${b.text}`}
                       >
@@ -395,51 +430,27 @@ export default function DashboardPage() {
                         ></div>
                         {activity.status}
                       </div>
-                    </td>
-                    <td className="py-4 px-6">
+                    </div>
+                    <div className="flex justify-between items-center mt-1">
+                      <span className="text-xs text-muted-foreground">
+                        {activity.date}
+                      </span>
                       <button className="text-sm text-primary hover:underline font-medium min-h-11 min-w-11">
                         عرض
                       </button>
-                    </td>
-                  </tr>
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile Cards */}
-        <div className="md:hidden flex flex-col">
-          {recentActivity.map((activity, idx) => {
-            const b = getBadgeStyle(activity.status);
-            return (
-              <div
-                key={idx}
-                className="px-4 py-4 border-t border-border flex flex-col gap-2"
-              >
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-bold text-foreground">
-                    {activity.type}
-                  </span>
-                  <div
-                    className={`rounded-full px-3 py-1 text-xs font-medium flex items-center gap-1.5 w-fit ${b.bg} ${b.text}`}
-                  >
-                    <div className={`w-1.5 h-1.5 rounded-full ${b.dot}`}></div>
-                    {activity.status}
-                  </div>
-                </div>
-                <div className="flex justify-between items-center mt-1">
-                  <span className="text-xs text-muted-foreground">
-                    {activity.date}
-                  </span>
-                  <button className="text-sm text-primary hover:underline font-medium min-h-11 min-w-11">
-                    عرض
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+            </div>
+          </>
+        ) : (
+          <div className="p-8 flex flex-col items-center justify-center text-center">
+            <p className="text-muted-foreground text-sm font-medium">
+              لا يوجد نشاط حتى الآن
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
