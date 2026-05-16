@@ -23,9 +23,6 @@ const navItems = [
   { id: "purpose", label: "غرض المعالجة" },
   { id: "protection", label: "الحماية والأمن" },
   { id: "sharing", label: "المشاركة والإفصاح" },
-  { id: "rights", label: "حقوقك القانونية" },
-  { id: "retention", label: "الاحتفاظ بالبيانات" },
-  { id: "cookies", label: "ملفات الكوكيز" },
   { id: "updates", label: "التحديثات" },
   { id: "contact", label: "اتصل بنا" },
 ];
