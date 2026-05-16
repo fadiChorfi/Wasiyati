@@ -46,13 +46,8 @@ const sections: { title: string; items: LinkItem[] }[] = [
     title: "مقالات قانونية",
     items: [
       {
-        label: "ASJP - المجلة الجزائرية للعلوم القانونية",
-        href: "https://asjp.cerist.dz",
-        badge: "بحث",
-      },
-      {
         label: "أحكام الوصية في القانون الجزائري",
-        href: "https://asjp.cerist.dz",
+        href: "https://asjp.cerist.dz/en/article/206792",
         badge: "PDF",
         note: "دراسة تحليلية لأحكام الوصية في التشريع الجزائري",
       },
@@ -71,9 +66,7 @@ export default function UsefulLinksPage() {
       {/* Header */}
       <section className="relative overflow-hidden bg-[radial-gradient(circle_at_30%_20%,#19714f,transparent_55%),linear-gradient(160deg,#0a3f2f_0%,#06281e_70%)] text-white pt-24 pb-20 px-6 mb-12 rounded-b-[40px] mx-2">
         <div className="max-w-4xl mx-auto text-center relative z-10 pt-16">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">
-            روابط مفيدة
-          </h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">روابط مفيدة</h1>
           <p className="text-lg text-white/80 max-w-2xl mx-auto leading-relaxed">
             مجموعة من المصادر والمراجع القانونية المعتمدة في الجزائر
           </p>
