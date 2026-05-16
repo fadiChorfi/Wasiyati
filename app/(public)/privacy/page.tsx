@@ -345,22 +345,22 @@ export default function PrivacyPage() {
                   البريد الإلكتروني:
                 </span>
                 <a
-                  href="mailto:support@wasiyati.dz"
+                  href="mailto:wasiyatidz@gmail.com"
                   className="text-primary font-bold hover:underline underline-offset-2"
                 >
-                  support@wasiyati.dz
+                  wasiyatidz@gmail.com
                 </a>
               </div>
               <div className="flex justify-between items-center bg-surface border border-border p-4 rounded-2xl">
                 <span className="font-bold text-foreground">الواتساب:</span>
                 <a
-                  href="https://wa.me/213553754171"
+                  href="https://wa.me/213792441574"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[#25D366] font-bold flex items-center gap-2 hover:underline underline-offset-2"
                 >
                   <FaWhatsapp className="text-xl" />
-                  <p dir="ltr">0553 75 41 71</p>
+                  <p dir="ltr">07 92 44 15 74</p>
                 </a>
               </div>
               <div className="text-center pt-2">
