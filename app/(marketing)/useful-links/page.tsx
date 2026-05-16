@@ -25,7 +25,7 @@ const sections: { title: string; items: LinkItem[] }[] = [
       },
       {
         label: "المحكمة العليا",
-        href: "http://www.coursupreme.dz",
+        href: "https://coursupreme.dz/",
       },
       {
         label: "مركز البحوث القانونية و القضائية",
