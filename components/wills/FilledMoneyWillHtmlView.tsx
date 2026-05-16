@@ -51,7 +51,7 @@ function Field({
         border-b
         border-black
         px-2
-        pb-[2px]
+        pb-0.5
         font-bold
         text-black
         ${width}
@@ -272,7 +272,7 @@ export default function FilledWillHtmlView({
 
         <div
           className="
-            min-h-[90px]
+            min-h-22.5
             w-full
             border
             border-black
@@ -375,13 +375,7 @@ export default function FilledWillHtmlView({
             <div className="border-b border-black"></div>
           </div>
 
-          <div className="w-[45%]">
-            <h3 className="mb-14 text-center font-bold">
-              ختم / مصادقة
-            </h3>
-
-            <div className="border-b border-black"></div>
-          </div>
+          
         </div>
 
         <div className="mt-14 flex flex-wrap items-end justify-start gap-x-4 gap-y-4">

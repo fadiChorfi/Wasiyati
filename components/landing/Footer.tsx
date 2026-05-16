@@ -118,10 +118,10 @@ export default function Footer() {
             جميع الحقوق محفوظة &copy; {new Date().getFullYear()} لمنصة وصيتي.
           </p>
           <div className="flex gap-6">
-            <Link href="#" className="hover:text-white transition-colors">
+            <Link href="/terms" className="hover:text-white transition-colors">
               الشروط والأحكام
             </Link>
-            <Link href="#" className="hover:text-white transition-colors">
+            <Link href="/privacy" className="hover:text-white transition-colors">
               سياسة الخصوصية
             </Link>
           </div>
