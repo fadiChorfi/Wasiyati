@@ -48,13 +48,13 @@ const sections: { title: string; items: LinkItem[] }[] = [
       {
         label: "أحكام الوصية في القانون الجزائري",
         href: "https://asjp.cerist.dz/en/article/206792",
-        badge: "PDF",
+        badge: "",
         note: "دراسة تحليلية لأحكام الوصية في التشريع الجزائري",
       },
       {
         label: "إثبات الوصية وإجراءات تثبيت الملكية المكتسبة في التشريع",
         href: "https://asjp.cerist.dz/index.php/en/article/183892",
-        badge: "PDF",
+        badge: "",
       },
     ],
   },
