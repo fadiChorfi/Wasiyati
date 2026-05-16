@@ -53,7 +53,7 @@ const sections: { title: string; items: LinkItem[] }[] = [
       },
       {
         label: "إثبات الوصية وإجراءات تثبيت الملكية المكتسبة في التشريع",
-        href: "https://asjp.cerist.dz",
+        href: "https://asjp.cerist.dz/index.php/en/article/183892",
         badge: "PDF",
       },
     ],
