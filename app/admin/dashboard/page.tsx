@@ -113,7 +113,7 @@ export default async function AdminDashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
         {/* Card 1 */}
         <Link
-          href="/admin/wills?status=pending"
+          href="/admin/dashboard/wills?status=pending"
           className="block bg-primary rounded-3xl p-6 relative overflow-hidden group hover:opacity-95 transition-opacity"
         >
           <div className="absolute top-4 left-4 bg-primary-foreground/20 rounded-xl p-2 text-primary-foreground">
@@ -131,7 +131,7 @@ export default async function AdminDashboardPage() {
 
         {/* Card 2 */}
         <Link
-          href="/admin/users"
+          href="/admin/dashboard/users"
           className="block bg-surface rounded-3xl p-6 border border-border text-right hover:shadow-md transition-shadow group"
         >
           <div className="flex md:flex-col items-center md:items-start gap-4 md:gap-0 relative">
@@ -184,7 +184,7 @@ export default async function AdminDashboardPage() {
               النشاط الأخير في المنصة
             </h3>
             <Link
-              href="/admin/activity"
+              href="/admin/dashboard/activity"
               className="text-sm text-primary hover:underline font-medium"
             >
               سجل النشاطات
@@ -287,7 +287,7 @@ export default async function AdminDashboardPage() {
               مستخدمين جدد
             </h3>
             <Link
-              href="/admin/users"
+              href="/admin/dashboard/users"
               className="text-sm text-primary hover:underline font-medium"
             >
               إدارة
