@@ -24,9 +24,6 @@ type BlockReason =
   | "will_rejected"
   | null;
 
-
-
-  
 export default function NewRequestClient({
   hasActiveSubscription,
   blockReason,
@@ -45,7 +42,7 @@ export default function NewRequestClient({
       id: "general",
       title: "الوصية العامة",
       description:
-        "خدمة تمكّنك من إنشاء وصية شاملة تشمل أموالك وأعمالك، مع احترام أحكام الشريعة الإسلامية والقانون الجزائري.",
+        "خدمة تمكّنك من إنشاء وصية شاملة تشمل أموالك وأعمالك، مع احترام القانون و أحكام الشريعة الإسلامية  الجزائري.",
       icon: RxFileText,
       colors: "bg-primary/10 text-primary border-primary",
     },
@@ -53,7 +50,7 @@ export default function NewRequestClient({
       id: "money",
       title: "وصية بالأموال",
       description:
-        "خدمة تمكّنك من تخصيص وتوزيع أموالك أو ممتلكاتك بدقة بعد الوفاة، مع الالتزام بأحكام الشريعة الإسلامية والقانون الجزائري.",
+        "خدمة تمكّنك من تخصيص وتوزيع أموالك أو ممتلكاتك بدقة بعد الوفاة، مع الالتزام بالقانون و أحكام الشريعة الإسلامية  الجزائري.",
       icon: RxArchive,
       colors: "bg-accent/10 text-accent-foreground border-accent",
     },
@@ -205,7 +202,7 @@ export default function NewRequestClient({
         </h1>
         <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
           اختر نوع الوصية التي ترغب في إنشائها. جميع النماذج مصممة للتوافق مع
-          أحكام الشريعة الإسلامية والقانون الجزائري لضمان حقوقك ومقاصدك.
+          القانون و أحكام الشريعة الإسلامية الجزائري لضمان حقوقك ومقاصدك.
         </p>
       </div>
 

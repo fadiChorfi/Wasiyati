@@ -26,7 +26,7 @@ export default function HeroSection() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
             </span>
-            منصة مخصصة وموثوقة قانونياً
+            منصة متخصصة وموثوقة قانونياً
           </span>
           <h1 className="text-3xl sm:text-4xl md:text-5xl leading-tight font-bold text-white">
             أنشئ وصيتك بسهولة
@@ -35,7 +35,7 @@ export default function HeroSection() {
           </h1>
           <p className="max-w-md text-base leading-8 text-white/80">
             منصة رقمية تتيح للأفراد إنشاء وصاياهم وإدارتها إلكترونيًا بطريقة
-            سهلة، آمنة، ومتوافقة مع أحكام الشريعة الإسلامية والقانون.
+            سهلة، آمنة، ومتوافقة مع القانون و أحكام الشريعة الإسلامية .
           </p>
           <div className="pt-2">
             <ActionButton

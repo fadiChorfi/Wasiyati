@@ -31,7 +31,7 @@ export default function ContactUsBanner() {
           <div className="relative z-10 shrink-0 w-full md:w-auto flex justify-end">
             {/* Replace with your actual WhatsApp phone number */}
             <Link
-              href="https://wa.me/213551669458"
+              href="https://wa.me/213792441574"
               target="_blank"
               rel="noopener noreferrer"
               className="w-full md:w-auto"

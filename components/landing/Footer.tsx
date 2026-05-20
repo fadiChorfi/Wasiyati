@@ -48,7 +48,7 @@ export default function Footer() {
             <ul className="space-y-4 text-sm text-white/70">
               <li>
                 <Link
-                  href="#hero"
+                  href="/#hero"
                   className="hover:text-white transition-colors"
                 >
                   الرئيسية
@@ -56,7 +56,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="#services"
+                  href="/#services"
                   className="hover:text-white transition-colors"
                 >
                   الخدمات
@@ -72,7 +72,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="#about"
+                  href="/#about"
                   className="hover:text-white transition-colors"
                 >
                   حول المنصة
@@ -103,10 +103,10 @@ export default function Footer() {
             <ul className="space-y-4 text-sm text-white/70">
               <li>الجزائر، الجزائر</li>
               <li dir="ltr" className="text-right">
-                contact@wasiyati.com
+                wasiyatidz@gmail.com
               </li>
               <li dir="ltr" className="text-right">
-                +213 591969959
+                +213792441574
               </li>
             </ul>
           </div>
@@ -121,7 +121,10 @@ export default function Footer() {
             <Link href="/terms" className="hover:text-white transition-colors">
               الشروط والأحكام
             </Link>
-            <Link href="/privacy" className="hover:text-white transition-colors">
+            <Link
+              href="/privacy"
+              className="hover:text-white transition-colors"
+            >
               سياسة الخصوصية
             </Link>
           </div>

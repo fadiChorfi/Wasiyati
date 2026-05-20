@@ -1,17 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { RxArrowTopLeft, RxHamburgerMenu, RxCross2, RxLink2 } from "react-icons/rx";
+import {
+  RxArrowTopLeft,
+  RxHamburgerMenu,
+  RxCross2,
+  RxLink2,
+} from "react-icons/rx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ActionButton from "./ActionButton";
 
 const links = [
-  { name: "الرئيسية", href: "#hero" },
-  { name: "حول المنصة", href: "#about" },
-  { name: "عن الوصية", href: "#about-will" },
-  { name: "الخدمات", href: "#services" },
-  { name: "تواصل معنا", href: "#contact" },
+  { name: "الرئيسية", href: "/" },
+  { name: "حول المنصة", href: "/#about" },
+  { name: "عن الوصية", href: "/#about-will" },
+  { name: "الخدمات", href: "/#services" },
+  { name: "تواصل معنا", href: "/#contact" },
 ];
 
 const USEFUL_LINKS_HREF = "/useful-links";
@@ -56,7 +61,6 @@ export default function Navbar() {
       dir="ltr"
     >
       <div className="flex items-center justify-between rounded-full bg-white px-2.5 py-2.5 shadow-sm mx-auto max-w-6xl relative z-50 transition-all duration-300">
-
         {/* Left side: CTA + mobile hamburger */}
         <div className="flex items-center gap-2">
           <Link href="/consultation">
@@ -80,7 +84,22 @@ export default function Navbar() {
             )}
           </button>
         </div>
+        <div className="flex flex-row-reverse">
+          <span className="hidden md:block w-px h-5 bg-black/10 mx-2" />
 
+          {/* Useful links — visually distinct: icon + muted label, signals "external-ish" */}
+          <Link
+            href={USEFUL_LINKS_HREF}
+            className={`hidden md:flex items-center gap-1.5 text-xs font-semibold  rounded-full transition-colors whitespace-nowrap ${
+              isUsefulLinksActive
+                ? "bg-primary/10 text-primary"
+                : "text-foreground/50 hover:text-foreground hover:bg-black/5"
+            }`}
+          >
+            <RxLink2 className="text-sm shrink-0" />
+            روابط مفيدة
+          </Link>
+        </div>
         {/* Center: anchor pill nav */}
         <nav
           className="flex items-center text-sm font-bold text-primary relative"
@@ -118,24 +137,16 @@ export default function Navbar() {
         </nav>
 
         {/* Right side: logo + "روابط مفيدة" as a quiet secondary link */}
-        <div className="flex items-center gap-1 px-3 py-1 mr-1 z-50 relative" dir="rtl">
-          <h2 className="text-2xl font-bold text-foreground">وصيتي</h2>
-
-          {/* Divider */}
-          <span className="hidden md:block w-px h-5 bg-black/10 mx-2" />
-
-          {/* Useful links — visually distinct: icon + muted label, signals "external-ish" */}
-          <Link
-            href={USEFUL_LINKS_HREF}
-            className={`hidden md:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full transition-colors whitespace-nowrap ${
-              isUsefulLinksActive
-                ? "bg-primary/10 text-primary"
-                : "text-foreground/50 hover:text-foreground hover:bg-black/5"
-            }`}
-          >
-            <RxLink2 className="text-sm shrink-0" />
-            روابط مفيدة
+        <div
+          className="flex items-center gap-1 px-3 py-1 mr-1 z-50 relative"
+          dir="rtl"
+        >
+          <Link href="/">
+            <h2 className="text-2xl font-bold text-foreground cursor-pointer">
+              وصيتي
+            </h2>
           </Link>
+          {/* Divider */}
         </div>
       </div>
 

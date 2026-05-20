@@ -89,7 +89,7 @@ export default function PrivacyPage() {
       {/* ─────────────── CONTENT ─────────────── */}
       <div className="max-w-4xl mx-auto px-6 mt-14 space-y-16">
         {/* 1 ─ مقدمة */}
-        <Section id="intro" num="١" title="مقدمة">
+        <Section id="intro" num="1" title="مقدمة">
           <p className="text-lg leading-loose text-muted-foreground">
             في <strong className="text-foreground">وصيتي</strong>، نؤمن أن
             خصوصيتك ليست مجرد التزام قانوني — بل هي أساس الثقة التي تجعل منصتنا
@@ -117,7 +117,7 @@ export default function PrivacyPage() {
         </Section>
 
         {/* 2 ─ البيانات المجمعة */}
-        <Section id="data-collected" num="٢" title="البيانات التي نجمعها">
+        <Section id="data-collected" num="2" title="البيانات التي نجمعها">
           <p className="text-lg leading-loose text-muted-foreground mb-8">
             نحن مسؤولون عن جمع الحد الأدنى الضروري من البيانات لتقديم خدماتنا.
             لا نجمع بيانات لمجرد الجمع. إليك ما قد نجمعه حسب الخدمات التي
@@ -166,7 +166,7 @@ export default function PrivacyPage() {
         </Section>
 
         {/* 3 ─ غرض المعالجة */}
-        <Section id="purpose" num="٣" title="لماذا نجمع بياناتك؟">
+        <Section id="purpose" num="3" title="لماذا نجمع بياناتك؟">
           <p className="text-lg leading-loose text-muted-foreground mb-6">
             نستخدم بياناتك للأغراض التالية فقط:
           </p>
@@ -214,7 +214,7 @@ export default function PrivacyPage() {
         </Section>
 
         {/* 4 ─ الحماية والأمن */}
-        <Section id="protection" num="٤" title="كيف نحمي بياناتك؟">
+        <Section id="protection" num="4" title="كيف نحمي بياناتك؟">
           <div className="bg-linear-to-br from-primary/4 to-primary/8 border border-primary/15 rounded-3xl p-8 mb-6">
             <div className="flex items-start gap-4">
               <div className="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shrink-0 text-3xl">
@@ -277,7 +277,7 @@ export default function PrivacyPage() {
         </Section>
 
         {/* 5 ─ المشاركة والإفصاح */}
-        <Section id="sharing" num="٥" title="مشاركة البيانات مع الغير">
+        <Section id="sharing" num="5" title="مشاركة البيانات مع الغير">
           <div className="space-y-4">
             {[
               {
@@ -316,8 +316,8 @@ export default function PrivacyPage() {
           </div>
         </Section>
 
-        {/* 9 ─ التحديثات */}
-        <Section id="updates" num="٩" title="تحديثات هذه السياسة">
+        {/* 6 ─ التحديثات */}
+        <Section id="updates" num="6" title="تحديثات هذه السياسة">
           <p className="text-lg leading-loose text-muted-foreground">
             قد نقوم بتحديث هذه السياسة من وقت لآخر لتعكس التغييرات في ممارساتنا
             أو المتطلبات القانونية. سيتم إعلامك بأي تغييرات جوهرية عبر البريد
@@ -330,8 +330,8 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
-        {/* 10 ─ الاتصال */}
-        <Section id="contact" num="١٠" title="اتصل بنا">
+        {/* 7 ─ الاتصال */}
+        <Section id="contact" num="7" title="اتصل بنا">
           <div className="bg-surface border border-border rounded-3xl p-8 text-center">
             <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4 text-3xl">
               <RxEnvelopeClosed />

@@ -1,5 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { FaWhatsapp } from "react-icons/fa6";
 import {
   RxCheck,
   RxInfoCircled,
@@ -8,6 +9,7 @@ import {
   RxReader,
   RxPerson,
   RxExclamationTriangle,
+  RxEnvelopeClosed,
 } from "react-icons/rx";
 
 export const metadata: Metadata = {
@@ -113,7 +115,7 @@ export default function TermsPage() {
       {/* ─────────────── CONTENT ─────────────── */}
       <div className="max-w-4xl mx-auto px-6 space-y-16">
         {/* 1 ─ القبول */}
-        <Section id="acceptance" num="١" title="القبول بالشروط">
+        <Section id="acceptance" num="1" title="القبول بالشروط">
           <p className="text-lg leading-loose text-muted-foreground">
             باستخدامك لمنصة وصيتي (يُشار إليها بـ&quot;المنصة&quot;)، فإنك توافق
             بشكل تام وملزم على الالتزام بهذه الشروط والأحكام. إذا كنت لا توافق
@@ -127,7 +129,7 @@ export default function TermsPage() {
         </Section>
 
         {/* 2 ─ وصف الخدمة */}
-        <Section id="service" num="٢" title="وصف الخدمة">
+        <Section id="service" num="2" title="وصف الخدمة">
           <p className="text-lg leading-loose text-muted-foreground">
             وصيتي هي منصة رقمية جزائرية تساعدك على إعداد مسودة وصيتك بتوفير
             نماذج تفاعلية وقوالب قانونية.
@@ -181,7 +183,7 @@ export default function TermsPage() {
         </Section>
 
         {/* 3 ─ الأهلية */}
-        <Section id="eligibility" num="٣" title="أهلية الاستخدام">
+        <Section id="eligibility" num="3" title="أهلية الاستخدام">
           <p className="text-lg leading-loose text-muted-foreground">
             يُسمح باستخدام المنصة للأشخاص الذين تتوفر فيهم الشروط التالية:
           </p>
@@ -221,7 +223,7 @@ export default function TermsPage() {
         </Section>
 
         {/* 4 ─ الحساب */}
-        <Section id="account" num="٤" title="إنشاء الحساب وأمانه">
+        <Section id="account" num="4" title="إنشاء الحساب وأمانه">
           <p className="text-lg leading-loose text-muted-foreground">
             لاستخدام الخدمات، يجب إنشاء حساب شخصي. أنت المسؤول الوحيد عن الحفاظ
             على سرية بيانات تسجيل الدخول الخاصة بك.
@@ -242,7 +244,7 @@ export default function TermsPage() {
         </Section>
 
         {/* 5 ─ المسؤوليات */}
-        <Section id="responsibilities" num="٥" title="مسؤوليات المستخدم">
+        <Section id="responsibilities" num="5" title="مسؤوليات المستخدم">
           <div className="bg-linear-to-br from-primary/4 to-primary/8 border border-primary/15 rounded-3xl p-6 mb-6">
             <div className="flex items-start gap-3">
               <RxLockClosed className="text-primary text-2xl shrink-0 mt-0.5" />
@@ -297,7 +299,7 @@ export default function TermsPage() {
         </Section>
 
         {/* 6 ─ الاشتراكات */}
-        <Section id="payments" num="٦" title="الاشتراكات والمدفوعات">
+        <Section id="payments" num="6" title="الاشتراكات والمدفوعات">
           <p className="text-lg leading-loose text-muted-foreground">
             توفر المنصة عدة باقات اشتراك (أساسية، متوسطة، Pro) بأسعار محددة
             بالدينار الجزائري (DZD). الأسعار قابلة للتحديث من وقت لآخر.
@@ -343,7 +345,7 @@ export default function TermsPage() {
         </Section>
 
         {/* 7 ─ الملكية الفكرية */}
-        <Section id="ip" num="٧" title="الملكية الفكرية">
+        <Section id="ip" num="7" title="الملكية الفكرية">
           <p className="text-lg leading-loose text-muted-foreground">
             جميع محتويات المنصة — بما في ذلك النصوص، القوالب، التصاميم،
             الرسومات، الشعارات، والبرمجيات — هي ملك حصري لمنصة وصيتي ومحمية
@@ -357,14 +359,14 @@ export default function TermsPage() {
         </Section>
 
         {/* 8 ─ حدود المسؤولية */}
-        <Section id="liability" num="٨" title="حدود المسؤولية">
+        <Section id="liability" num="8" title="حدود المسؤولية">
           <p className="text-lg leading-loose text-muted-foreground">
             نحن مسؤولون عن تقديم الخدمات وفقاً لأعلى معايير الجودة والأمان
             المتاحة تقنياً، وعن حماية بياناتك وفقاً للتشريعات السارية.
           </p>
 
-          <div className="bg-red-50 dark:bg-red-950/10 border border-red-200/60 dark:border-red-700/30 rounded-3xl p-6 mt-4">
-            <h4 className="font-bold text-red-800 dark:text-red-200 mb-3 flex items-center gap-2">
+          <div className="bg- text-primary border border-red-200/60 dark:border-red-700/30 rounded-3xl p-6 mt-4">
+            <h4 className="font-bold   mb-3 flex items-center gap-2">
               <RxInfoCircled className="text-lg" />
               لا تتحمل المنصة المسؤولية عن:
             </h4>
@@ -376,10 +378,7 @@ export default function TermsPage() {
                 "دقة المعلومات القانونية التي قد تختلف باختلاف الاختصاص القضائي.",
                 "فقدان البيانات الناتج عن إهمال المستخدم في الحفاظ على نسخة احتياطية.",
               ].map((item, i) => (
-                <li
-                  key={i}
-                  className="flex gap-2 text-sm text-red-700 dark:text-red-300/90"
-                >
+                <li key={i} className="flex gap-2 text-sm  ">
                   <span className="shrink-0">•</span>
                   {item}
                 </li>
@@ -389,7 +388,7 @@ export default function TermsPage() {
         </Section>
 
         {/* 9 ─ إنهاء الخدمة */}
-        <Section id="termination" num="٩" title="إنهاء الخدمة">
+        <Section id="termination" num="9" title="إنهاء الخدمة">
           <p className="text-lg leading-loose text-muted-foreground">
             تحتفظ المنصة بالحق في تعليق أو إنهاء حساب أي مستخدم يخالف هذه الشروط
             أو يساء استخدام المنصة أو يشكل خطراً على أمن المنصة أو مستخدميها.
@@ -407,7 +406,7 @@ export default function TermsPage() {
         </Section>
 
         {/* 10 ─ التعديلات */}
-        <Section id="modifications" num="١٠" title="التعديلات على الشروط">
+        <Section id="modifications" num="10" title="التعديلات على الشروط">
           <p className="text-lg leading-loose text-muted-foreground">
             قد نقوم بتعديل هذه الشروط من وقت لآخر. سنقوم بإشعارك بأي تغييرات
             جوهرية عبر البريد الإلكتروني المسجل في حسابك.
@@ -419,7 +418,7 @@ export default function TermsPage() {
         </Section>
 
         {/* 11 ─ القانون المطبق */}
-        <Section id="governing" num="١١" title="القانون الواجب التطبيق">
+        <Section id="governing" num="11" title="القانون الواجب التطبيق">
           <div className="bg-surface border border-border rounded-3xl p-8 text-center">
             <div className="w-14 h-14 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4 text-3xl">
               <RxReader />
@@ -436,33 +435,45 @@ export default function TermsPage() {
         </Section>
 
         {/* 12 ─ الاتصال */}
-        <Section id="contact" num="١٢" title="اتصل بنا">
-          <div className="bg-surface border border-border rounded-3xl p-8 text-center">
-            <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4 text-3xl">
-              <RxLockClosed />
-            </div>
-            <p className="text-muted-foreground leading-relaxed mb-4">
-              لأي استفسار متعلق بهذه الشروط أو خدمات المنصة:
-            </p>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>
-                <span className="font-bold text-foreground">
-                  البريد الإلكتروني:
-                </span>{" "}
-                <a
-                  href="mailto:support@wasiyati.dz"
-                  className="text-primary font-bold underline underline-offset-2"
-                >
-                  support@wasiyati.dz
-                </a>
-              </p>
-              <p>
-                <span className="font-bold text-foreground">العنوان:</span>{" "}
-                الجزائر، الجمهورية الجزائرية الديمقراطية الشعبية
-              </p>
-            </div>
-          </div>
-        </Section>
+         <Section id="contact" num="7" title="اتصل بنا">
+                  <div className="bg-surface border border-border rounded-3xl p-8 text-center">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4 text-3xl">
+                      <RxEnvelopeClosed />
+                    </div>
+                    <p className="text-muted-foreground leading-relaxed mb-4">
+                      لأي استفسار أو طلب يتعلق ببياناتك الشخصية:
+                    </p>
+                    <div className="space-y-4 text-sm text-muted-foreground max-w-sm mx-auto">
+                      <div className="flex justify-between items-center bg-surface border border-border p-4 rounded-2xl">
+                        <span className="font-bold text-foreground">
+                          البريد الإلكتروني:
+                        </span>
+                        <a
+                          href="mailto:wasiyatidz@gmail.com"
+                          className="text-primary font-bold hover:underline underline-offset-2"
+                        >
+                          wasiyatidz@gmail.com
+                        </a>
+                      </div>
+                      <div className="flex justify-between items-center bg-surface border border-border p-4 rounded-2xl">
+                        <span className="font-bold text-foreground">الواتساب:</span>
+                        <a
+                          href="https://wa.me/213792441574"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#25D366] font-bold flex items-center gap-2 hover:underline underline-offset-2"
+                        >
+                          <FaWhatsapp className="text-xl" />
+                          <p dir="ltr">07 92 44 15 74</p>
+                        </a>
+                      </div>
+                      <div className="text-center pt-2">
+                        <span className="font-bold text-foreground">العنوان:</span>{" "}
+                        الجزائر
+                      </div>
+                    </div>
+                  </div>
+                </Section>
 
         {/* ─────────────── FOOTER LINK ─────────────── */}
         <div className="text-center pt-4 pb-8">
