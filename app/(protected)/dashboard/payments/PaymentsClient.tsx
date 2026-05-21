@@ -24,7 +24,7 @@ import { useRouter } from "next/navigation";
 interface PaymentsClientProps {
   initialOfferKey: OfferKey;
   dbOffers: Offer[];
-  hasWill: boolean; 
+  hasWill: boolean;
 }
 
 export default function PaymentsClient({
@@ -41,6 +41,12 @@ export default function PaymentsClient({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"ccp" | "baridi_mob">(
+    "ccp",
+  );
+  const [baridiOption, setBaridiOption] = useState<"upload" | "email">(
+    "upload",
+  );
   const [isPending, startTransition] = useTransition();
   const [isDeletingSubscription, startDeleteTransition] = useTransition();
 
@@ -65,6 +71,8 @@ export default function PaymentsClient({
     setTimeout(() => {
       setPreviewUrl(null);
       setSelectedFile(null);
+      setPaymentMethod("ccp");
+      setBaridiOption("upload");
     }, 200);
   };
 
@@ -194,7 +202,9 @@ export default function PaymentsClient({
                   disabled={isDeletingSubscription}
                   className="mr-3 bg-red-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-700 transition disabled:opacity-50"
                 >
-                  {isDeletingSubscription ? "جاري الحذف..." : "حذف الاشتراك والوصية"}
+                  {isDeletingSubscription
+                    ? "جاري الحذف..."
+                    : "حذف الاشتراك والوصية"}
                 </button>
               </div>
             </div>
@@ -394,9 +404,7 @@ export default function PaymentsClient({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4 animate-in fade-in duration-200">
           <div className="bg-surface w-full max-w-sm md:max-w-md rounded-3xl shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center p-5 border-b border-border">
-              <h2 className="text-xl font-bold text-foreground">
-                رفع إيصال الدفع
-              </h2>
+              <h2 className="text-xl font-bold text-foreground">إتمام الدفع</h2>
               <button
                 name="close"
                 title="إغلاق"
@@ -406,73 +414,116 @@ export default function PaymentsClient({
                 <RxCross2 className="text-xl" />
               </button>
             </div>
+
             <div className="p-6 space-y-5">
+              {/* Plan summary */}
               <p className="text-sm text-muted-foreground">
                 لإتمام الاشتراك في الباقة{" "}
                 <span className="font-bold text-primary">
                   {dbOffers.find((p) => p.offer_key === selectedPlan)?.name_ar}
                 </span>
-                ، يرجى الاستمرار برفع إيصال التحويل البنكي أو البريدي الخاص بك.
+                ، يرجى اختيار طريقة الدفع وإرفاق الإيصال.
               </p>
-              {previewUrl ? (
-                <div className="relative border-2 border-border rounded-2xl overflow-hidden group h-40 flex items-center justify-center bg-gray-50">
-                  {previewUrl === "pdf-placeholder" ? (
-                    <div className="flex flex-col items-center gap-2 text-primary">
-                      <RxFileText className="text-4xl" />
-                      <p className="text-sm font-bold">ملف PDF مرفق</p>
+
+              {/* Payment method selector */}
+              <div className="flex gap-2 rounded-2xl bg-background p-1.5 border border-border">
+                <button
+                  onClick={() => setPaymentMethod("ccp")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${
+                    paymentMethod === "ccp"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  CCP
+                </button>
+                <button
+                  onClick={() => setPaymentMethod("baridi_mob")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${
+                    paymentMethod === "baridi_mob"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  بريدي موب
+                </button>
+              </div>
+
+              {/* File upload area */}
+              {true && (
+                <>
+                  {previewUrl ? (
+                    <div className="relative border-2 border-border rounded-2xl overflow-hidden group h-40 flex items-center justify-center bg-gray-50">
+                      {previewUrl === "pdf-placeholder" ? (
+                        <div className="flex flex-col items-center gap-2 text-primary">
+                          <RxFileText className="text-4xl" />
+                          <p className="text-sm font-bold">ملف PDF مرفق</p>
+                        </div>
+                      ) : (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={previewUrl}
+                          alt="معاينة الإيصال"
+                          className="w-full h-full object-contain"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button
+                          title="إزالة الصورة"
+                          onClick={() => {
+                            setPreviewUrl(null);
+                            setSelectedFile(null);
+                          }}
+                          className="bg-white/90 text-red-500 rounded-full p-3 shadow-md hover:bg-white hover:scale-110 transition-all"
+                        >
+                          <RxCross2 className="text-2xl font-bold" />
+                        </button>
+                      </div>
                     </div>
                   ) : (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
-                      src={previewUrl}
-                      alt="معاينة الإيصال"
-                      className="w-full h-full object-contain"
-                    />
+                    <label className="block border-2 border-dashed border-border rounded-2xl p-6 text-center hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer group">
+                      <RxUpload className="text-3xl text-gray-400 mx-auto mb-3 group-hover:text-primary transition-colors" />
+                      <p className="text-sm font-bold text-foreground">
+                        اضغط هنا لاختيار الملف
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        (PNG, JPG, PDF) بحد أقصى 5 ميجابايت
+                      </p>
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
+                    </label>
                   )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button
-                      title="إزالة الصورة"
-                      onClick={() => {
-                        setPreviewUrl(null);
-                        setSelectedFile(null);
-                      }}
-                      className="bg-white/90 text-red-500 rounded-full p-3 shadow-md hover:bg-white hover:scale-110 transition-all"
-                    >
-                      <RxCross2 className="text-2xl font-bold" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <label className="block border-2 border-dashed border-border rounded-2xl p-6 text-center hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer group">
-                  <RxUpload className="text-3xl text-gray-400 mx-auto mb-3 group-hover:text-primary transition-colors" />
-                  <p className="text-sm font-bold text-foreground">
-                    اضغط هنا لاختيار الملف
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    (PNG, JPG, PDF) بحد أقصى 5 ميجابايت
-                  </p>
-                  <input
-                    type="file"
-                    accept="image/*,.pdf"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                </label>
+                </>
               )}
+
+             
             </div>
+
             <div className="p-5 bg-background border-t border-border flex gap-3">
               <button
                 onClick={async () => {
-                  if (!previewUrl || !selectedDbOfferId || !selectedFile) {
+                  const needsFile =
+                    paymentMethod === "ccp" || baridiOption === "upload";
+
+                  if (needsFile && (!previewUrl || !selectedFile)) {
                     toast.error("يرجى اختيار ملف صحيح");
+                    return;
+                  }
+
+                  if (!selectedDbOfferId) {
+                    toast.error("حدث خطأ: لم يتم تحديد الباقة");
                     return;
                   }
 
                   startTransition(async () => {
                     const formData = new FormData();
                     formData.append("offer_id", selectedDbOfferId);
-                    formData.append("receipt", selectedFile);
-                    console.log("offer id: ", selectedDbOfferId);
+                    formData.append("payment_method", paymentMethod);
+                    if (selectedFile) formData.append("receipt", selectedFile);
 
                     const res = await submitPayment(formData);
                     if (res.success) {
@@ -485,7 +536,7 @@ export default function PaymentsClient({
 
                       toast.success(
                         res.isNew
-                          ? "تم إرسال إيصالك للمراجعة بنجاح! سيتم إشعارك قريباً."
+                          ? "تم إرسال طلب الاشتراك للمراجعة بنجاح! سيتم إشعارك قريباً."
                           : blockingMessage,
                       );
                       closeModal();
@@ -494,7 +545,11 @@ export default function PaymentsClient({
                     }
                   });
                 }}
-                disabled={!previewUrl || isPending}
+                disabled={
+                  isPending ||
+                  (paymentMethod === "ccp" && !previewUrl) ||
+                  (paymentMethod === "baridi_mob" && !previewUrl)
+                }
                 className="flex-1 bg-primary text-primary-foreground py-3 rounded-xl text-sm font-bold shadow-sm hover:opacity-90 transition active:scale-95 disabled:opacity-50 disabled:active:scale-100"
               >
                 {isPending ? "جاري الإرسال..." : "تأكيد الإرسال"}

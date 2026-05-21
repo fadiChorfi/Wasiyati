@@ -61,6 +61,8 @@ export interface Subscription {
   user_id: string;
   offer_id: string;
   status: SubscriptionStatus;
+  payment_method: string | null;
+  payment_email: string | null;
   receipt_url: string | null;
   receipt_path: string | null;
   started_at: string | null;

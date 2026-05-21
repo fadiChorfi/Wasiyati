@@ -66,10 +66,20 @@ export async function submitPayment(formData: FormData) {
   if (authError || !user) return { success: false, error: "Unauthorized" };
 
   const offerId = formData.get("offer_id") as string;
-  const receiptFile = formData.get("receipt") as File;
+  const receiptFile = formData.get("receipt") as File | null;
+  const paymentMethod = formData.get("payment_method") as string;
+  const paymentEmail = formData.get("payment_email") as string;
 
-  if (!offerId || !receiptFile) {
-    return { success: false, error: "Missing offer or receipt" };
+  if (!offerId) {
+    return { success: false, error: "Missing offer" };
+  }
+
+  if (paymentMethod === "baridi_mob" && !receiptFile && !paymentEmail) {
+    return { success: false, error: "يرجى رفع إيصال أو إدخال البريد الإلكتروني" };
+  }
+
+  if (paymentMethod !== "baridi_mob" && !receiptFile) {
+    return { success: false, error: "Missing receipt" };
   }
 
   try {
@@ -104,7 +114,6 @@ export async function submitPayment(formData: FormData) {
 
           if (existingWillError) throw existingWillError;
 
-          // Legacy cleanup: active sub already consumed by a will -> expire it and continue.
           if (existingWillRows && existingWillRows.length > 0) {
             const { error: expireError } = await supabase
               .from("subscriptions")
@@ -128,35 +137,46 @@ export async function submitPayment(formData: FormData) {
       }
     }
 
-    // 2. upload receipt to storage
-    const ext = receiptFile.name.split(".").pop();
-    const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+    let receiptPath: string | null = null;
+    let signedUrl: string | null = null;
 
-    const { error: uploadError } = await supabase.storage
-      .from("payement_receipts")
-      .upload(path, receiptFile);
+    // 2. upload receipt if provided
+    if (receiptFile) {
+      const ext = receiptFile.name.split(".").pop();
+      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
 
-    if (uploadError) throw uploadError;
+      const { error: uploadError } = await supabase.storage
+        .from("payement_receipts")
+        .upload(path, receiptFile);
 
-    // 3. get signed URL (1 year — admin uses this to view the receipt)
-    const { data: signedUrlData, error: signUrlError } = await supabase.storage
-      .from("payement_receipts")
-      .createSignedUrl(path, 60 * 60 * 24 * 365);
+      if (uploadError) throw uploadError;
 
-    if (signUrlError || !signedUrlData)
-      throw signUrlError || new Error("Failed to create signed URL");
-    const signedUrl = signedUrlData.signedUrl;
+      const { data: signedUrlData, error: signUrlError } = await supabase.storage
+        .from("payement_receipts")
+        .createSignedUrl(path, 60 * 60 * 24 * 365);
 
-    // 4. create pending subscription
+      if (signUrlError || !signedUrlData)
+        throw signUrlError || new Error("Failed to create signed URL");
+
+      receiptPath = path;
+      signedUrl = signedUrlData.signedUrl;
+    }
+
+    // 3. create pending subscription
+    const insertPayload: Record<string, unknown> = {
+      user_id: user.id,
+      offer_id: offerId,
+      status: "pending",
+      payment_method: paymentMethod || "ccp",
+    };
+
+    if (receiptPath) insertPayload.receipt_path = receiptPath;
+    if (signedUrl) insertPayload.receipt_url = signedUrl;
+    if (paymentEmail) insertPayload.payment_email = paymentEmail;
+
     const { data: newSubscription, error: insertError } = await supabase
       .from("subscriptions")
-      .insert({
-        user_id: user.id,
-        offer_id: offerId,
-        status: "pending",
-        receipt_path: path,
-        receipt_url: signedUrl,
-      })
+      .insert(insertPayload)
       .select("*")
       .single();
 
@@ -175,7 +195,7 @@ export async function submitPayment(formData: FormData) {
       }
     }
 
-    // Notify admins about new subscription submission (same pattern as will submission)
+    // Notify admins about new subscription submission
     const { data: adminProfiles } = await supabase
       .from("profiles")
       .select("id")
@@ -189,7 +209,9 @@ export async function submitPayment(formData: FormData) {
             user_id: admin.id,
             type: "submission_received" as const,
             title_ar: "طلب اشتراك جديد",
-            message_ar: "تم إرسال طلب اشتراك جديد من أحد العملاء وبانتظار المراجعة.",
+            message_ar: paymentEmail
+              ? `تم إرسال طلب اشتراك جديد (بريدي موب - بريد إلكتروني: ${paymentEmail}).`
+              : "تم إرسال طلب اشتراك جديد من أحد العملاء وبانتظار المراجعة.",
             subscription_id: newSubscription.id,
             is_read: false,
           })),
