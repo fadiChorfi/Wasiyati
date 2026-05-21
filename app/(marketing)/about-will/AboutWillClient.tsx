@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
-import { RxCheck } from "react-icons/rx";
+import { RxArrowLeft, RxCheck } from "react-icons/rx";
 
 export default function AboutWillClient() {
   const [activeSection, setActiveSection] = useState("definition");
@@ -378,7 +379,7 @@ export default function AboutWillClient() {
             </div>
           </div>
 
-          <div className="bg-red-50 dark:bg-red-950/20 border-s-4 border-red-500 rounded-e-xl p-6 text-red-900 dark:text-red-200">
+          <div className=" border-s-4 rounded-e-xl p-6 ">
             <p className="font-bold mb-2 flex items-center gap-2">
               ⚠️ استبعاد الوصية الشفوية تماماً
             </p>
@@ -550,6 +551,15 @@ export default function AboutWillClient() {
             </div>
           </div>
         </section>
+        <div className="text-center pt-4 pb-8">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline underline-offset-4 decoration-primary/30"
+          >
+            <RxArrowLeft className="text-lg" />
+            العودة إلى الصفحة الرئيسية
+          </Link>
+        </div>
       </div>
     </div>
   );

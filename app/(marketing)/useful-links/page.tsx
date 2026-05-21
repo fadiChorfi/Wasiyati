@@ -1,4 +1,4 @@
-import { RxExternalLink, RxFileText } from "react-icons/rx";
+import { RxArrowLeft, RxExternalLink, RxFileText } from "react-icons/rx";
 import { Metadata } from "next";
 import Link from "next/link";
 
@@ -129,12 +129,13 @@ export default function UsefulLinksPage() {
           </div>
         ))}
 
-        <div className="text-center pt-6">
+        <div className="text-center pt-4 pb-8">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
+            className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline underline-offset-4 decoration-primary/30"
           >
-            العودة إلى الرئيسية
+            <RxArrowLeft className="text-lg" />
+            العودة إلى الصفحة الرئيسية
           </Link>
         </div>
       </div>

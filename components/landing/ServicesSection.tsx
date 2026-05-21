@@ -12,8 +12,7 @@ const services = [
     title: "الوصية العامة",
     description:
       "خدمة تمكّنك من إنشاء وصية شاملة تشمل أموالك وأعمالك، مع احترام القانون و أحكام الشريعة الإسلامية  الجزائري.",
-    image:
-      "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=400",
+    image: "/generalwill.webp",
   },
   {
     title: "وصية بالأموال",
