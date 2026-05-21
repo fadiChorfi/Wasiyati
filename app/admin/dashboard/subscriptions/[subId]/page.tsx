@@ -16,6 +16,7 @@ interface SubscriptionData {
   status: "active" | "cancelled" | "pending";
   created_at: string;
   receipt_url: string;
+  payment_method: string | null;
   profiles: {
     full_name_ar: string;
     full_name_en: string;
@@ -138,6 +139,22 @@ export default function SubscriptionDetails() {
                 <span className="text-muted-foreground">السعر</span>
                 <span className="font-bold text-foreground">
                   {sub.offers?.price} د.ج
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">طريقة الدفع</span>
+                <span className="font-bold text-foreground bg-primary/5 px-3 py-1 rounded-xl text-xs flex items-center gap-1.5">
+                  {sub.payment_method === "baridi_mob" ? (
+                    <>
+                      <span className="text-primary">📱</span>
+                      بريدي موب
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-primary">💳</span>
+                      CCP
+                    </>
+                  )}
                 </span>
               </div>
               <div className="flex justify-between items-center">

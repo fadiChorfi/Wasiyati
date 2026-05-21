@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { RxArchive, RxBell, RxExit, RxGear, RxPerson } from "react-icons/rx";
+import {  RxBell, RxExit, RxGear } from "react-icons/rx";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useUser } from "@/context/UserContext";
 import Image from "next/image";
@@ -335,15 +335,15 @@ export default function AdminTopBar() {
               dir="rtl"
             >
               <div className="py-2">
-                <button className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+                {/* <button className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
                   <RxArchive className="text-lg text-gray-500" />
                   عروضي
-                </button>
-                <button className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+                </button> */}
+                {/* <button className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
                   <RxPerson className="text-lg text-gray-500" />
                   الملف الشخصي
-                </button>
-                <button className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+                </button> */}
+                <button onClick={()=>router.push('/admin/dashboard/settings')} className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
                   <RxGear className="text-lg text-gray-500" />
                   الإعدادات
                 </button>

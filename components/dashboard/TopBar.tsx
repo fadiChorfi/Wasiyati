@@ -1,14 +1,7 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-import {
-  RxBell,
-  RxPerson,
-  RxArchive,
-  RxGear,
-  RxExit,
-  RxPlus,
-} from "react-icons/rx";
+import { usePathname, useRouter } from "next/navigation";
+import { RxBell, RxArchive, RxGear, RxExit, RxPlus } from "react-icons/rx";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useUser } from "@/context/UserContext";
 import Image from "next/image";
@@ -135,6 +128,13 @@ export default function TopBar() {
       void supabase.removeChannel(channel);
     };
   }, [profile?.id, supabase]);
+
+  const router = useRouter();
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  };
 
   useEffect(() => {
     if (!profile?.id) return;
@@ -344,7 +344,20 @@ export default function TopBar() {
               dir="rtl"
             >
               <div className="py-2">
-                <button className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center justify-between group">
+                {profile?.role === "admin" && (
+                  <Link
+                    href="/admin/dashboard"
+                    className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                  >
+                    <RxGear className="text-lg text-[#19714f]" />{" "}
+                    {/* you can adjust the icon color to match your admin color schema */}
+                    لوحة تحكم المشرف
+                  </Link>
+                )}
+                <button
+                  onClick={() => router.push("/dashboard/payments")}
+                  className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center justify-between group"
+                >
                   <div className="flex items-center gap-2">
                     <RxArchive className="text-lg text-gray-500" />
                     عروضي
@@ -353,16 +366,22 @@ export default function TopBar() {
                     نشط
                   </span>
                 </button>
-                <button className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+                {/* <button className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
                   <RxPerson className="text-lg text-gray-500" />
                   الملف الشخصي
-                </button>
-                <button className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+                </button> */}
+                <button
+                  onClick={() => router.push("/dashboard/settings")}
+                  className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                >
                   <RxGear className="text-lg text-gray-500" />
                   الإعدادات
                 </button>
                 <div className="border-t border-gray-100 my-1"></div>
-                <button className="w-full text-right px-4 py-2.5 text-sm text-red-500 font-bold hover:bg-red-50 transition-colors flex items-center gap-2">
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-right px-4 py-2.5 text-sm text-red-500 font-bold hover:bg-red-50 transition-colors flex items-center gap-2"
+                >
                   <RxExit className="text-lg" />
                   تسجيل الخروج
                 </button>

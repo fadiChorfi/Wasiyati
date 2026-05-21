@@ -2,10 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { RxDashboard, RxFileText, RxIdCard, RxGear } from "react-icons/rx";
+import {
+  RxDashboard,
+  RxFileText,
+  RxIdCard,
+  RxGear,
+  RxArrowRight,
+} from "react-icons/rx";
+import { useUser } from "@/context/UserContext";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const user = useUser();
 
   const navItems = [
     { label: "الرئيسية", href: "/dashboard", icon: RxDashboard },
@@ -23,6 +31,18 @@ export default function Sidebar() {
 
       <div className="flex-1 overflow-y-auto py-6 px-4">
         <nav className="flex flex-col gap-2">
+          {user.role === "admin" && (
+            <Link
+              href="/admin/dashboard"
+              className="flex items-center justify-between gap-3 px-4 min-h-11 rounded-xl font-bold transition-all text-sm bg-accent/10 border border-accent/20 text-accent-foreground shadow-sm hover:bg-accent hover:text-white"
+            >
+              <div className="flex items-center gap-3">
+                <RxDashboard className="text-xl" />
+                <span>لوحة تحكم المشرف</span>
+              </div>
+            </Link>
+          )}
+
           {navItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
@@ -45,6 +65,16 @@ export default function Sidebar() {
             );
           })}
         </nav>
+      </div>
+
+      <div className="p-4 border-t border-gray-100">
+        <Link
+          href="/"
+          className="flex items-center gap-3 px-4 min-h-11 rounded-xl font-bold transition-all text-sm text-[#06281e] hover:bg-gray-50 border border-transparent"
+        >
+          <RxArrowRight className="text-xl text-[#19714f]" />
+          <span>العودة للمنصة</span>
+        </Link>
       </div>
     </aside>
   );
