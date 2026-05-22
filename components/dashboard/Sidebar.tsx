@@ -17,7 +17,7 @@ export default function Sidebar() {
 
   const navItems = [
     { label: "الرئيسية", href: "/dashboard", icon: RxDashboard },
-    { label: "وصاياي", href: "/dashboard/wills", icon: RxFileText },
+    { label: "وصايا", href: "/dashboard/wills", icon: RxFileText },
     { label: "طلب جديد", href: "/dashboard/new-request", icon: RxFileText },
     { label: "المدفوعات", href: "/dashboard/payments", icon: RxIdCard },
     { label: "الإعدادات", href: "/dashboard/settings", icon: RxGear },

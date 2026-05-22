@@ -185,7 +185,7 @@ export default function TopBar() {
   };
 
   let title = "نظرة عامة";
-  if (pathname.includes("/wills")) title = "وصاياي";
+  if (pathname.includes("/wills")) title = "وصايا";
   if (pathname.includes("/new-request")) title = "إنشاء وصية جديدة";
   if (pathname.includes("/payments")) title = "المدفوعات";
   if (pathname.includes("/settings")) title = "الإعدادات";
