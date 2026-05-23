@@ -25,8 +25,7 @@ const services = [
     title: "وصية بالأعمال",
     description:
       "خدمة تمكّنك من تحديد وتنظيم الأعمال أو المهام التي ترغب في تنفيذها بعد وفاتك، وفقًا للأحكام الشرعية والقانونية المعمول بها.",
-    image:
-      "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=400",
+    image: "/workWill.webp",
   },
 ];
 
