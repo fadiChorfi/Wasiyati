@@ -449,6 +449,34 @@ export default function PaymentsClient({
                 </button>
               </div>
 
+              {/* CCP account details */}
+              {paymentMethod === "ccp" && (
+                <div className="rounded-xl border border-border px-4 py-3 text-center">
+                  <span className="text-xs text-muted-foreground">CCP</span>
+                  <p
+                    className="text-sm font-bold text-foreground tracking-wide mt-1"
+                    dir="ltr"
+                  >
+                    28840775 Clé 03
+                  </p>
+                </div>
+              )}
+
+              {/* Baridi Mob account details */}
+              {paymentMethod === "baridi_mob" && (
+                <div className="rounded-xl border border-border px-4 py-3 text-center">
+                  <span className="text-xs text-muted-foreground">
+                    Baridi Mob
+                  </span>
+                  <p
+                    className="text-sm font-bold text-foreground tracking-wide mt-1"
+                    dir="ltr"
+                  >
+                    007 99999 0028 8407 7538
+                  </p>
+                </div>
+              )}
+
               {/* File upload area */}
               {true && (
                 <>
@@ -499,8 +527,6 @@ export default function PaymentsClient({
                   )}
                 </>
               )}
-
-             
             </div>
 
             <div className="p-5 bg-background border-t border-border flex gap-3">
