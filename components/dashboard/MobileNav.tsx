@@ -15,7 +15,7 @@ export default function MobileNav() {
 
   const navItems = [
     { label: "الرئيسية", href: "/dashboard", icon: RxDashboard },
-    { label: "وصاياي", href: "/dashboard/wills", icon: RxFileText },
+    { label: "وصايا", href: "/dashboard/wills", icon: RxFileText },
     {
       label: "جديد",
       href: "/dashboard/new-request",
