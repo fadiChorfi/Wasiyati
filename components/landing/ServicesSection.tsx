@@ -6,6 +6,7 @@ import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import ActionButton from "./ActionButton";
 import SectionBadge from "./SectionBadge";
 import ServiceCard from "./ServiceCard";
+import { useRouter } from "next/navigation";
 
 const services = [
   {
@@ -35,6 +36,8 @@ export default function ServicesSection() {
     left: 0,
     width: 0,
   });
+
+  const router = useRouter();
 
   return (
     <section
@@ -121,6 +124,7 @@ export default function ServicesSection() {
           <div className="inline-flex flex-col items-center gap-4" dir="ltr">
             <ActionButton
               label="اكتشف جميع الباقات و الأسعار"
+              onClick={() => router.push("/offer")}
               variant="primary"
               className="  text-base font-bold hidden md:inline-flex   text-white"
               icon={<RxArrowTopLeft />}

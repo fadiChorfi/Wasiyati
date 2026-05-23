@@ -51,7 +51,7 @@ export default function OfferPage() {
 
   return (
     <div
-      className="space-y-6 md:px-6 py-4 pb-24 md:pb-6 mt-16 max-w-6xl mx-auto"
+      className="space-y-6 mx-2 md:px-6 py-4 pb-24 md:pb-6  max-w-6xl md:mx-auto"
       dir="rtl"
     >
       <div className="bg-surface rounded-3xl border border-border p-6 shadow-sm mb-6 text-center md:text-right">
@@ -152,18 +152,6 @@ export default function OfferPage() {
                   </li>
                 ))}
               </ul>
-
-              <Link href={`/dashboard/payments?offer_key=${config.key}`}>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                  className={`w-full py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 mt-auto ${isSelected ? "bg-primary text-primary-foreground font-bold shadow-md hover:bg-primary/90" : uiPlan.colors.btn}`}
-                >
-                  الاشتراك في الباقة
-                  <RxArrowLeft />
-                </button>
-              </Link>
             </div>
           );
         })}
