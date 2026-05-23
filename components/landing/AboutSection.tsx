@@ -57,7 +57,7 @@ export default function AboutSection() {
           <div className="flex-1 w-full">
             <div className="relative h-87.5 w-full md:h-125 overflow-hidden rounded-[28px] bg-gray-100 shadow-sm">
               <Image
-                src="/about.jpg"
+                src="https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=1200"
                 className="object-cover"
                 alt="من نحن"
                 fill
