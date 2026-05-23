@@ -6,10 +6,8 @@ import {
   RxFileText,
   RxLockClosed,
   RxStar,
-  RxArrowLeft,
 } from "react-icons/rx";
 import { OFFERS } from "@/config/offers";
-import Link from "next/link";
 
 export default function OfferPage() {
   const [selectedPlan, setSelectedPlan] = useState<string>("medium");
