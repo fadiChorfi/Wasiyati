@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import ActionButton from "./ActionButton";
+import Image from "next/image";
 
 const links = [
   { name: "الرئيسية", href: "/" },
@@ -141,10 +142,17 @@ export default function Navbar() {
           className="flex items-center gap-1 px-3 py-1 mr-1 z-50 relative"
           dir="rtl"
         >
-          <Link href="/">
-            <h2 className="text-2xl font-bold text-foreground cursor-pointer">
+          <Link href="/" className=" ">
+            {/* <h2 className="text-2xl font-bold text-foreground cursor-pointer">
               وصيتي
-            </h2>
+            </h2> */}
+            <Image
+              src="/logo.png"
+              alt="وصيتي"
+              width={120}
+              height={10}
+              className="object-contain"
+            />
           </Link>
           {/* Divider */}
         </div>
