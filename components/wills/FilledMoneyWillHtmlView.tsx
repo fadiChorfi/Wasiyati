@@ -75,11 +75,23 @@ export default function FilledWillHtmlView({
   onDownloadPdf?: () => void;
 }) {
   if (variant === "general") {
-    return <FilledGeneralWillHtmlView data={data} />;
+    return (
+      <FilledGeneralWillHtmlView
+        data={data}
+        onOpenPdf={onOpenPdf}
+        onDownloadPdf={onDownloadPdf}
+      />
+    );
   }
 
   if (variant === "business") {
-    return <FilledBusinessWillHtmlView data={data} />;
+    return (
+      <FilledBusinessWillHtmlView
+        data={data}
+        onOpenPdf={onOpenPdf}
+        onDownloadPdf={onDownloadPdf}
+      />
+    );
   }
 
   return (
@@ -247,6 +259,13 @@ export default function FilledWillHtmlView({
         </div>
 
         <div className="mb-4 flex flex-wrap items-end gap-x-3 gap-y-4">
+          <span>المولود بتاريخ:</span>
+
+          <Field
+            value={data.beneficiary_birth_date}
+            width="min-w-[150px]"
+          />
+
           <span>بـ:</span>
 
           <Field
@@ -254,7 +273,7 @@ export default function FilledWillHtmlView({
             width="min-w-[180px]"
           />
 
-          <span>المقيم بـ:</span>
+          <span>والمقيم بـ:</span>
 
           <Field
             value={data.beneficiary_residence}
