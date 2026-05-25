@@ -263,10 +263,10 @@ export default function FilledWillHtmlView({
         <div className="mb-4 flex flex-wrap items-end gap-x-3 gap-y-4">
           <span>المولود بتاريخ:</span>
 
-          <Field
+          {/* <Field
             value={data.beneficiary_birth_date}
             width="min-w-[120px] md:min-w-[150px]"
-          />
+          /> */}
 
           <span>بـ:</span>
 
