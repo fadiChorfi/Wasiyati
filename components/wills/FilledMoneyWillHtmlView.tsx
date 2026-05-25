@@ -41,7 +41,7 @@ type FieldProps = {
 
 function Field({
   value,
-  width = "min-w-[140px]",
+  width = "min-w-[100px] md:min-w-[140px]",
   align = "text-center",
 }: FieldProps) {
   return (
@@ -101,11 +101,13 @@ export default function FilledWillHtmlView({
       className="
         mx-auto
         w-full
-        max-w-[210mm]
-        min-h-[297mm]
+        max-w-full
+        md:max-w-[210mm]
         bg-white
-        px-[18mm]
-        py-[20mm]
+        px-4
+        md:px-[18mm]
+        py-4
+        md:py-[20mm]
         text-[15px]
         leading-loose
         text-black
@@ -169,21 +171,21 @@ export default function FilledWillHtmlView({
 
           <Field
             value={data.testator_full_name}
-            width="min-w-[260px]"
+            width="min-w-[140px] md:min-w-[260px]"
           />
 
           <span>المولود(ة) بتاريخ:</span>
 
           <Field
             value={data.testator_birth_date}
-            width="min-w-[150px]"
+            width="min-w-[120px] md:min-w-[150px]"
           />
 
           <span>بـ:</span>
 
           <Field
             value={data.testator_birth_place}
-            width="min-w-[170px]"
+            width="min-w-[120px] md:min-w-[170px]"
           />
         </div>
 
@@ -192,14 +194,14 @@ export default function FilledWillHtmlView({
 
           <Field
             value={data.testator_profession}
-            width="min-w-[170px]"
+            width="min-w-[120px] md:min-w-[170px]"
           />
 
           <span>المقيم بـ:</span>
 
           <Field
             value={data.testator_residence}
-            width="min-w-[320px]"
+            width="min-w-[150px] md:min-w-[320px]"
             align="text-right"
           />
         </div>
@@ -211,21 +213,21 @@ export default function FilledWillHtmlView({
 
           <Field
             value={data.testator_national_id}
-            width="min-w-[180px]"
+            width="min-w-[130px] md:min-w-[180px]"
           />
 
           <span>الصادرة بتاريخ:</span>
 
           <Field
             value={data.testator_id_issue_date}
-            width="min-w-[120px]"
+            width="min-w-[90px] md:min-w-[120px]"
           />
 
           <span>عن دائرة:</span>
 
           <Field
             value={data.testator_id_issue_place}
-            width="min-w-[180px]"
+            width="min-w-[130px] md:min-w-[180px]"
           />
         </div>
       </div>
@@ -247,14 +249,14 @@ export default function FilledWillHtmlView({
 
           <Field
             value={data.beneficiary_full_name}
-            width="min-w-[260px]"
+            width="min-w-[140px] md:min-w-[260px]"
           />
 
           <span>صلة القرابة:</span>
 
           <Field
             value={data.beneficiary_relationship}
-            width="min-w-[160px]"
+            width="min-w-[120px] md:min-w-[160px]"
           />
         </div>
 
@@ -263,21 +265,21 @@ export default function FilledWillHtmlView({
 
           <Field
             value={data.beneficiary_birth_date}
-            width="min-w-[150px]"
+            width="min-w-[120px] md:min-w-[150px]"
           />
 
           <span>بـ:</span>
 
           <Field
             value={data.beneficiary_birth_place}
-            width="min-w-[180px]"
+            width="min-w-[130px] md:min-w-[180px]"
           />
 
           <span>والمقيم بـ:</span>
 
           <Field
             value={data.beneficiary_residence}
-            width="min-w-[320px]"
+            width="min-w-[150px] md:min-w-[320px]"
             align="text-right"
           />
         </div>
@@ -352,14 +354,14 @@ export default function FilledWillHtmlView({
 
             <Field
               value={data.witness_1}
-              width="min-w-[260px]"
+              width="min-w-[140px] md:min-w-[260px]"
             />
 
             <span>التوقيع:</span>
 
             <Field
               value={data.witness_1_signature}
-              width="min-w-[180px]"
+              width="min-w-[130px] md:min-w-[180px]"
             />
           </div>
 
@@ -370,14 +372,14 @@ export default function FilledWillHtmlView({
 
             <Field
               value={data.witness_2}
-              width="min-w-[260px]"
+              width="min-w-[140px] md:min-w-[260px]"
             />
 
             <span>التوقيع:</span>
 
             <Field
               value={data.witness_2_signature}
-              width="min-w-[180px]"
+              width="min-w-[130px] md:min-w-[180px]"
             />
           </div>
         </div>
@@ -402,14 +404,14 @@ export default function FilledWillHtmlView({
 
           <Field
             value={data.testator_birth_place}
-            width="min-w-[180px]"
+            width="min-w-[130px] md:min-w-[180px]"
           />
 
           <span>في:</span>
 
           <Field
             value={data.created_at}
-            width="min-w-[180px]"
+            width="min-w-[130px] md:min-w-[180px]"
           />
         </div>
       </section>

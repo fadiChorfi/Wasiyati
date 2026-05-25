@@ -363,8 +363,8 @@ export default function WillDetailsPage() {
 
   if (loading) {
     return (
-      <div className="space-y-5 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
-        <div className="bg-surface rounded-3xl border border-border shadow-sm p-10 min-h-[50vh] flex items-center justify-center">
+    <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+      <div className="bg-surface rounded-3xl border border-border shadow-sm p-10 min-h-[50vh] flex items-center justify-center">
           <div className="text-center">
             <RxClock className="text-4xl text-muted-foreground animate-pulse mx-auto mb-4" />
             <p className="text-muted-foreground font-medium">
@@ -378,7 +378,7 @@ export default function WillDetailsPage() {
 
   if (error || !will) {
     return (
-      <div className="space-y-5 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+      <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
         <div className="bg-surface rounded-3xl border border-border shadow-sm p-10 min-h-[50vh] flex items-center justify-center">
           <div className="text-center">
             <RxCross2 className="text-4xl text-red-500 mx-auto mb-4" />
@@ -400,7 +400,7 @@ export default function WillDetailsPage() {
   const b = getStatusBadge(will.status);
 
   return (
-    <div className="space-y-5 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
+    <div className="space-y-5 px-4 md:px-6 py-4 pb-24 md:pb-6" dir="rtl">
       <div className="bg-primary rounded-3xl p-6 md:p-8 overflow-hidden relative">
         <div className="absolute w-64 h-64 rounded-full bg-primary-foreground/5 -bottom-12 -right-12"></div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -461,7 +461,7 @@ export default function WillDetailsPage() {
       {/* Approved template preview */}
       {will.status === "approved" ? (
         <div className="space-y-4">
-          <div className="bg-surface hidden rounded-2xl border border-border p-4  flex-col md:flex-row gap-3 md:items-center md:justify-between">
+          <div className="bg-surface rounded-2xl border border-border p-4 flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
             <p className="text-sm text-muted-foreground">
               إنشاء ملف PDF مطابق للقالب الأصلي مع تعبئة بيانات الوصية.
             </p>

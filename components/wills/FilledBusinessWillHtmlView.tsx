@@ -35,7 +35,7 @@ export default function FilledBusinessWillHtmlView({
   onDownloadPdf?: () => void;
 }) {
   return (
-    <div className="mx-auto w-full max-w-[210mm] min-h-[297mm] bg-white p-[18mm] shadow-sm border border-border flex flex-col gap-2">
+    <div className="mx-auto w-full max-w-full md:max-w-[210mm] bg-white p-4 md:p-[18mm] shadow-sm border border-border flex flex-col gap-2">
       {/* PDF BUTTONS */}
       <div className="mb-6 flex justify-end gap-3 print:hidden">
         <button
