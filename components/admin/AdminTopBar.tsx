@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import {  RxBell, RxExit, RxGear } from "react-icons/rx";
+import { RxBell, RxExit, RxGear } from "react-icons/rx";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useUser } from "@/context/UserContext";
 import Image from "next/image";
@@ -249,7 +249,9 @@ export default function AdminTopBar() {
                     <div
                       key={notif.id}
                       className={`p-4 border-b border-border/50 flex gap-3 hover:bg-black/5 transition-colors ${
-                        !notif.is_read ? "bg-background" : "bg-black/5 opacity-75"
+                        !notif.is_read
+                          ? "bg-background"
+                          : "bg-black/5 opacity-75"
                       }`}
                     >
                       <div
@@ -343,12 +345,16 @@ export default function AdminTopBar() {
                   <RxPerson className="text-lg text-gray-500" />
                   الملف الشخصي
                 </button> */}
-                <button onClick={()=>router.push('/admin/dashboard/settings')} className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+                <button
+                  onClick={() => router.push("/admin/dashboard/settings")}
+                  className="w-full text-right px-4 py-2.5 text-sm text-[#06281e] font-medium hover:bg-gray-50 transition-colors flex items-center gap-2"
+                >
                   <RxGear className="text-lg text-gray-500" />
                   الإعدادات
                 </button>
                 <div className="border-t border-gray-100 my-1"></div>
                 <button
+                  type="button"
                   onClick={handleLogout}
                   className="w-full text-right px-4 py-2.5 text-sm text-red-500 font-bold hover:bg-red-50 transition-colors flex items-center gap-2"
                 >
