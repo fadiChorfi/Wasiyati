@@ -265,15 +265,11 @@ export default function WillDetailsPage() {
       if (!will) return;
 
       const testator = will.testator ?? will.testators?.[0] ?? null;
-      const financial = testator?.financial_status?.[0] ?? null;
       const beneficiary = will.will_beneficiaries?.[0] ?? null;
       const witness1 = will.witnesses?.find((w) => w.witness_number === 1);
       const witness2 = will.witnesses?.find((w) => w.witness_number === 2);
 
-      const fields: Record<string, string | number> = {
-        will_id: will.id,
-        will_category: getWillTypeLabel(will.will_category),
-        created_at: new Date(will.created_at).toLocaleDateString("ar-DZ"),
+      const fields: Record<string, string> = {
         testator_full_name:
           `${testator?.first_name ?? ""} ${testator?.last_name ?? ""}`.trim(),
         testator_birth_date: testator?.birth_date ?? "",
@@ -285,75 +281,59 @@ export default function WillDetailsPage() {
         testator_id_issue_place: testator?.id_issue_place ?? "",
         beneficiary_full_name: beneficiary?.full_name ?? "",
         beneficiary_relationship: beneficiary?.relationship ?? "",
+        beneficiary_birth_place: "",
+        beneficiary_residence: "",
         subject_of_will: will.subject_of_will ?? "",
         witness_1:
           `${witness1?.first_name ?? ""} ${witness1?.last_name ?? ""}`.trim(),
+        witness_1_signature: "",
         witness_2:
           `${witness2?.first_name ?? ""} ${witness2?.last_name ?? ""}`.trim(),
-        number_of_children: financial?.number_of_children ?? 0,
-        boys: financial?.boys ?? 0,
-        girls: financial?.girls ?? 0,
-        total_money:
-          financial?.total_money == null ? "" : String(financial.total_money),
+        witness_2_signature: "",
+        place: testator?.birth_place ?? "",
+        created_at: new Date(will.created_at).toLocaleDateString("ar-DZ"),
       };
+
+      const htmlTemplateName =
+        will.will_category === "business"
+          ? "business-will.html"
+          : will.will_category === "money"
+            ? "money-will.html"
+            : "general-will.html";
 
       try {
         setIsGeneratingPdf(true);
-        const htmlTemplateName =
-          will.will_category === "business"
-            ? "business-will.html"
-            : will.will_category === "money"
-              ? "money-will.html"
-              : "general-will.html";
 
-        const res = await fetch("/api/generate-html-pdf", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            templateName: htmlTemplateName,
-            outputFileName: `${will.id}.pdf`,
-            fields: {
-              ...fields,
-              // Keep PDF footer aligned with customized money preview
-              place: testator?.birth_place ?? "",
-              beneficiary_birth_place: "",
-              beneficiary_residence: "",
-            },
-          }),
-        });
+        const tmplRes = await fetch(`/docs/templates/${htmlTemplateName}`);
+        if (!tmplRes.ok) throw new Error("تعذر تحميل قالب الوصية");
+        let html = await tmplRes.text();
 
-        if (!res.ok) {
-          let message = "Failed to generate PDF";
-          try {
-            const err = (await res.json()) as { error?: string };
-            if (err?.error) message = err.error;
-          } catch {
-            // Ignore JSON parse errors and keep fallback message
-          }
-          throw new Error(message);
+        for (const [key, value] of Object.entries(fields)) {
+          html = html.replaceAll(`{{${key}}}`, value || "");
         }
-
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
+        html = html.replace(/\{\{[^}]+\}\}/g, "");
 
         if (mode === "preview") {
+          const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
           window.open(url, "_blank", "noopener,noreferrer");
           setTimeout(() => URL.revokeObjectURL(url), 60_000);
           return;
         }
 
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${will.id}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        const win = window.open("", "_blank");
+        if (!win) {
+          toast.error("يرجى السماح للنوافذ المنبثقة");
+          return;
+        }
+        win.document.write(html);
+        win.document.close();
+        win.focus();
+        toast.success("سيتم فتح نافذة الطباعة لحفظ الوصية كـ PDF");
+        setTimeout(() => win.print(), 1000);
       } catch (e) {
         console.error(e);
-        const message =
-          e instanceof Error ? e.message : "تعذر إنشاء ملف PDF حالياً";
-        toast.error(message);
+        toast.error("تعذر إنشاء ملف PDF حالياً");
       } finally {
         setIsGeneratingPdf(false);
       }
