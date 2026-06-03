@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
-import os from "os";
-import { execFile } from "child_process";
-import { promisify } from "util";
+import puppeteer from "puppeteer";
 
-const execFileAsync = promisify(execFile);
-
-// ── Field map type ───────────────────────────────────────────────────────────
 type WillFields = {
   testator_full_name?: string | null;
   testator_birth_date?: string | null;
@@ -30,26 +25,10 @@ type WillFields = {
 };
 
 type GenerateHtmlPdfBody = {
-  templateName?: string;   // e.g. "general-will.html"
-  outputFileName?: string; // e.g. "will-123.pdf"
+  templateName?: string;
+  outputFileName?: string;
   fields?: WillFields;
 };
-
-// ── Fill HTML template with field values ─────────────────────────────────────
-function fillTemplate(html: string, fields: WillFields): string {
-  let filled = html;
-
-  for (const [key, value] of Object.entries(fields)) {
-    const safe = escapeHtml(value == null ? "" : String(value));
-    // Replace {{key}} placeholders
-    filled = filled.replaceAll(`{{${key}}}`, safe);
-  }
-
-  // Any remaining {{...}} placeholders → empty string (don't leave raw tokens)
-  filled = filled.replace(/\{\{[^}]+\}\}/g, "");
-
-  return filled;
-}
 
 function escapeHtml(str: string): string {
   return str
@@ -60,18 +39,25 @@ function escapeHtml(str: string): string {
     .replace(/'/g, "&#39;");
 }
 
-// ── API Route ─────────────────────────────────────────────────────────────────
-export async function POST(req: Request) {
-  let tmpHtmlPath: string | null = null;
-  let tmpPdfPath: string | null = null;
+function fillTemplate(html: string, fields: WillFields): string {
+  let filled = html;
 
+  for (const [key, value] of Object.entries(fields)) {
+    const safe = escapeHtml(value == null ? "" : String(value));
+    filled = filled.replaceAll(`{{${key}}}`, safe);
+  }
+
+  filled = filled.replace(/\{\{[^}]+\}\}/g, "");
+  return filled;
+}
+
+export async function POST(req: Request) {
   try {
     const body = (await req.json()) as GenerateHtmlPdfBody;
-    const fields        = body.fields        ?? {};
-    const templateName  = body.templateName  ?? "general-will.html";
+    const fields = body.fields ?? {};
+    const templateName = body.templateName ?? "general-will.html";
     const outputFileName = body.outputFileName ?? "will.pdf";
 
-    // ── 1. Load HTML template ──────────────────────────────────────────────
     const templatePath = path.join(
       process.cwd(),
       "public",
@@ -90,71 +76,39 @@ export async function POST(req: Request) {
       );
     }
 
-    // ── 2. Fill placeholders ───────────────────────────────────────────────
     const filledHtml = fillTemplate(templateHtml, fields);
 
-    // ── 3. Write filled HTML to tmp file ──────────────────────────────────
-    const tmpDir  = os.tmpdir();
-    const uid     = Date.now() + "-" + Math.random().toString(36).slice(2);
-    tmpHtmlPath   = path.join(tmpDir, `will-${uid}.html`);
-    tmpPdfPath    = path.join(tmpDir, `will-${uid}.pdf`);
-
-    await fs.writeFile(tmpHtmlPath, filledHtml, "utf-8");
-
-    // ── 4. Run wkhtmltopdf ─────────────────────────────────────────────────
-    const wkhtmlArgs = [
-      // Page setup
-      "--page-size",    "A4",
-      "--orientation",  "Portrait",
-      "--encoding",     "UTF-8",
-
-      // Margins (match original PDF padding ~50pt ≈ 18mm)
-      "--margin-top",    "18mm",
-      "--margin-bottom", "18mm",
-      "--margin-left",   "18mm",
-      "--margin-right",  "18mm",
-
-      // Arabic / RTL support
-      "--enable-local-file-access",
-      "--disable-smart-shrinking",
-
-      // Disable JS (not needed, speeds up render)
-      "--no-background",
-
-      // Input/output
-      tmpHtmlPath,
-      tmpPdfPath,
-    ];
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
 
     try {
-      await execFileAsync("wkhtmltopdf", wkhtmlArgs);
-    } catch (err) {
-      console.error("[generate-pdf] wkhtmltopdf failed:", err);
-      return NextResponse.json(
-        { success: false, error: "PDF generation failed" },
-        { status: 500 },
-      );
+      const page = await browser.newPage();
+      await page.setContent(filledHtml, { waitUntil: "load" });
+      await page.emulateMediaType("print");
+
+      const pdfBuffer = await page.pdf({
+        format: "A4",
+        printBackground: true,
+        margin: { top: "18mm", bottom: "18mm", left: "16mm", right: "16mm" },
+      });
+
+      return new NextResponse(Buffer.from(pdfBuffer), {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${outputFileName}"`,
+          "Content-Length": String(pdfBuffer.byteLength),
+        },
+      });
+    } finally {
+      await browser.close();
     }
-
-    // ── 5. Read generated PDF and return ──────────────────────────────────
-    const pdfBytes = await fs.readFile(tmpPdfPath);
-
-    return new NextResponse(pdfBytes, {
-      headers: {
-        "Content-Type":        "application/pdf",
-        "Content-Disposition": `attachment; filename="${outputFileName}"`,
-        "Content-Length":      String(pdfBytes.byteLength),
-      },
-    });
   } catch (error) {
     console.error("[generate-pdf] unexpected error:", error);
     return NextResponse.json(
-      { success: false, error: "Unexpected error" },
+      { success: false, error: "PDF generation failed" },
       { status: 500 },
     );
-  } finally {
-    // ── 6. Cleanup tmp files ───────────────────────────────────────────────
-    if (tmpHtmlPath) fs.unlink(tmpHtmlPath).catch(() => null);
-    if (tmpPdfPath)  fs.unlink(tmpPdfPath).catch(() => null);
   }
 }
